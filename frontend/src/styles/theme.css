@@ -1,0 +1,103 @@
+@theme {
+  /* Primary palette — Blue */
+  --color-primary: oklch(0.446 0.177 265.7);
+  --color-primary-light: oklch(0.62 0.17 265.7);
+  --color-primary-dark: oklch(0.28 0.18 265.7);
+  --color-on-primary: oklch(1 0 0);
+
+  /* Secondary palette — Teal */
+  --color-secondary: oklch(0.527 0.117 181);
+  --color-on-secondary: oklch(1 0 0);
+
+  /* Surface & background */
+  --color-bg: oklch(0.98 0 0);
+  --color-surface: oklch(1 0 0);
+  --color-surface-variant: oklch(0.94 0.008 265);
+  --color-on-surface: oklch(0.14 0.01 265);
+  --color-on-surface-muted: oklch(0.45 0.01 265);
+
+  /* Error */
+  --color-error: oklch(0.44 0.195 27);
+  --color-on-error: oklch(1 0 0);
+
+  /* Success */
+  --color-success: oklch(0.53 0.15 145);
+  --color-on-success: oklch(1 0 0);
+
+  /* Warning */
+  --color-warning: oklch(0.7 0.16 75);
+  --color-on-warning: oklch(0.14 0.01 265);
+
+  /* Score accent colours */
+  --color-team-a: oklch(0.446 0.177 265.7);
+  --color-team-b: oklch(0.527 0.117 181);
+
+  /* Border */
+  --color-border: oklch(0.87 0.005 265);
+
+  /* Border radius */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-full: 9999px;
+
+  /* Font family */
+  --font-sans: Roboto, "Helvetica Neue", sans-serif;
+
+  /* Font sizes */
+  --text-hero: 3rem;
+  --text-score: 5rem;
+
+  /* Shadows */
+  --shadow-card: 0 1px 3px oklch(0.14 0.01 265 / 0.12), 0 1px 2px oklch(0.14 0.01 265 / 0.08);
+  --shadow-elevated: 0 4px 6px oklch(0.14 0.01 265 / 0.1), 0 2px 4px oklch(0.14 0.01 265 / 0.06);
+}
+
+/* Dark mode variant */
+@variant dark (&:where([data-theme="dark"] *));
+
+@layer base {
+  [data-theme="dark"] {
+    --color-bg: oklch(0.12 0.01 265);
+    --color-surface: oklch(0.16 0.01 265);
+    --color-surface-variant: oklch(0.22 0.01 265);
+    --color-on-surface: oklch(0.93 0 0);
+    --color-on-surface-muted: oklch(0.65 0.005 265);
+    --color-border: oklch(0.28 0.01 265);
+  }
+}
+
+@layer components {
+  .pts-card {
+    @apply bg-surface rounded-lg p-4;
+    box-shadow: var(--shadow-card);
+  }
+
+  .pts-btn-primary {
+    @apply bg-primary text-on-primary rounded-md px-4 py-2 font-medium text-sm
+           hover:bg-primary-dark transition-colors duration-150
+           focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .pts-btn-secondary {
+    @apply bg-transparent text-primary border border-primary rounded-md px-4 py-2 font-medium text-sm
+           hover:bg-primary/10 transition-colors duration-150
+           focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .pts-btn-icon {
+    @apply flex items-center justify-center w-12 h-12 rounded-full
+           hover:bg-on-surface/8 transition-colors duration-150
+           focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary;
+  }
+
+  .pts-score-display {
+    font-size: var(--text-score);
+    font-weight: 700;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+}

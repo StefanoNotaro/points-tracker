@@ -1,0 +1,20 @@
+version: "3.9"
+
+# Local dev overrides — not used in production
+services:
+  db:
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: pts_app
+      POSTGRES_PASSWORD: devpassword
+      POSTGRES_DB: points_tracker
+
+  api:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__Default=Host=db;Port=5432;Database=points_tracker;Username=pts_app;Password=devpassword
+      - ShareToken__Secret=dev_secret_replace_in_production_64chars_minimum_length
+      - Cors__AllowedOrigins__0=http://localhost:4200
+    ports:
+      - "8080:8080"
