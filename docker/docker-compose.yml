@@ -1,0 +1,63 @@
+version: "3.9"
+
+services:
+
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ${TLS_CERT_PATH:-/etc/nginx/certs}:/etc/nginx/certs:ro
+    depends_on:
+      - api
+    networks:
+      - pts-net
+
+  api:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__Default=${DB_CONNECTION_STRING}
+      - Authentik__Authority=${AUTHENTIK_AUTHORITY}
+      - Authentik__ClientId=${AUTHENTIK_CLIENT_ID}
+      - ShareToken__Secret=${SHARE_TOKEN_SECRET}
+      - Cors__AllowedOrigins__0=${APP_BASE_URL}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - pts-net
+
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: points_tracker
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d points_tracker"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - pts-net
+
+volumes:
+  db-data:
+
+networks:
+  pts-net:
+    driver: bridge
