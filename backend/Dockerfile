@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 
 COPY ["src/PointsTracker.Domain/PointsTracker.Domain.csproj", "src/PointsTracker.Domain/"]
@@ -10,7 +10,7 @@ RUN dotnet restore "src/PointsTracker.Api/PointsTracker.Api.csproj"
 COPY . .
 RUN dotnet publish "src/PointsTracker.Api/PointsTracker.Api.csproj" -c Release -o /app/publish --no-restore
 
-FROM mcr.microsoft.com/dotnet/aspnet:7.0 AS final
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS final
 WORKDIR /app
 COPY --from=build /app/publish .
 EXPOSE 8080

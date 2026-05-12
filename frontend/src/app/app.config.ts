@@ -1,6 +1,6 @@
 import {
   ApplicationConfig,
-  provideZoneChangeDetection,
+  provideZonelessChangeDetection,
   importProvidersFrom,
 } from '@angular/core';
 import { provideRouter, withComponentInputBinding } from '@angular/router';
@@ -18,7 +18,7 @@ import { errorInterceptor } from './core/interceptors/error.interceptor';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideZoneChangeDetection({ eventCoalescing: true }),
+    provideZonelessChangeDetection(),
     provideRouter(routes, withComponentInputBinding()),
     provideHttpClient(withFetch(), withInterceptors([authInterceptor, errorInterceptor])),
     provideAnimationsAsync(),
