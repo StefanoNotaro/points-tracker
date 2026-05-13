@@ -1,8 +1,7 @@
-import { Injectable, signal, computed, inject } from '@angular/core';
-import { Router } from '@angular/router';
-import { OAuthService, AuthConfig } from 'angular-oauth2-oidc';
+import { Injectable, computed, inject, signal } from '@angular/core';
+import { AuthConfig, OAuthService } from 'angular-oauth2-oidc';
 import { environment } from '../../../environments/environment';
-import { User, GlobalRole } from '../../shared/models/user.model';
+import { GlobalRole, User } from '../../shared/models/user.model';
 
 const authConfig: AuthConfig = {
   issuer: environment.oidc.issuer,
@@ -10,21 +9,20 @@ const authConfig: AuthConfig = {
   scope: environment.oidc.scope,
   redirectUri: environment.oidc.redirectUri,
   postLogoutRedirectUri: environment.oidc.postLogoutRedirectUri,
-  responseType: environment.oidc.responseType,
-
-  useSilentRefresh: false,
-  sessionChecksEnabled: false,
-
+  responseType: 'code',
   showDebugInformation: !environment.production,
-  clearHashAfterLogin: true,
-  nonceStateSeparator: 'semicolon',
+  // Authentik's OIDC endpoints (authorize, token, jwks, etc.) live at
+  // /application/o/<action>/ while the issuer is /application/o/<slug>/.
+  // The endpoint URLs therefore don't share the issuer's path prefix, which
+  // makes the library's default strict discovery check reject the document.
   strictDiscoveryDocumentValidation: false,
 };
+
+const ROLE_HIERARCHY: readonly GlobalRole[] = ['user', 'admin', 'super_admin'];
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly oauthService = inject(OAuthService);
-  private readonly router = inject(Router);
 
   private readonly _user = signal<User | null>(null);
   private readonly _isInitialized = signal(false);
@@ -37,29 +35,11 @@ export class AuthService {
     this.oauthService.configure(authConfig);
     this.oauthService.setupAutomaticSilentRefresh();
 
+    this.oauthService.events.subscribe(() => this.refreshUserFromClaims());
+
     try {
-      // 1) Discovery only — DON'T try login yet, because token validation
-      //    needs JWKS and we have to redirect that through the dev proxy first
-      //    to avoid Authentik's cross-origin CORS error.
-      await this.oauthService.loadDiscoveryDocument();
-
-      if (!environment.production) {
-        const doc = (this.oauthService as any).discoveryDoc;
-        if (doc?.jwks_uri) {
-          const url = new URL(doc.jwks_uri);
-          // Same-origin relative URL — Angular dev proxy forwards /application/o/* to Authentik.
-          doc.jwks_uri = url.pathname + url.search;
-        }
-        // The library also caches jwks_uri on the service itself in some versions.
-        (this.oauthService as any).jwksUri = doc?.jwks_uri ?? (this.oauthService as any).jwksUri;
-      }
-
-      // 2) Now we can safely validate any token from the redirect.
-      await this.oauthService.tryLogin();
-
-      this.syncUserFromToken();
-    } catch {
-      // Authentik unreachable or not configured — continue as anonymous
+      await this.oauthService.loadDiscoveryDocumentAndTryLogin();
+      this.refreshUserFromClaims();
     } finally {
       this._isInitialized.set(true);
     }
@@ -71,23 +51,24 @@ export class AuthService {
 
   logout(): void {
     this.oauthService.logOut();
-    this._user.set(null);
   }
 
   getAccessToken(): string | null {
-    const token = this.oauthService.getAccessToken();
-    return token || null;
+    return this.oauthService.getAccessToken() || null;
   }
 
   hasRole(role: GlobalRole): boolean {
     const user = this._user();
     if (!user) return false;
-
-    const hierarchy: GlobalRole[] = ['user', 'admin', 'super_admin'];
-    return hierarchy.indexOf(user.role) >= hierarchy.indexOf(role);
+    return ROLE_HIERARCHY.indexOf(user.role) >= ROLE_HIERARCHY.indexOf(role);
   }
 
-  private syncUserFromToken(): void {
+  private refreshUserFromClaims(): void {
+    if (!this.oauthService.hasValidIdToken()) {
+      this._user.set(null);
+      return;
+    }
+
     const claims = this.oauthService.getIdentityClaims() as Record<string, unknown> | null;
     if (!claims) {
       this._user.set(null);
