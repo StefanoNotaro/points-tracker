@@ -89,12 +89,22 @@ If the owner clears `localStorage`, they lose ownership but existing share links
 
 ### F-T01: Tournament Creation
 
-**Who:** Admin or Super-Admin
+**Who:** Any authenticated user (multi-tournament). Anonymous users may have
+**one active tournament** at a time, bound to their session token.
 
 **Behaviour:**
-- Create a tournament with: name, sport, format (single elimination, double elimination, round robin), date range.
-- Configure seeding, team sizes, number of participants.
-- Tournament is in **Draft** status until published.
+- Create a tournament with: name, sport, format (single elimination, double
+  elimination, round robin), optional rule overrides.
+- Tournament is in **Draft** status until participants are added and the
+  organiser clicks "Generate bracket & start".
+- The chosen format is plugged via `IBracketGenerator` so adding new formats
+  (group stage, swiss, etc.) is open/closed clean — no changes to existing
+  generators required.
+
+**Rule changes mid-tournament:** the organiser may edit rule overrides at any
+time. Changes apply **only to future matches** (`Pending` / `Ready`, no
+counter yet). Matches already `InProgress` or `Completed` keep the rules they
+started with.
 
 ---
 
@@ -111,11 +121,21 @@ If the owner clears `localStorage`, they lose ownership but existing share links
 
 ### F-T03: Match Result Entry
 
-**Who:** Admin, or delegated scorer using an in-match counter
+**Who:** Tournament organiser (creator) or admin
 
 **Behaviour:**
-- Admins can manually enter results.
-- Optionally link a live counter session to a tournament match — scores flow directly into bracket.
+- Tapping a `Ready` match in the bracket lazily spawns a `Counter` with the
+  tournament's sport + rule overrides + team names taken from the two
+  participants. The spawned counter is linked back to the match via
+  `tournament_matches.counter_id`.
+- Existing counter scoring flow applies — every score change flows through
+  SignalR. When the counter reaches `Finished`, the bracket reconciles on the
+  next `GET /tournaments/{id}` (lazy reconciliation): winner is recorded, the
+  next match slot's participant pointer is filled, double-elim losers are
+  dropped to the losers bracket.
+- Manual override: `POST /tournaments/{id}/matches/{matchId}/result` for the
+  organiser to record / correct a result without the counter (walkovers,
+  manual entry).
 
 ---
 
@@ -140,8 +160,9 @@ See `docs/ROLES_PERMISSIONS.md` for full role definitions.
 
 The following are explicitly **out of scope for Phase 1**:
 
-- Tournaments of any kind.
 - Player/team profiles beyond a display name per counter.
-- Statistics or history dashboards.
+- Statistics or history dashboards beyond per-tournament standings.
 - Push notifications.
 - Mobile-native apps (PWA is acceptable but not required).
+- Group stage + knockout, Swiss, and other compound formats — pluggable via
+  `IBracketGenerator` but not implemented yet.

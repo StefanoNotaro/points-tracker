@@ -112,34 +112,80 @@ Append-only audit log of all score changes. Enables undo and replay.
 
 ---
 
-### `tournaments` (Phase 2)
+### `tournaments`
 
-| Column         | Type          | Notes                                              |
-|----------------|---------------|----------------------------------------------------|
-| `id`           | UUID PK       |                                                    |
-| `name`         | VARCHAR(200)  |                                                    |
-| `sport_type`   | VARCHAR(50)   |                                                    |
-| `format`       | VARCHAR(50)   | `single_elimination`, `double_elimination`, `round_robin` |
-| `status`       | VARCHAR(50)   | `draft`, `registration`, `active`, `completed`     |
-| `owner_user_id`| UUID FK       | `users.id`                                         |
-| `starts_at`    | TIMESTAMPTZ NULLABLE |                                               |
-| `ends_at`      | TIMESTAMPTZ NULLABLE |                                               |
-| `created_at`   | TIMESTAMPTZ   |                                                    |
-| `updated_at`   | TIMESTAMPTZ   |                                                    |
-| `deleted_at`   | TIMESTAMPTZ NULLABLE |                                               |
+Match-rule columns mirror `counters` so the same `SportRules` engine and
+`Counter.Create` constructor can be reused when a counter is spawned for a
+tournament match.
+
+| Column                              | Type                | Notes                                            |
+|-------------------------------------|---------------------|--------------------------------------------------|
+| `id`                                | UUID PK             |                                                  |
+| `name`                              | VARCHAR(200)        |                                                  |
+| `sport_type`                        | VARCHAR(50)         |                                                  |
+| `format`                            | VARCHAR(50)         | `singleelimination`, `doubleelimination`, `roundrobin` |
+| `status`                            | VARCHAR(50)         | `draft`, `registration`, `active`, `completed`, `abandoned` |
+| `owner_user_id`                     | UUID FK NULLABLE    | null = anonymous tournament                      |
+| `session_token_hash`                | VARCHAR(64) NULLABLE| SHA-256 of anon session token                    |
+| `custom_points_per_set`             | INTEGER NULLABLE    | rule override                                    |
+| `custom_last_set_points`            | INTEGER NULLABLE    |                                                  |
+| `custom_sets_to_win`                | INTEGER NULLABLE    |                                                  |
+| `custom_total_sets`                 | INTEGER NULLABLE    |                                                  |
+| `custom_win_by_two`                 | BOOLEAN NULLABLE    |                                                  |
+| `indoor_switch_every_sets`          | INTEGER NULLABLE    |                                                  |
+| `beach_auto_switch_sides`           | BOOLEAN             | default true                                     |
+| `custom_timeouts_per_set`           | INTEGER NULLABLE    |                                                  |
+| `custom_timeout_duration_seconds`   | INTEGER NULLABLE    |                                                  |
+| `starts_at`                         | TIMESTAMPTZ NULLABLE|                                                  |
+| `ends_at`                           | TIMESTAMPTZ NULLABLE|                                                  |
+| `created_at`                        | TIMESTAMPTZ         |                                                  |
+| `updated_at`                        | TIMESTAMPTZ         |                                                  |
+| `deleted_at`                        | TIMESTAMPTZ NULLABLE| soft delete                                      |
+
+Constraint enforced in code (not DB): at most one row with
+`session_token_hash IS NOT NULL` and `status IN ('draft','registration','active')`
+per hash. Validated in `CreateTournamentHandler`.
 
 ---
 
-### `tournament_participants` (Phase 2)
+### `tournament_participants`
 
-| Column            | Type        | Notes                              |
-|-------------------|-------------|------------------------------------|
-| `id`              | UUID PK     |                                    |
-| `tournament_id`   | UUID FK     | `tournaments.id`                   |
-| `user_id`         | UUID FK NULLABLE | `users.id`                    |
-| `team_name`       | VARCHAR(100)|                                    |
-| `seed`            | SMALLINT NULLABLE |                               |
-| `registered_at`   | TIMESTAMPTZ |                                    |
+| Column            | Type              | Notes                              |
+|-------------------|-------------------|------------------------------------|
+| `id`              | UUID PK           |                                    |
+| `tournament_id`   | UUID FK           | `tournaments.id`                   |
+| `user_id`         | UUID FK NULLABLE  | `users.id`                         |
+| `team_name`       | VARCHAR(100)      | unique per tournament              |
+| `seed`            | INTEGER NULLABLE  |                                    |
+| `registered_at`   | TIMESTAMPTZ       |                                    |
+
+---
+
+### `tournament_matches`
+
+One row per slot in the bracket — generated up-front by `IBracketGenerator`
+when the tournament is started.
+
+| Column                  | Type             | Notes                                                  |
+|-------------------------|------------------|--------------------------------------------------------|
+| `id`                    | UUID PK          |                                                        |
+| `tournament_id`         | UUID FK          | `tournaments.id`                                       |
+| `bracket_side`          | VARCHAR(20)      | `main`, `winners`, `losers`, `grandfinal`              |
+| `round_number`          | INTEGER          | 1-based within bracket_side                            |
+| `match_number`          | INTEGER          | 1-based within round                                   |
+| `participant_a_id`      | UUID FK NULLABLE | filled in once feeder resolves                         |
+| `participant_b_id`      | UUID FK NULLABLE |                                                        |
+| `counter_id`            | UUID FK NULLABLE | lazy — set when scorer opens the match                 |
+| `winner_participant_id` | UUID FK NULLABLE |                                                        |
+| `loser_participant_id`  | UUID FK NULLABLE |                                                        |
+| `status`                | VARCHAR(20)      | `pending`, `ready`, `inprogress`, `completed`, `walkover` |
+| `next_match_id`         | UUID FK NULLABLE | winner advances here                                   |
+| `next_loser_match_id`   | UUID FK NULLABLE | double-elim: loser drops here                          |
+| `winner_to_side_a`      | BOOLEAN          | which slot of next match the winner fills              |
+| `loser_to_side_a`       | BOOLEAN          | likewise for the loser drop-in                         |
+| `scheduled_at`          | TIMESTAMPTZ NULLABLE |                                                    |
+| `created_at`            | TIMESTAMPTZ      |                                                        |
+| `updated_at`            | TIMESTAMPTZ      |                                                        |
 
 ---
 
@@ -166,7 +212,13 @@ CREATE INDEX idx_counter_events_counter ON counter_events(counter_id, created_at
 CREATE INDEX idx_share_tokens_counter ON share_tokens(counter_id) WHERE revoked_at IS NULL;
 CREATE INDEX idx_share_tokens_token ON share_tokens(token);
 
--- Tournament indexes added in Phase 2 migrations
+-- Tournaments
+CREATE INDEX idx_tournaments_owner ON tournaments(owner_user_id) WHERE deleted_at IS NULL;
+CREATE INDEX idx_tournaments_session ON tournaments(session_token_hash) WHERE deleted_at IS NULL;
+CREATE INDEX idx_tournament_participants_t ON tournament_participants(tournament_id);
+CREATE UNIQUE INDEX idx_tournament_participants_uname ON tournament_participants(tournament_id, team_name);
+CREATE INDEX idx_tournament_matches_t ON tournament_matches(tournament_id);
+CREATE INDEX idx_tournament_matches_counter ON tournament_matches(counter_id) WHERE counter_id IS NOT NULL;
 ```
 
 ---

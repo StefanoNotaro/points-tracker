@@ -41,13 +41,19 @@ Anonymous users are a special case — they get no role but can perform a limite
 | Claim anonymous counter              | ❌        | ✅   | ✅    | ✅          |
 | View tournaments (published)         | ✅        | ✅   | ✅    | ✅          |
 | Register for a tournament            | ❌        | ✅   | ✅    | ✅          |
-| Create tournament                    | ❌        | ❌   | ✅    | ✅          |
+| Create tournament (own)              | ✅ (1)    | ✅   | ✅    | ✅          |
+| Create multiple tournaments          | ❌        | ✅   | ✅    | ✅          |
 | Manage any tournament                | ❌        | ❌   | ✅    | ✅          |
 | Manage users                         | ❌        | ❌   | ❌    | ✅          |
 | Change global roles                  | ❌        | ❌   | ❌    | ✅          |
 | Access admin panel                   | ❌        | ❌   | ✅    | ✅          |
 | View platform audit logs             | ❌        | ❌   | ❌    | ✅          |
 | Hard delete any entity               | ❌        | ❌   | ❌    | ✅          |
+
+(1) Anonymous users may have **at most one active tournament** at a time —
+enforced server-side via the session-token hash. The tournament + its bracket
+are accessible only while the browser keeps that token in `localStorage`.
+Logged-in users have no cap.
 
 ---
 
