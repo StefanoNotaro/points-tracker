@@ -45,6 +45,29 @@ export interface Counter {
   pendingSideSwitchConfirmation: boolean;
   indoorSwitchEverySets: number | null;
   beachAutoSwitchSides: boolean;
+  canUndo: boolean;
+  canRedo: boolean;
+  events: CounterEvent[];
+}
+
+export type CounterEventType =
+  | 'score_increment'
+  | 'score_decrement'
+  | 'undo'
+  | 'redo';
+
+export interface CounterEvent {
+  id: string;
+  setNumber: number;
+  eventType: CounterEventType;
+  team: Team;
+  scoreABefore: number;
+  scoreBBefore: number;
+  scoreAAfter: number;
+  scoreBAfter: number;
+  isUndone: boolean;
+  relatedEventId: string | null;
+  createdAt: string;
 }
 
 export interface CounterSummary {

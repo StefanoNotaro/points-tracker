@@ -5,6 +5,7 @@ import { ScoreBoardComponent } from '../../../../shared/components/score-board/s
 import { ScoreButtonComponent } from '../../../../shared/components/score-button/score-button.component';
 import { TeamNameEditorComponent } from '../../../../shared/components/team-name-editor/team-name-editor.component';
 import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
+import { EventsLogComponent } from '../events-log/events-log.component';
 import {
   ShareDialogComponent,
   ShareDialogData,
@@ -22,6 +23,7 @@ import { CounterStore } from '../../store/counter.store';
     ScoreButtonComponent,
     TeamNameEditorComponent,
     LoadingSpinnerComponent,
+    EventsLogComponent,
     MatMenuModule,
   ],
   providers: [CounterStore],
@@ -60,13 +62,33 @@ import { CounterStore } from '../../store/counter.store';
               <button
                 type="button"
                 class="pts-btn-icon"
-                (click)="undo()"
-                [disabled]="store.actionPending()"
-                aria-label="Undo last point"
-                title="Undo last point"
+                [disabled]="!counter.canUndo || store.actionPending()"
+                (click)="undoOnce()"
+                (pointerdown)="startHoldUndo($event)"
+                (pointerup)="stopHold()"
+                (pointerleave)="stopHold()"
+                (pointercancel)="stopHold()"
+                aria-label="Undo last action (hold to repeat)"
+                title="Undo (hold to undo more)"
               >
                 <span class="material-symbols-rounded text-xl">undo</span>
               </button>
+              @if (counter.canRedo) {
+                <button
+                  type="button"
+                  class="pts-btn-icon"
+                  [disabled]="store.actionPending()"
+                  (click)="redoOnce()"
+                  (pointerdown)="startHoldRedo($event)"
+                  (pointerup)="stopHold()"
+                  (pointerleave)="stopHold()"
+                  (pointercancel)="stopHold()"
+                  aria-label="Redo (hold to repeat)"
+                  title="Redo (hold to redo more)"
+                >
+                  <span class="material-symbols-rounded text-xl">redo</span>
+                </button>
+              }
             }
             <button
               type="button"
@@ -226,6 +248,13 @@ import { CounterStore } from '../../store/counter.store';
           </div>
         }
 
+        <!-- Events log — collapsed by default -->
+        <pts-events-log
+          [events]="counter.events"
+          [teamAName]="counter.teamAName"
+          [teamBName]="counter.teamBName"
+        />
+
       </div>
     }
   `,
@@ -255,6 +284,15 @@ export class CounterPageComponent implements OnInit, OnDestroy {
   private sideSwitchDialogOpen = false;
   // Track the count we last observed so we can detect beach auto-switches.
   private lastObservedSwitchCount: number | null = null;
+
+  // Press-and-hold state for undo/redo.
+  private holdTimer: ReturnType<typeof setInterval> | null = null;
+  private holdInitialTimer: ReturnType<typeof setTimeout> | null = null;
+  private holdSuppressClick = false;
+  // First click fires immediately; if the user keeps holding, repeat after a
+  // short delay so a normal tap doesn't accidentally fire two undos.
+  private readonly HOLD_DELAY_MS = 400;
+  private readonly HOLD_INTERVAL_MS = 180;
 
   constructor() {
     effect(() => {
@@ -290,6 +328,7 @@ export class CounterPageComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.clearHoldTimers();
     this.store.ngOnDestroy();
   }
 
@@ -308,25 +347,64 @@ export class CounterPageComponent implements OnInit, OnDestroy {
     });
   }
 
-  async undo(): Promise<void> {
-    const confirmed = await this.dialog
-      .open<ConfirmDialogComponent, ConfirmDialogData, boolean>(ConfirmDialogComponent, {
-        data: {
-          title: 'Undo last point',
-          message: 'This will revert the last score change. Are you sure?',
-          confirmLabel: 'Undo',
-        },
-      })
-      .afterClosed()
-      .toPromise();
-
-    if (confirmed) {
-      await this.store.undo();
+  undoOnce(): void {
+    // pointerdown -> pointerup also synthesizes a click. After a hold burst
+    // we want to ignore that click; this flag is set when the hold-repeat
+    // path actually fired.
+    if (this.holdSuppressClick) {
+      this.holdSuppressClick = false;
+      return;
     }
+    void this.store.undo(1);
+  }
+
+  redoOnce(): void {
+    if (this.holdSuppressClick) {
+      this.holdSuppressClick = false;
+      return;
+    }
+    void this.store.redo(1);
+  }
+
+  startHoldUndo(ev: PointerEvent): void {
+    // Only react to primary button / touch / pen.
+    if (ev.pointerType === 'mouse' && ev.button !== 0) return;
+    this.beginHold(() => this.store.undo(1));
+  }
+
+  startHoldRedo(ev: PointerEvent): void {
+    if (ev.pointerType === 'mouse' && ev.button !== 0) return;
+    this.beginHold(() => this.store.redo(1));
+  }
+
+  stopHold(): void {
+    this.clearHoldTimers();
   }
 
   switchSidesManually(): void {
     void this.store.switchSidesManually();
+  }
+
+  private beginHold(action: () => Promise<void>): void {
+    this.clearHoldTimers();
+    this.holdInitialTimer = setTimeout(() => {
+      this.holdSuppressClick = true;
+      void action();
+      this.holdTimer = setInterval(() => {
+        void action();
+      }, this.HOLD_INTERVAL_MS);
+    }, this.HOLD_DELAY_MS);
+  }
+
+  private clearHoldTimers(): void {
+    if (this.holdInitialTimer) {
+      clearTimeout(this.holdInitialTimer);
+      this.holdInitialTimer = null;
+    }
+    if (this.holdTimer) {
+      clearInterval(this.holdTimer);
+      this.holdTimer = null;
+    }
   }
 
   private async openConfirmSwitchDialog(mode: string): Promise<void> {

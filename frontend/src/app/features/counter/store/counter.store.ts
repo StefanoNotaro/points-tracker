@@ -101,16 +101,31 @@ export class CounterStore implements OnDestroy {
     }
   }
 
-  async undo(): Promise<void> {
+  async undo(count = 1): Promise<void> {
     const counter = this._counter();
     if (!counter || this._actionPending()) return;
 
     this._actionPending.set(true);
     try {
-      const updated = await this.counterService.undo(counter.id);
+      const updated = await this.counterService.undo(counter.id, count);
       this.applyUpdate(updated);
     } catch {
       this.notifications.error('Failed to undo.');
+    } finally {
+      this._actionPending.set(false);
+    }
+  }
+
+  async redo(count = 1): Promise<void> {
+    const counter = this._counter();
+    if (!counter || this._actionPending()) return;
+
+    this._actionPending.set(true);
+    try {
+      const updated = await this.counterService.redo(counter.id, count);
+      this.applyUpdate(updated);
+    } catch {
+      this.notifications.error('Failed to redo.');
     } finally {
       this._actionPending.set(false);
     }

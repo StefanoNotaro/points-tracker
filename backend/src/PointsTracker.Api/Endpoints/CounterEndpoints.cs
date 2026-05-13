@@ -20,6 +20,7 @@ public static class CounterEndpoints
         group.MapPost("/{id:guid}/score/increment", IncrementScore).AllowAnonymous();
         group.MapPost("/{id:guid}/score/decrement", DecrementScore).AllowAnonymous();
         group.MapPost("/{id:guid}/undo", Undo).AllowAnonymous();
+        group.MapPost("/{id:guid}/redo", Redo).AllowAnonymous();
         group.MapPatch("/{id:guid}/teams", UpdateTeamName).AllowAnonymous();
         group.MapPost("/{id:guid}/side-switch", ResolveSideSwitch).AllowAnonymous();
         group.MapPost("/{id:guid}/switch-sides", SwitchSides).AllowAnonymous();
@@ -112,12 +113,28 @@ public static class CounterEndpoints
 
     private static async Task<IResult> Undo(
         Guid id,
+        UndoRequest? req,
         IMediator mediator,
         IHubContext<CounterHub> hub,
         HttpContext ctx)
     {
         var (userId, sessionToken, shareToken) = GetContext(ctx);
-        var result = await mediator.Send(new UndoCommand(id, userId, sessionToken, shareToken));
+        var count = req?.Count ?? 1;
+        var result = await mediator.Send(new UndoCommand(id, userId, sessionToken, shareToken, count));
+        await hub.BroadcastScoreUpdate(id, result);
+        return Results.Ok(result);
+    }
+
+    private static async Task<IResult> Redo(
+        Guid id,
+        UndoRequest? req,
+        IMediator mediator,
+        IHubContext<CounterHub> hub,
+        HttpContext ctx)
+    {
+        var (userId, sessionToken, shareToken) = GetContext(ctx);
+        var count = req?.Count ?? 1;
+        var result = await mediator.Send(new RedoCommand(id, userId, sessionToken, shareToken, count));
         await hub.BroadcastScoreUpdate(id, result);
         return Results.Ok(result);
     }
@@ -215,3 +232,4 @@ public record ScoreRequest(string Team);
 public record UpdateTeamNameRequest(string Team, string Name);
 public record CreateShareTokenRequest(string Scope);
 public record ResolveSideSwitchRequest(bool Confirm);
+public record UndoRequest(int? Count);

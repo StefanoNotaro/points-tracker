@@ -24,6 +24,8 @@ public class CounterEventConfiguration : IEntityTypeConfiguration<CounterEvent>
         builder.Property(e => e.ScoreBAfter).HasColumnName("score_b_after");
         builder.Property(e => e.ActorUserId).HasColumnName("actor_user_id");
         builder.Property(e => e.CreatedAt).HasColumnName("created_at");
+        builder.Property(e => e.IsUndone).HasColumnName("is_undone").HasDefaultValue(false);
+        builder.Property(e => e.RelatedEventId).HasColumnName("related_event_id");
 
         builder.HasIndex(e => new { e.CounterId, e.CreatedAt });
     }

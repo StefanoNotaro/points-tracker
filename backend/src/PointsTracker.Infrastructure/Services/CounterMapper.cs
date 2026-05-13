@@ -40,7 +40,24 @@ public class CounterMapper(ICounterAuthorizationService authService) : ICounterM
             counter.SideSwitchCount,
             counter.PendingSideSwitchConfirmation,
             counter.IndoorSwitchEverySets,
-            counter.BeachAutoSwitchSides
+            counter.BeachAutoSwitchSides,
+            counter.CanUndo,
+            counter.CanRedo,
+            counter.Events
+                .OrderBy(e => e.CreatedAt)
+                .Select(e => new CounterEventDto(
+                    e.Id,
+                    e.SetNumber,
+                    e.EventType,
+                    e.Team.ToString(),
+                    e.ScoreABefore,
+                    e.ScoreBBefore,
+                    e.ScoreAAfter,
+                    e.ScoreBAfter,
+                    e.IsUndone,
+                    e.RelatedEventId,
+                    e.CreatedAt))
+                .ToList()
         );
     }
 }

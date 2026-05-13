@@ -195,16 +195,73 @@ public class Counter
         Touch();
     }
 
+    /// <summary>
+    /// True when there is at least one active score event that can be rolled back.
+    /// </summary>
+    public bool CanUndo => _events.Any(IsUndoTarget);
+
+    /// <summary>
+    /// True when the latest event is an undo/redo (so a redo is the natural next
+    /// action) AND there is an undone score event waiting to be re-applied.
+    /// A new score action implicitly clears the redo stack.
+    /// </summary>
+    public bool CanRedo
+    {
+        get
+        {
+            var last = _events.LastOrDefault();
+            if (last is null) return false;
+            if (last.EventType != "undo" && last.EventType != "redo") return false;
+            return _events.Any(e => IsScoreEvent(e) && e.IsUndone);
+        }
+    }
+
     public void Undo(Guid? actorUserId)
     {
         EnsureActive();
-        var last = _events.LastOrDefault(e => e.EventType != "undo");
-        if (last is null) return;
+        // Walk backwards through events. The first score event that is not already
+        // undone is the one we roll back. Repeated calls keep stepping further back.
+        var target = _events
+            .AsEnumerable()
+            .Reverse()
+            .FirstOrDefault(IsUndoTarget);
+        if (target is null) return;
 
-        CurrentSet.SetScores(last.ScoreABefore, last.ScoreBBefore);
-        RecordEvent("undo", last.Team, actorUserId);
+        // Restore the current set's score to the state BEFORE the target event.
+        // (Same simplification as before: cross-set undo is out of scope.)
+        if (target.SetNumber == CurrentSetNumber)
+            CurrentSet.SetScores(target.ScoreABefore, target.ScoreBBefore);
+
+        target.IsUndone = true;
+        RecordEvent("undo", target.Team, actorUserId, relatedEventId: target.Id);
         Touch();
     }
+
+    public void Redo(Guid? actorUserId)
+    {
+        EnsureActive();
+        if (!CanRedo) return;
+
+        // Re-apply the most recently undone score event.
+        var target = _events
+            .AsEnumerable()
+            .Reverse()
+            .FirstOrDefault(e => IsScoreEvent(e) && e.IsUndone);
+        if (target is null) return;
+
+        if (target.SetNumber == CurrentSetNumber)
+            CurrentSet.SetScores(target.ScoreAAfter, target.ScoreBAfter);
+
+        target.IsUndone = false;
+        RecordEvent("redo", target.Team, actorUserId, relatedEventId: target.Id);
+        Touch();
+    }
+
+    private static bool IsScoreEvent(CounterEvent e) =>
+        e.EventType == "score_increment" || e.EventType == "score_decrement";
+
+    private static bool IsUndoTarget(CounterEvent e) =>
+        IsScoreEvent(e) && !e.IsUndone;
 
     public void UpdateTeamName(Team team, string name)
     {
@@ -233,7 +290,7 @@ public class Counter
             throw new DomainException("Counter is not active.");
     }
 
-    private void RecordEvent(string eventType, Team team, Guid? actorUserId)
+    private void RecordEvent(string eventType, Team team, Guid? actorUserId, Guid? relatedEventId = null)
     {
         var previous = _events.LastOrDefault();
         var scoreABefore = previous?.ScoreAAfter ?? 0;
@@ -254,7 +311,8 @@ public class Counter
             ScoreAAfter = (short)CurrentScoreA,
             ScoreBAfter = (short)CurrentScoreB,
             ActorUserId = actorUserId,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
+            RelatedEventId = relatedEventId
         });
     }
 

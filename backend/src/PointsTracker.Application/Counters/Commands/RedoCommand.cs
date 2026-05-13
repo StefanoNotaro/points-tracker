@@ -6,7 +6,7 @@ using PointsTracker.Domain.Interfaces;
 
 namespace PointsTracker.Application.Counters.Commands;
 
-public record UndoCommand(
+public record RedoCommand(
     Guid CounterId,
     Guid? ActorUserId,
     string? SessionToken,
@@ -14,16 +14,15 @@ public record UndoCommand(
     int Count = 1
 ) : IRequest<CounterDto>;
 
-public class UndoHandler(
+public class RedoHandler(
     ICounterRepository counterRepo,
     ICounterAuthorizationService authService,
     ICounterMapper mapper
-) : IRequestHandler<UndoCommand, CounterDto>
+) : IRequestHandler<RedoCommand, CounterDto>
 {
-    // Hard cap so a misbehaving client can't ask for a 10,000-step rewind.
-    private const int MaxUndoSteps = 50;
+    private const int MaxRedoSteps = 50;
 
-    public async Task<CounterDto> Handle(UndoCommand cmd, CancellationToken ct)
+    public async Task<CounterDto> Handle(RedoCommand cmd, CancellationToken ct)
     {
         var counter = await counterRepo.GetByIdAsync(cmd.CounterId, ct)
             ?? throw new NotFoundException(nameof(Domain.Entities.Counter), cmd.CounterId);
@@ -31,9 +30,9 @@ public class UndoHandler(
         var access = authService.GetAccess(counter, cmd.ActorUserId, cmd.SessionToken, cmd.ShareToken);
         if (!access.CanEdit) throw new ForbiddenException();
 
-        var steps = Math.Clamp(cmd.Count, 1, MaxUndoSteps);
-        for (var i = 0; i < steps && counter.CanUndo; i++)
-            counter.Undo(cmd.ActorUserId);
+        var steps = Math.Clamp(cmd.Count, 1, MaxRedoSteps);
+        for (var i = 0; i < steps && counter.CanRedo; i++)
+            counter.Redo(cmd.ActorUserId);
 
         await counterRepo.SaveChangesAsync(ct);
         return mapper.ToDto(counter, cmd.ActorUserId, cmd.SessionToken, cmd.ShareToken);

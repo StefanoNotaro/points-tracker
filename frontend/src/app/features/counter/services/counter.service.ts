@@ -44,8 +44,12 @@ export class CounterService {
     );
   }
 
-  undo(id: string): Promise<Counter> {
-    return firstValueFrom(this.http.post<Counter>(`${this.base}/${id}/undo`, {}));
+  undo(id: string, count = 1): Promise<Counter> {
+    return firstValueFrom(this.http.post<Counter>(`${this.base}/${id}/undo`, { count }));
+  }
+
+  redo(id: string, count = 1): Promise<Counter> {
+    return firstValueFrom(this.http.post<Counter>(`${this.base}/${id}/redo`, { count }));
   }
 
   resolveSideSwitch(id: string, confirm: boolean): Promise<Counter> {

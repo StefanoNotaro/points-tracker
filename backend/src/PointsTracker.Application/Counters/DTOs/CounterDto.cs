@@ -22,7 +22,24 @@ public record CounterDto(
     int SideSwitchCount,
     bool PendingSideSwitchConfirmation,
     int? IndoorSwitchEverySets,
-    bool BeachAutoSwitchSides
+    bool BeachAutoSwitchSides,
+    bool CanUndo,
+    bool CanRedo,
+    IReadOnlyList<CounterEventDto> Events
+);
+
+public record CounterEventDto(
+    Guid Id,
+    int SetNumber,
+    string EventType,
+    string Team,
+    int ScoreABefore,
+    int ScoreBBefore,
+    int ScoreAAfter,
+    int ScoreBAfter,
+    bool IsUndone,
+    Guid? RelatedEventId,
+    DateTime CreatedAt
 );
 
 public record SportRulesDto(
