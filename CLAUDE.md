@@ -105,6 +105,36 @@ points-tracker/
 - Lazy-load every feature route.
 - Full guidelines: `docs/UI_GUIDELINES.md`.
 
+### Responsive design — mobile-first, desktop-aware
+
+This app is **mobile-first**. The primary use-case is a person scoring a match
+from a phone at the side of the court. Desktop is a supported secondary target,
+not the design baseline.
+
+- **Default styles target mobile** (~360–430 px wide). Apply `sm:` / `md:` / `lg:`
+  Tailwind breakpoints only to *enhance* the layout for larger screens, never to
+  "fix" a desktop-first design.
+- **Touch targets ≥ 44 × 44 px** for every interactive element. Score increment
+  buttons should be substantially larger — they're the one-tap action this app
+  exists for.
+- **Reachability**: primary actions sit in the lower half of the screen so a
+  one-handed phone user can reach them with a thumb. Navigation / less-frequent
+  actions go top.
+- **Single-column on mobile**, multi-column / wider container on `md+`. Cap the
+  shell at a comfortable reading width (`max-w-2xl` or similar) so the desktop
+  view doesn't stretch absurdly.
+- **Progressive disclosure**: don't render rarely-used controls (edit team
+  names, custom rules, share, advanced match info) up-front. Hide them behind a
+  toggle, menu, or "more" affordance. The scoreboard + score buttons are the
+  only things visible by default during an active match.
+- **Icons over text labels** whenever the action is unambiguous. Always keep an
+  `aria-label` / `title` for accessibility. Material Symbols Rounded is the
+  icon set; use a consistent weight.
+- **No hover-only affordances** — every interaction must have a tap equivalent.
+  `hover:` styles are decorative, never required.
+- Test every change at ≤ 390 px width *first*; only then verify it still looks
+  reasonable at `md` (768 px) and `lg` (1024 px+).
+
 ## Backend Rules
 
 - Follow **Clean Architecture** layers strictly — the Domain layer has zero external dependencies.

@@ -4,7 +4,11 @@ namespace PointsTracker.Domain.Entities;
 
 public class CounterSet
 {
-    public Guid Id { get; private set; } = Guid.NewGuid();
+    // Don't initialize with Guid.NewGuid() — when a new set is added to an already-
+    // tracked Counter (after a set is won), EF Core would otherwise mark it as
+    // Modified instead of Added because the PK is non-default. EF will fill in a
+    // fresh Guid on save.
+    public Guid Id { get; private set; }
     public Guid CounterId { get; private set; }
     public int SetNumber { get; private set; }
     public int ScoreA { get; private set; }

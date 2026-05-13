@@ -46,6 +46,6 @@ public class UpdateScoreHandler(
         else counter.DecrementScore(team, cmd.ActorUserId);
 
         await counterRepo.SaveChangesAsync(ct);
-        return mapper.ToDto(counter, cmd.ActorUserId, cmd.ShareToken);
+        return mapper.ToDto(counter, cmd.ActorUserId, cmd.SessionToken, cmd.ShareToken);
     }
 }

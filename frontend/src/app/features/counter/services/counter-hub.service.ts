@@ -14,19 +14,27 @@ import { AuthService } from '../../../core/auth/auth.service';
 export class CounterHubService implements OnDestroy {
   private readonly auth = inject(AuthService);
   private connection: HubConnection | null = null;
+  private currentCounterId: string | null = null;
 
   readonly scoreUpdated$ = new Subject<Counter>();
   readonly connectionStateChanged$ = new Subject<HubConnectionState>();
 
   async connect(counterId: string): Promise<void> {
-    if (this.connection?.state === HubConnectionState.Connected) {
-      await this.joinGroup(counterId);
-      return;
+    // If a connection already exists, just switch groups instead of rebuilding.
+    if (this.connection) {
+      if (this.connection.state === HubConnectionState.Connected) {
+        await this.switchGroup(counterId);
+        return;
+      }
+      // Stale/failed connection — tear it down before rebuilding.
+      try { await this.connection.stop(); } catch { /* ignore */ }
+      this.connection = null;
     }
 
     this.connection = new HubConnectionBuilder()
       .withUrl(`${environment.hubUrl}/counter`, {
-        accessTokenFactory: () => this.auth.getAccessToken() ?? '',
+        // Returning undefined (not '') tells SignalR not to send an Authorization header.
+        accessTokenFactory: () => this.auth.getAccessToken() ?? undefined as unknown as string,
       })
       .withAutomaticReconnect()
       .configureLogging(environment.production ? LogLevel.Error : LogLevel.Warning)
@@ -42,24 +50,54 @@ export class CounterHubService implements OnDestroy {
 
     this.connection.onreconnected(async () => {
       this.connectionStateChanged$.next(HubConnectionState.Connected);
-      await this.joinGroup(counterId);
+      // Rejoin whatever counter is currently active, not the one captured at connect time.
+      if (this.currentCounterId) {
+        await this.joinGroup(this.currentCounterId);
+      }
+    });
+
+    this.connection.onclose(() => {
+      this.connectionStateChanged$.next(HubConnectionState.Disconnected);
     });
 
     await this.connection.start();
-    await this.joinGroup(counterId);
+    await this.switchGroup(counterId);
     this.connectionStateChanged$.next(HubConnectionState.Connected);
   }
 
   async disconnect(counterId: string): Promise<void> {
-    if (this.connection?.state === HubConnectionState.Connected) {
-      await this.connection.invoke('LeaveCounter', counterId);
+    if (!this.connection) return;
+
+    if (this.connection.state === HubConnectionState.Connected) {
+      try {
+        await this.connection.invoke('LeaveCounter', counterId);
+      } catch {
+        /* ignore — we're tearing down anyway */
+      }
     }
+
+    try { await this.connection.stop(); } catch { /* ignore */ }
+    this.connection = null;
+    this.currentCounterId = null;
   }
 
   async ngOnDestroy(): Promise<void> {
-    await this.connection?.stop();
+    if (this.connection) {
+      try { await this.connection.stop(); } catch { /* ignore */ }
+      this.connection = null;
+    }
     this.scoreUpdated$.complete();
     this.connectionStateChanged$.complete();
+  }
+
+  private async switchGroup(counterId: string): Promise<void> {
+    if (this.currentCounterId && this.currentCounterId !== counterId) {
+      try {
+        await this.connection!.invoke('LeaveCounter', this.currentCounterId);
+      } catch { /* ignore — best-effort */ }
+    }
+    await this.joinGroup(counterId);
+    this.currentCounterId = counterId;
   }
 
   private async joinGroup(counterId: string): Promise<void> {

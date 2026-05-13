@@ -4,6 +4,7 @@ import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import {
   Counter,
+  CounterSummary,
   CreateCounterRequest,
   CreateCounterResponse,
   ShareTokenResponse,
@@ -47,6 +48,18 @@ export class CounterService {
     return firstValueFrom(this.http.post<Counter>(`${this.base}/${id}/undo`, {}));
   }
 
+  resolveSideSwitch(id: string, confirm: boolean): Promise<Counter> {
+    return firstValueFrom(
+      this.http.post<Counter>(`${this.base}/${id}/side-switch`, { confirm }),
+    );
+  }
+
+  switchSidesManually(id: string): Promise<Counter> {
+    return firstValueFrom(
+      this.http.post<Counter>(`${this.base}/${id}/switch-sides`, {}),
+    );
+  }
+
   updateTeamName(id: string, team: 'A' | 'B', name: string): Promise<Counter> {
     return firstValueFrom(
       this.http.patch<Counter>(`${this.base}/${id}/teams`, { team, name }),
@@ -61,5 +74,14 @@ export class CounterService {
 
   joinByShareToken(token: string): Promise<Counter> {
     return firstValueFrom(this.http.get<Counter>(`${this.base}/join/${token}`));
+  }
+
+  listMine(): Promise<CounterSummary[]> {
+    return firstValueFrom(this.http.get<CounterSummary[]>(`${this.base}/mine`));
+  }
+
+  async delete(id: string): Promise<void> {
+    await firstValueFrom(this.http.delete<void>(`${this.base}/${id}`));
+    this.sessionTokens.removeToken(id);
   }
 }

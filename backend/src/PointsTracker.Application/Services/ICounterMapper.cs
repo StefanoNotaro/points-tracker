@@ -5,5 +5,5 @@ namespace PointsTracker.Application.Services;
 
 public interface ICounterMapper
 {
-    CounterDto ToDto(Counter counter, Guid? actorUserId, string? shareToken);
+    CounterDto ToDto(Counter counter, Guid? actorUserId, string? sessionToken, string? shareToken);
 }

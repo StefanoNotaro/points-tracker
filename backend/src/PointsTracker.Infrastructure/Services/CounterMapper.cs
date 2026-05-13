@@ -6,10 +6,11 @@ namespace PointsTracker.Infrastructure.Services;
 
 public class CounterMapper(ICounterAuthorizationService authService) : ICounterMapper
 {
-    public CounterDto ToDto(Counter counter, Guid? actorUserId, string? shareToken)
+    public CounterDto ToDto(Counter counter, Guid? actorUserId, string? sessionToken, string? shareToken)
     {
-        var access = authService.GetAccess(counter, actorUserId, null, shareToken);
+        var access = authService.GetAccess(counter, actorUserId, sessionToken, shareToken);
 
+        var rules = counter.EffectiveRules;
         return new CounterDto(
             counter.Id,
             counter.SportType.ToString().ToLowerInvariant(),
@@ -26,7 +27,20 @@ public class CounterMapper(ICounterAuthorizationService authService) : ICounterM
             access.IsOwner,
             access.CanEdit,
             counter.CreatedAt,
-            counter.UpdatedAt
+            counter.UpdatedAt,
+            new SportRulesDto(
+                rules.PointsPerSet,
+                rules.LastSetPoints,
+                rules.SetsToWin,
+                rules.TotalSets,
+                rules.WinByTwo,
+                rules.SideSwitchMode.ToString().ToLowerInvariant(),
+                rules.SideSwitchInterval,
+                rules.SideSwitchIntervalLastSet),
+            counter.SideSwitchCount,
+            counter.PendingSideSwitchConfirmation,
+            counter.IndoorSwitchEverySets,
+            counter.BeachAutoSwitchSides
         );
     }
 }

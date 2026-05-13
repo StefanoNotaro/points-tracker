@@ -1,4 +1,4 @@
-export type SportType = 'volleyball' | 'beach_volleyball';
+export type SportType = 'volleyball' | 'beach_volleyball' | 'custom';
 
 export interface SportConfig {
   type: SportType;
@@ -30,6 +30,16 @@ export const SPORT_CONFIGS: Record<SportType, SportConfig> = {
     lastSetPoints: 15,
     setsToWin: 2,
     totalSets: 3,
+    winByTwo: true,
+  },
+  custom: {
+    type: 'custom',
+    label: 'Custom',
+    icon: 'tune',
+    pointsPerSet: 25,
+    lastSetPoints: 15,
+    setsToWin: 3,
+    totalSets: 5,
     winByTwo: true,
   },
 };

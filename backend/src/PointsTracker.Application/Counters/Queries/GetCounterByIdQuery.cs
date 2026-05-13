@@ -25,6 +25,6 @@ public class GetCounterByIdHandler(
             ?? throw new NotFoundException(nameof(Domain.Entities.Counter), query.CounterId);
 
         var access = authService.GetAccess(counter, query.ActorUserId, query.SessionToken, query.ShareToken);
-        return mapper.ToDto(counter, query.ActorUserId, query.ShareToken);
+        return mapper.ToDto(counter, query.ActorUserId, query.SessionToken, query.ShareToken);
     }
 }

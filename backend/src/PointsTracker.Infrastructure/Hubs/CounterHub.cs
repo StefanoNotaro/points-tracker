@@ -1,8 +1,10 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using PointsTracker.Application.Counters.DTOs;
 
 namespace PointsTracker.Infrastructure.Hubs;
 
+[AllowAnonymous]
 public class CounterHub : Hub
 {
     public async Task JoinCounter(string counterId)

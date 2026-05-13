@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find \"C:\\\\Users\\\\stefa\\\\RiderProjects\\\\points-tracker\" -name \"auth.service.ts\" 2>/dev/null)",
+      "Bash(npx ng *)",
+      "Bash(xargs grep -l \"Auth\\\\|Jwt\\\\|Bearer\\\\|Oidc\\\\|OpenId\")",
+      "Bash(xargs grep -l \"\")",
+      "Bash(xargs grep -l \"SportType\\\\|BeachVolleyball\\\\|Volleyball\")",
+      "Bash(xargs cat)",
+      "Bash(dotnet build *)",
+      "Bash(npx tsc *)",
+      "Bash(echo \"EXIT=$?\")",
+      "Bash(dotnet ef *)",
+      "Bash(rm C:/Users/stefa/RiderProjects/points-tracker/backend/src/PointsTracker.Infrastructure/Persistence/Migrations/20260513140000_AddSideSwitch.cs)",
+      "Bash(ASPNETCORE_ENVIRONMENT=Development dotnet ef database update --project src/PointsTracker.Infrastructure --startup-project src/PointsTracker.Api)",
+      "Bash(ASPNETCORE_ENVIRONMENT=Development dotnet ef migrations list --project src/PointsTracker.Infrastructure --startup-project src/PointsTracker.Api)",
+      "Bash(PGPASSWORD=devpassword psql -h localhost -U pts_app -d points_tracker_dev -c \"\\\\d counters\")",
+      "Bash(where psql.exe)",
+      "Bash(\"C:/Program Files/PostgreSQL/16/bin/psql.exe\" --version)",
+      "Bash(\"C:/Program Files/PostgreSQL/15/bin/psql.exe\" --version)",
+      "Bash(\"C:/Program Files/PostgreSQL/17/bin/psql.exe\" --version)",
+      "Bash(docker exec *)",
+      "Bash(ASPNETCORE_ENVIRONMENT=Development dotnet ef migrations add AddBeachAutoSwitch --project src/PointsTracker.Infrastructure --startup-project src/PointsTracker.Api)",
+      "Bash(echo \"FE_EXIT=$?\")"
+    ]
+  }
+}

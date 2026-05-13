@@ -1,10 +1,10 @@
 export const environment = {
   production: false,
-  apiUrl: 'http://localhost:8080/api',
-  hubUrl: 'http://localhost:8080/hubs',
+  apiUrl: '/api',
+  hubUrl: '/hubs',
   oidc: {
-    issuer: 'https://auth.yourdomain.com/application/o/points-tracker/',
-    clientId: 'points-tracker',
+    issuer: 'https://auth.snotaro.dev/application/o/points-tracker/',
+    clientId: 'SDhkCEcb6JbCviinY1itp2Caxsk8lEqz7pbHFiAa',
     scope: 'openid profile email offline_access',
     redirectUri: window.location.origin,
     postLogoutRedirectUri: window.location.origin,
