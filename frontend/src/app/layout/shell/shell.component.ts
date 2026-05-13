@@ -10,12 +10,16 @@ import { AuthService } from '../../core/auth/auth.service';
   imports: [RouterOutlet, NavBarComponent, ToastContainerComponent, LoadingSpinnerComponent],
   template: `
     @if (!auth.isInitialized()) {
-      <pts-loading-spinner [overlay]="true" size="lg" />
+      <div class="fixed inset-0 flex items-center justify-center bg-bg">
+        <pts-loading-spinner size="lg" />
+      </div>
     } @else {
-      <pts-nav-bar />
-      <main class="max-w-5xl mx-auto px-4 py-6 min-h-[calc(100vh-3.5rem)]">
-        <router-outlet />
-      </main>
+      <div class="min-h-[100dvh] flex flex-col bg-bg text-on-surface">
+        <pts-nav-bar />
+        <main class="flex-1 w-full max-w-2xl mx-auto px-3 sm:px-4 py-4 sm:py-6 pb-[env(safe-area-inset-bottom)]">
+          <router-outlet />
+        </main>
+      </div>
       <pts-toast-container />
     }
   `,

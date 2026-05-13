@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
@@ -6,6 +7,7 @@ using PointsTracker.Api.Endpoints;
 using PointsTracker.Api.Middleware;
 using PointsTracker.Application.Common;
 using PointsTracker.Infrastructure;
+using PointsTracker.Infrastructure.Auth;
 using PointsTracker.Infrastructure.Hubs;
 using PointsTracker.Infrastructure.Persistence;
 
@@ -29,6 +31,50 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         opts.Audience = builder.Configuration["Authentik:ClientId"];
         opts.RequireHttpsMetadata = !builder.Environment.IsDevelopment();
         opts.TokenValidationParameters.ValidateAudience = false;
+        opts.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                var accessToken = context.Request.Query["access_token"];
+
+                var path = context.HttpContext.Request.Path;
+
+                if (!string.IsNullOrEmpty(accessToken) &&
+                    path.StartsWithSegments("/hubs"))
+                {
+                    context.Token = accessToken;
+                }
+
+                return Task.CompletedTask;
+            },
+
+            // Sync the external identity into our users table once per request and
+            // attach pts_id / pts_role claims, so ctx.User.GetUserId() resolves the
+            // internal Guid that ownership checks compare against.
+            OnTokenValidated = async context =>
+            {
+                if (context.Principal is null) return;
+
+                var sync = context.HttpContext.RequestServices.GetRequiredService<UserSyncService>();
+                try
+                {
+                    var user = await sync.SyncAsync(context.Principal, context.HttpContext.RequestAborted);
+
+                    var identity = context.Principal.Identity as ClaimsIdentity;
+                    if (identity is not null && !identity.HasClaim(c => c.Type == "pts_id"))
+                    {
+                        identity.AddClaim(new Claim("pts_id", user.Id.ToString()));
+                        identity.AddClaim(new Claim("pts_role", user.Role));
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // Don't reject the token just because user-sync failed; log and continue.
+                    var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
+                    logger.LogWarning(ex, "User sync failed during token validation");
+                }
+            }
+        };
     });
 
 builder.Services.AddAuthorization();
@@ -38,6 +84,15 @@ builder.Services.AddCors(opts => opts.AddDefaultPolicy(policy =>
           .AllowAnyHeader()
           .AllowAnyMethod()
           .AllowCredentials()));
+
+// SignalR is also registered in Infrastructure; configure JSON here so payloads
+// match the camelCase contract the Angular client expects (Counter.teamAName, etc).
+builder.Services.AddSignalR()
+    .AddJsonProtocol(opts =>
+    {
+        opts.PayloadSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+        opts.PayloadSerializerOptions.DictionaryKeyPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+    });
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();

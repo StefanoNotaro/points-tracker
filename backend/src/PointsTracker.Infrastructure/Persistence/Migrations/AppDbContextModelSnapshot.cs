@@ -29,22 +29,64 @@ namespace PointsTracker.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<bool>("BeachAutoSwitchSides")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true)
+                        .HasColumnName("beach_auto_switch_sides");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
+
+                    b.Property<int?>("CustomLastSetPoints")
+                        .HasColumnType("integer")
+                        .HasColumnName("custom_last_set_points");
+
+                    b.Property<int?>("CustomPointsPerSet")
+                        .HasColumnType("integer")
+                        .HasColumnName("custom_points_per_set");
+
+                    b.Property<int?>("CustomSetsToWin")
+                        .HasColumnType("integer")
+                        .HasColumnName("custom_sets_to_win");
+
+                    b.Property<int?>("CustomTotalSets")
+                        .HasColumnType("integer")
+                        .HasColumnName("custom_total_sets");
+
+                    b.Property<bool?>("CustomWinByTwo")
+                        .HasColumnType("boolean")
+                        .HasColumnName("custom_win_by_two");
 
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("deleted_at");
 
+                    b.Property<int?>("IndoorSwitchEverySets")
+                        .HasColumnType("integer")
+                        .HasColumnName("indoor_switch_every_sets");
+
                     b.Property<Guid?>("OwnerUserId")
                         .HasColumnType("uuid")
                         .HasColumnName("owner_user_id");
+
+                    b.Property<bool>("PendingSideSwitchConfirmation")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("pending_side_switch_confirmation");
 
                     b.Property<string>("SessionTokenHash")
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)")
                         .HasColumnName("session_token_hash");
+
+                    b.Property<int>("SideSwitchCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0)
+                        .HasColumnName("side_switch_count");
 
                     b.Property<string>("SportType")
                         .IsRequired()

@@ -1,18 +1,32 @@
-FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+# syntax=docker/dockerfile:1.7
+
+# ---- Build ----
+FROM mcr.microsoft.com/dotnet/sdk:9.0-alpine AS build
 WORKDIR /src
 
-COPY ["src/PointsTracker.Domain/PointsTracker.Domain.csproj", "src/PointsTracker.Domain/"]
-COPY ["src/PointsTracker.Application/PointsTracker.Application.csproj", "src/PointsTracker.Application/"]
+# Restore first for better layer caching.
+COPY ["src/PointsTracker.Domain/PointsTracker.Domain.csproj",                 "src/PointsTracker.Domain/"]
+COPY ["src/PointsTracker.Application/PointsTracker.Application.csproj",       "src/PointsTracker.Application/"]
 COPY ["src/PointsTracker.Infrastructure/PointsTracker.Infrastructure.csproj", "src/PointsTracker.Infrastructure/"]
-COPY ["src/PointsTracker.Api/PointsTracker.Api.csproj", "src/PointsTracker.Api/"]
+COPY ["src/PointsTracker.Api/PointsTracker.Api.csproj",                       "src/PointsTracker.Api/"]
 RUN dotnet restore "src/PointsTracker.Api/PointsTracker.Api.csproj"
 
-COPY . .
-RUN dotnet publish "src/PointsTracker.Api/PointsTracker.Api.csproj" -c Release -o /app/publish --no-restore
+COPY src/ src/
+RUN dotnet publish "src/PointsTracker.Api/PointsTracker.Api.csproj" \
+    -c Release -o /app/publish --no-restore /p:UseAppHost=false
 
-FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS final
+# ---- Runtime ----
+FROM mcr.microsoft.com/dotnet/aspnet:9.0-alpine AS runtime
 WORKDIR /app
+
+# Run as non-root.
+RUN addgroup -S app && adduser -S -G app app
+USER app
+
 COPY --from=build /app/publish .
-EXPOSE 8080
+
 ENV ASPNETCORE_URLS=http://+:8080
+ENV ASPNETCORE_ENVIRONMENT=Production
+EXPOSE 8080
+
 ENTRYPOINT ["dotnet", "PointsTracker.Api.dll"]

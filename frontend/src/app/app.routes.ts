@@ -13,6 +13,14 @@ export const routes: Routes = [
           import('./features/counter/counter.routes').then((m) => m.COUNTER_ROUTES),
       },
       {
+        path: 'my-counters',
+        canActivate: [authGuard],
+        loadComponent: () =>
+          import('./features/counter/components/my-counters/my-counters.component').then(
+            (m) => m.MyCountersComponent,
+          ),
+      },
+      {
         path: 'settings',
         canActivate: [authGuard],
         loadComponent: () =>

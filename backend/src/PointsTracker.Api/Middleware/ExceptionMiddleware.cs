@@ -1,6 +1,7 @@
 using System.Net;
 using System.Text.Json;
 using FluentValidation;
+using Microsoft.EntityFrameworkCore;
 using PointsTracker.Domain.Exceptions;
 
 namespace PointsTracker.Api.Middleware;
@@ -32,6 +33,18 @@ public class ExceptionMiddleware(RequestDelegate next, ILogger<ExceptionMiddlewa
             DomainException => (HttpStatusCode.UnprocessableEntity, ex.Message, null),
             _ => (HttpStatusCode.InternalServerError, "An unexpected error occurred.", null)
         };
+
+        if (ex is DbUpdateConcurrencyException dbEx)
+        {
+            foreach (var entry in dbEx.Entries)
+            {
+                var pk = entry.Metadata.FindPrimaryKey();
+                var pkValue = pk is null ? "?" : string.Join(",", pk.Properties
+                    .Select(p => entry.OriginalValues[p]?.ToString() ?? "null"));
+                logger.LogError("Concurrency conflict on {Entity} pk={PrimaryKey} state={State}",
+                    entry.Entity.GetType().Name, pkValue, entry.State);
+            }
+        }
 
         if (status == HttpStatusCode.InternalServerError)
             logger.LogError(ex, "Unhandled exception");

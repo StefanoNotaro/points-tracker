@@ -11,6 +11,19 @@ export interface CounterSet {
   winner: Team | null;
 }
 
+export type SideSwitchMode = 'none' | 'confirmeverysets' | 'autoeverypoints';
+
+export interface SportRulesDto {
+  pointsPerSet: number;
+  lastSetPoints: number;
+  setsToWin: number;
+  totalSets: number;
+  winByTwo: boolean;
+  sideSwitchMode: SideSwitchMode;
+  sideSwitchInterval: number;
+  sideSwitchIntervalLastSet: number;
+}
+
 export interface Counter {
   id: string;
   sportType: SportType;
@@ -27,12 +40,34 @@ export interface Counter {
   canEdit: boolean;
   createdAt: string;
   updatedAt: string;
+  rules: SportRulesDto;
+  sideSwitchCount: number;
+  pendingSideSwitchConfirmation: boolean;
+  indoorSwitchEverySets: number | null;
+  beachAutoSwitchSides: boolean;
+}
+
+export interface CounterSummary {
+  id: string;
+  sportType: SportType;
+  teamAName: string;
+  teamBName: string;
+  status: CounterStatus;
+  setsWonA: number;
+  setsWonB: number;
+  currentScoreA: number;
+  currentScoreB: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface CreateCounterRequest {
   sportType: SportType;
   teamAName: string;
   teamBName: string;
+  customRules?: Pick<SportRulesDto, 'pointsPerSet' | 'lastSetPoints' | 'setsToWin' | 'totalSets' | 'winByTwo'>;
+  indoorSwitchEverySets?: number | null;
+  beachAutoSwitchSides?: boolean;
 }
 
 export interface CreateCounterResponse {

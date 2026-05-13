@@ -35,10 +35,17 @@ export class CounterStore implements OnDestroy {
       const counter = await this.counterService.getById(counterId);
       this._counter.set(counter);
       this._loadState.set('loaded');
-      await this.subscribeToHub(counterId);
     } catch {
       this._loadState.set('error');
-      this.notifications.error('Failed to load counter.');
+      return;
+    }
+
+    // SignalR is best-effort — a connection failure must not hide a loaded counter.
+    try {
+      await this.subscribeToHub(counterId);
+    } catch (err) {
+      console.warn('Real-time updates unavailable:', err);
+      this.notifications.error('Live updates unavailable. Scores will not refresh automatically.');
     }
   }
 
@@ -49,11 +56,33 @@ export class CounterStore implements OnDestroy {
     this._actionPending.set(true);
     try {
       const updated = await this.counterService.incrementScore(counter.id, team);
-      this._counter.set(updated);
+      this.applyUpdate(updated);
     } catch {
       this.notifications.error('Failed to update score.');
     } finally {
       this._actionPending.set(false);
+    }
+  }
+
+  async resolveSideSwitch(confirm: boolean): Promise<void> {
+    const counter = this._counter();
+    if (!counter) return;
+    try {
+      const updated = await this.counterService.resolveSideSwitch(counter.id, confirm);
+      this.applyUpdate(updated);
+    } catch {
+      this.notifications.error('Failed to record side switch.');
+    }
+  }
+
+  async switchSidesManually(): Promise<void> {
+    const counter = this._counter();
+    if (!counter) return;
+    try {
+      const updated = await this.counterService.switchSidesManually(counter.id);
+      this.applyUpdate(updated);
+    } catch {
+      this.notifications.error('Failed to switch sides.');
     }
   }
 
@@ -64,7 +93,7 @@ export class CounterStore implements OnDestroy {
     this._actionPending.set(true);
     try {
       const updated = await this.counterService.decrementScore(counter.id, team);
-      this._counter.set(updated);
+      this.applyUpdate(updated);
     } catch {
       this.notifications.error('Failed to update score.');
     } finally {
@@ -79,7 +108,7 @@ export class CounterStore implements OnDestroy {
     this._actionPending.set(true);
     try {
       const updated = await this.counterService.undo(counter.id);
-      this._counter.set(updated);
+      this.applyUpdate(updated);
     } catch {
       this.notifications.error('Failed to undo.');
     } finally {
@@ -92,7 +121,7 @@ export class CounterStore implements OnDestroy {
     if (!counter) return;
     try {
       const updated = await this.counterService.updateTeamName(counter.id, team, name);
-      this._counter.set(updated);
+      this.applyUpdate(updated);
     } catch {
       this.notifications.error('Failed to update team name.');
     }
@@ -108,8 +137,21 @@ export class CounterStore implements OnDestroy {
 
   private async subscribeToHub(counterId: string): Promise<void> {
     this.hubSub = this.hubService.scoreUpdated$.subscribe((updated) => {
-      this._counter.set(updated);
+      // The broadcast carries isOwner/canEdit computed for whoever made the change,
+      // not for this client. Preserve our own access flags so a viewer doesn't
+      // suddenly see edit buttons just because the owner moved the score.
+      const current = this._counter();
+      const merged = current
+        ? { ...updated, isOwner: current.isOwner, canEdit: current.canEdit }
+        : updated;
+      this.applyUpdate(merged);
     });
     await this.hubService.connect(counterId);
+  }
+
+  private applyUpdate(next: Counter): void {
+    this._counter.set(next);
+    // The "side switched" notification is handled by the counter page so it can
+    // render as a dialog (auto-dismissed after 5s) rather than a toast.
   }
 }

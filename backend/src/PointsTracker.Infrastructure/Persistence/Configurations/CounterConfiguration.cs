@@ -27,6 +27,29 @@ public class CounterConfiguration : IEntityTypeConfiguration<Counter>
         builder.Property(c => c.UpdatedAt).HasColumnName("updated_at");
         builder.Property(c => c.DeletedAt).HasColumnName("deleted_at");
 
+        builder.Property(c => c.CustomPointsPerSet).HasColumnName("custom_points_per_set");
+        builder.Property(c => c.CustomLastSetPoints).HasColumnName("custom_last_set_points");
+        builder.Property(c => c.CustomSetsToWin).HasColumnName("custom_sets_to_win");
+        builder.Property(c => c.CustomTotalSets).HasColumnName("custom_total_sets");
+        builder.Property(c => c.CustomWinByTwo).HasColumnName("custom_win_by_two");
+
+        builder.Property(c => c.SideSwitchCount).HasColumnName("side_switch_count").HasDefaultValue(0);
+        builder.Property(c => c.PendingSideSwitchConfirmation).HasColumnName("pending_side_switch_confirmation").HasDefaultValue(false);
+        builder.Property(c => c.IndoorSwitchEverySets).HasColumnName("indoor_switch_every_sets");
+        builder.Property(c => c.BeachAutoSwitchSides).HasColumnName("beach_auto_switch_sides").HasDefaultValue(true);
+
+        // Computed read-only properties. EF Core 9 may otherwise try to interpret
+        // CurrentSet as a single-cardinality navigation (and create a shadow FK),
+        // or interpret EffectiveRules as a complex/owned type, both of which break
+        // SaveChanges with phantom UPDATE columns and concurrency exceptions.
+        builder.Ignore(c => c.EffectiveRules);
+        builder.Ignore(c => c.CurrentSet);
+        builder.Ignore(c => c.CurrentSetNumber);
+        builder.Ignore(c => c.CurrentScoreA);
+        builder.Ignore(c => c.CurrentScoreB);
+        builder.Ignore(c => c.SetsWonA);
+        builder.Ignore(c => c.SetsWonB);
+
         builder.HasQueryFilter(c => c.DeletedAt == null);
 
         builder.HasMany(c => c.Sets)

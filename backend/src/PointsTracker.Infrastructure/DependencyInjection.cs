@@ -4,7 +4,6 @@ using Microsoft.Extensions.DependencyInjection;
 using PointsTracker.Application.Services;
 using PointsTracker.Domain.Interfaces;
 using PointsTracker.Infrastructure.Auth;
-using PointsTracker.Infrastructure.Hubs;
 using PointsTracker.Infrastructure.Persistence;
 using PointsTracker.Infrastructure.Repositories;
 using PointsTracker.Infrastructure.Services;
@@ -30,7 +29,8 @@ public static class DependencyInjection
         services.AddScoped<ICounterMapper, CounterMapper>();
         services.AddScoped<UserSyncService>();
 
-        services.AddSignalR();
+        // SignalR is registered in the API layer so its JsonProtocol options
+        // can be configured alongside the rest of the API JSON pipeline.
 
         return services;
     }

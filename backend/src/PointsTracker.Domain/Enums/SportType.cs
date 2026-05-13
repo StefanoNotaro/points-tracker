@@ -3,5 +3,7 @@ namespace PointsTracker.Domain.Enums;
 public enum SportType
 {
     Volleyball,
-    BeachVolleyball
+    BeachVolleyball,
+    Beach_Volleyball,
+    Custom
 }

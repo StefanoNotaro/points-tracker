@@ -1,9 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
-import { MatButtonModule } from '@angular/material/button';
-import { MatTabsModule } from '@angular/material/tabs';
 import { NgClass } from '@angular/common';
-import { ShareScope, ShareTokenResponse } from '../../models/counter.model';
+import { ShareScope } from '../../models/counter.model';
 import { CounterService } from '../../../features/counter/services/counter.service';
 import { NotificationService } from '../../../core/services/notification.service';
 
@@ -13,55 +11,84 @@ export interface ShareDialogData {
 
 @Component({
   selector: 'pts-share-dialog',
-  imports: [MatDialogModule, MatButtonModule, MatTabsModule, NgClass],
+  imports: [MatDialogModule, NgClass],
   template: `
-    <div class="p-6 min-w-[320px] max-w-sm">
-      <h2 class="text-lg font-semibold text-on-surface mb-4">Share Counter</h2>
+    <div class="p-6 w-full max-w-sm">
 
-      <div class="flex gap-2 mb-4">
+      <!-- Header -->
+      <div class="flex items-center gap-3 mb-5">
+        <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+          <span class="material-symbols-rounded text-primary text-xl">share</span>
+        </div>
+        <h2 class="text-lg font-bold text-on-surface">Share Counter</h2>
+      </div>
+
+      <!-- Scope selector -->
+      <div class="grid grid-cols-2 gap-2 mb-4">
         @for (scope of scopes; track scope.value) {
           <button
             type="button"
-            class="flex-1 py-2 rounded-md text-sm font-medium border-2 transition-all"
-            [ngClass]="
-              selectedScope() === scope.value
-                ? 'border-primary bg-primary/8 text-primary'
-                : 'border-border text-on-surface-muted hover:border-primary/40'
-            "
-            (click)="selectedScope.set(scope.value)"
+            class="flex flex-col items-start gap-1 p-3 rounded-xl border-2 transition-all duration-150 text-left"
+            [ngClass]="selectedScope() === scope.value
+              ? 'border-primary bg-primary/8'
+              : 'border-border bg-surface-raised hover:border-primary/30'"
+            (click)="onScopeChange(scope.value)"
           >
-            {{ scope.label }}
+            <span
+              class="material-symbols-rounded text-lg"
+              [ngClass]="selectedScope() === scope.value ? 'text-primary' : 'text-on-surface-muted'"
+            >{{ scope.icon }}</span>
+            <span
+              class="text-sm font-semibold"
+              [ngClass]="selectedScope() === scope.value ? 'text-primary' : 'text-on-surface'"
+            >{{ scope.label }}</span>
+            <span class="text-xs text-on-surface-muted">{{ scope.description }}</span>
           </button>
         }
       </div>
 
+      <!-- Generated link -->
       @if (shareUrl()) {
-        <div class="bg-surface-variant rounded-md p-3 mb-4">
-          <p class="text-xs text-on-surface-muted mb-1">Share link</p>
-          <p class="text-sm break-all font-mono text-on-surface select-all">{{ shareUrl() }}</p>
+        <div class="bg-surface-variant rounded-xl p-3 mb-4 border border-border">
+          <p class="pts-label mb-1.5">Share link</p>
+          <p class="text-xs font-mono text-on-surface break-all select-all leading-relaxed">
+            {{ shareUrl() }}
+          </p>
         </div>
-        <div class="flex gap-2">
+
+        <div class="flex gap-2 mb-3">
           <button class="pts-btn-primary flex-1" (click)="copyLink()">
-            <span class="material-symbols-rounded text-base mr-1">content_copy</span>
-            Copy Link
+            <span class="material-symbols-rounded text-base">content_copy</span>
+            Copy link
           </button>
-          <button class="pts-btn-secondary" (click)="generate()" [disabled]="loading()">
-            Regenerate
+          <button
+            class="pts-btn-secondary px-3"
+            (click)="generate()"
+            [disabled]="loading()"
+            title="Regenerate link"
+          >
+            <span class="material-symbols-rounded text-base">refresh</span>
           </button>
         </div>
       } @else {
         <button
-          class="pts-btn-primary w-full"
+          class="pts-btn-primary w-full mb-3"
           (click)="generate()"
           [disabled]="loading()"
         >
-          {{ loading() ? 'Generating...' : 'Generate Link' }}
+          @if (loading()) {
+            <span class="material-symbols-rounded animate-spin text-base">progress_activity</span>
+            Generating…
+          } @else {
+            <span class="material-symbols-rounded text-base">link</span>
+            Generate link
+          }
         </button>
       }
 
+      <!-- Close -->
       <button
-        mat-button
-        class="mt-4 w-full text-on-surface-muted"
+        class="w-full text-sm text-on-surface-muted hover:text-on-surface transition-colors py-1"
         (click)="dialogRef.close()"
       >
         Close
@@ -70,19 +97,24 @@ export interface ShareDialogData {
   `,
 })
 export class ShareDialogComponent {
-  readonly data = inject<ShareDialogData>(MAT_DIALOG_DATA);
+  readonly data     = inject<ShareDialogData>(MAT_DIALOG_DATA);
   readonly dialogRef = inject(MatDialogRef<ShareDialogComponent>);
-  private readonly counterService = inject(CounterService);
-  private readonly notifications = inject(NotificationService);
+  private readonly counterService  = inject(CounterService);
+  private readonly notifications   = inject(NotificationService);
 
-  readonly scopes: { value: ShareScope; label: string }[] = [
-    { value: 'read', label: 'View only' },
-    { value: 'edit', label: 'Can edit' },
+  readonly scopes: { value: ShareScope; label: string; description: string; icon: string }[] = [
+    { value: 'read', label: 'View only',  description: 'Can watch live score', icon: 'visibility' },
+    { value: 'edit', label: 'Can score',  description: 'Can add/remove points', icon: 'edit' },
   ];
 
   selectedScope = signal<ShareScope>('read');
-  shareUrl = signal<string | null>(null);
-  loading = signal(false);
+  shareUrl      = signal<string | null>(null);
+  loading       = signal(false);
+
+  onScopeChange(scope: ShareScope): void {
+    this.selectedScope.set(scope);
+    this.shareUrl.set(null); // reset link when scope changes
+  }
 
   async generate(): Promise<void> {
     this.loading.set(true);

@@ -1,6 +1,6 @@
-import { Component, inject, input, OnInit, OnDestroy } from '@angular/core';
+import { Component, inject, input, signal, computed, OnInit, OnDestroy, effect } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
-import { MatButtonModule } from '@angular/material/button';
+import { MatMenuModule } from '@angular/material/menu';
 import { ScoreBoardComponent } from '../../../../shared/components/score-board/score-board.component';
 import { ScoreButtonComponent } from '../../../../shared/components/score-button/score-button.component';
 import { TeamNameEditorComponent } from '../../../../shared/components/team-name-editor/team-name-editor.component';
@@ -22,50 +22,90 @@ import { CounterStore } from '../../store/counter.store';
     ScoreButtonComponent,
     TeamNameEditorComponent,
     LoadingSpinnerComponent,
-    MatButtonModule,
+    MatMenuModule,
   ],
   providers: [CounterStore],
   template: `
+    <!-- Loading -->
     @if (store.isLoading()) {
-      <pts-loading-spinner size="lg" [overlay]="true" />
-    } @else if (store.loadState() === 'error') {
-      <div class="flex flex-col items-center justify-center min-h-[60vh] gap-4 text-center">
-        <span class="material-symbols-rounded text-6xl text-error">error</span>
-        <p class="text-on-surface-muted">Counter not found or unavailable.</p>
+      <div class="flex items-center justify-center min-h-[60vh]">
+        <pts-loading-spinner size="lg" />
       </div>
-    } @else if (store.counter(); as counter) {
-      <div class="flex flex-col gap-8">
 
-        <!-- Header -->
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            <span class="material-symbols-rounded text-primary">
+    <!-- Error -->
+    } @else if (store.loadState() === 'error') {
+      <div class="flex flex-col items-center justify-center min-h-[60vh] gap-4 text-center px-4">
+        <span class="material-symbols-rounded text-7xl text-error">error_outline</span>
+        <h2 class="text-xl font-bold text-on-surface">Counter not found</h2>
+        <p class="text-on-surface-muted text-sm">This counter doesn't exist or you don't have access.</p>
+      </div>
+
+    <!-- Counter loaded -->
+    } @else if (store.counter(); as counter) {
+      <div class="flex flex-col gap-4 sm:gap-5">
+
+        <!-- Top bar: small sport chip + action menu -->
+        <div class="flex items-center justify-between gap-2">
+          <div class="inline-flex items-center gap-1.5 text-on-surface-muted">
+            <span class="material-symbols-rounded text-base text-primary">
               {{ store.sportConfig()?.icon }}
             </span>
-            <span class="text-sm text-on-surface-muted">{{ store.sportConfig()?.label }}</span>
+            <span class="text-xs font-medium uppercase tracking-wide">
+              {{ store.sportConfig()?.label }}
+            </span>
           </div>
-          <div class="flex gap-1">
+
+          <div class="flex items-center gap-0.5">
+            @if (counter.canEdit) {
+              <button
+                type="button"
+                class="pts-btn-icon"
+                (click)="undo()"
+                [disabled]="store.actionPending()"
+                aria-label="Undo last point"
+                title="Undo last point"
+              >
+                <span class="material-symbols-rounded text-xl">undo</span>
+              </button>
+            }
             <button
               type="button"
               class="pts-btn-icon"
-              (click)="undo()"
-              [disabled]="!counter.canEdit || store.actionPending()"
-              aria-label="Undo last action"
+              [matMenuTriggerFor]="moreMenu"
+              aria-label="More options"
+              title="More"
             >
-              <span class="material-symbols-rounded">undo</span>
+              <span class="material-symbols-rounded text-xl">more_vert</span>
             </button>
-            <button
-              type="button"
-              class="pts-btn-icon"
-              (click)="openShare(counter.id)"
-              aria-label="Share counter"
-            >
-              <span class="material-symbols-rounded">share</span>
-            </button>
+
+            <mat-menu #moreMenu="matMenu">
+              @if (canShare()) {
+                <button mat-menu-item (click)="openShare(counter.id)">
+                  <span class="material-symbols-rounded mr-2 text-base align-middle">share</span>
+                  Share
+                </button>
+              }
+              @if (counter.canEdit) {
+                <button mat-menu-item (click)="toggleEditTeams()">
+                  <span class="material-symbols-rounded mr-2 text-base align-middle">edit</span>
+                  {{ editingTeams() ? 'Hide team editor' : 'Rename teams' }}
+                </button>
+              }
+              <button mat-menu-item (click)="toggleMatchInfo()">
+                <span class="material-symbols-rounded mr-2 text-base align-middle">info</span>
+                {{ showMatchInfo() ? 'Hide match info' : 'Match info' }}
+              </button>
+              @if (counter.canEdit && counter.status === 'active') {
+                <button mat-menu-item (click)="switchSidesManually()">
+                  <span class="material-symbols-rounded mr-2 text-base align-middle">swap_horiz</span>
+                  Switch sides
+                </button>
+              }
+            </mat-menu>
           </div>
         </div>
 
-        <!-- Score board -->
+        <!-- Score board card -->
         <div class="pts-card">
           <pts-score-board
             [teamAName]="counter.teamAName"
@@ -74,65 +114,114 @@ import { CounterStore } from '../../store/counter.store';
             [scoreB]="counter.currentScoreB"
             [setsWonA]="counter.setsWonA"
             [setsWonB]="counter.setsWonB"
-            [totalSetsToWin]="store.sportConfig()?.setsToWin ?? 3"
+            [totalSetsToWin]="counter.rules.setsToWin"
             [currentSet]="counter.currentSetNumber"
+            [swap]="swapSides()"
           />
+          @if (swapSides()) {
+            <div class="mt-2 flex justify-center">
+              <span class="pts-badge bg-surface-variant text-on-surface-muted text-[11px]">
+                <span class="material-symbols-rounded text-sm">swap_horiz</span>
+                Sides switched
+              </span>
+            </div>
+          }
         </div>
 
-        <!-- Match status banner -->
+        <!-- Match finished banner -->
         @if (counter.status !== 'active') {
+          <div class="flex items-center justify-center gap-2 rounded-2xl py-3
+                      bg-success/10 border border-success/20 text-success text-sm font-semibold">
+            <span class="material-symbols-rounded">emoji_events</span>
+            <span>Match finished</span>
+          </div>
+        }
+
+        <!-- Score buttons (active + editable) - big, thumb-reachable -->
+        @if (counter.canEdit && counter.status === 'active') {
+          <div class="flex gap-3 sm:gap-4" [class.flex-row-reverse]="swapSides()">
+            <pts-score-button
+              class="flex-1 min-w-0"
+              [label]="counter.teamAName"
+              team="A"
+              [disabled]="store.actionPending()"
+              (increment)="store.incrementScore('A')"
+              (decrement)="store.decrementScore('A')"
+            />
+            <pts-score-button
+              class="flex-1 min-w-0"
+              [label]="counter.teamBName"
+              team="B"
+              [disabled]="store.actionPending()"
+              (increment)="store.incrementScore('B')"
+              (decrement)="store.decrementScore('B')"
+            />
+          </div>
+        }
+
+        <!-- View-only chip (small, unobtrusive) -->
+        @if (!counter.canEdit) {
           <div class="flex justify-center">
-            <span class="text-sm font-semibold text-success bg-success/10 px-4 py-2 rounded-full">
-              Match finished
+            <span class="pts-badge bg-surface-variant text-on-surface-muted">
+              <span class="material-symbols-rounded text-sm">visibility</span>
+              View only
             </span>
           </div>
         }
 
-        <!-- Score buttons (active + editable only) -->
-        @if (counter.canEdit && counter.status === 'active') {
-          <div class="grid grid-cols-3 items-center gap-4">
-            <div class="flex justify-center">
-              <pts-score-button
-                [label]="counter.teamAName"
-                team="A"
-                [disabled]="store.actionPending()"
-                (increment)="store.incrementScore('A')"
-                (decrement)="store.decrementScore('A')"
-              />
+        <!-- Team name editor — only when toggled from the menu -->
+        @if (counter.canEdit && editingTeams()) {
+          <div class="pts-card flex flex-col gap-3">
+            <div class="flex items-center justify-between">
+              <p class="pts-label">Team names</p>
+              <button
+                type="button"
+                class="pts-btn-icon h-8 w-8"
+                (click)="editingTeams.set(false)"
+                aria-label="Close team editor"
+              >
+                <span class="material-symbols-rounded text-lg">close</span>
+              </button>
             </div>
-
-            <div class="flex justify-center">
-              <span class="text-xs text-on-surface-muted">vs</span>
-            </div>
-
-            <div class="flex justify-center">
-              <pts-score-button
-                [label]="counter.teamBName"
-                team="B"
-                [disabled]="store.actionPending()"
-                (increment)="store.incrementScore('B')"
-                (decrement)="store.decrementScore('B')"
-              />
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div class="flex items-center gap-2">
+                <span class="inline-block w-2 h-2 rounded-full bg-team-a shrink-0"></span>
+                <pts-team-name-editor
+                  [teamName]="counter.teamAName"
+                  [canEdit]="counter.canEdit"
+                  (nameChanged)="store.updateTeamName('A', $event)"
+                />
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="inline-block w-2 h-2 rounded-full bg-team-b shrink-0"></span>
+                <pts-team-name-editor
+                  [teamName]="counter.teamBName"
+                  [canEdit]="counter.canEdit"
+                  (nameChanged)="store.updateTeamName('B', $event)"
+                />
+              </div>
             </div>
           </div>
         }
 
-        <!-- Team name editors -->
-        @if (counter.canEdit) {
-          <div class="grid grid-cols-2 gap-4 text-center">
-            <div class="flex justify-center">
-              <pts-team-name-editor
-                [teamName]="counter.teamAName"
-                [canEdit]="counter.canEdit"
-                (nameChanged)="store.updateTeamName('A', $event)"
-              />
+        <!-- Match info — only when toggled -->
+        @if (showMatchInfo()) {
+          <div class="pts-card flex flex-col gap-2 text-xs text-on-surface-muted">
+            <div class="flex justify-between">
+              <span>Points per set</span>
+              <span class="font-mono text-on-surface">{{ counter.rules.pointsPerSet }}</span>
             </div>
-            <div class="flex justify-center">
-              <pts-team-name-editor
-                [teamName]="counter.teamBName"
-                [canEdit]="counter.canEdit"
-                (nameChanged)="store.updateTeamName('B', $event)"
-              />
+            <div class="flex justify-between">
+              <span>Last-set points</span>
+              <span class="font-mono text-on-surface">{{ counter.rules.lastSetPoints }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span>Sets to win</span>
+              <span class="font-mono text-on-surface">{{ counter.rules.setsToWin }} of {{ counter.rules.totalSets }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span>Must win by 2</span>
+              <span class="font-mono text-on-surface">{{ counter.rules.winByTwo ? 'Yes' : 'No' }}</span>
             </div>
           </div>
         }
@@ -142,9 +231,59 @@ import { CounterStore } from '../../store/counter.store';
   `,
 })
 export class CounterPageComponent implements OnInit, OnDestroy {
-  readonly id = input.required<string>();
+  readonly id    = input.required<string>();
   readonly store = inject(CounterStore);
   private readonly dialog = inject(MatDialog);
+
+  // Sharing is owner-only: share-link visitors and read-only viewers should
+  // not be able to re-distribute access from this UI.
+  readonly canShare = computed(() => this.store.counter()?.isOwner === true);
+
+  // Progressive disclosure — both off by default.
+  readonly editingTeams = signal(false);
+  readonly showMatchInfo = signal(false);
+
+  // True when teams have switched sides an odd number of times — used to
+  // mirror the scoreboard and the score buttons so the team on the left of
+  // the screen matches the team on the left of the court.
+  readonly swapSides = computed(() => {
+    const c = this.store.counter();
+    return !!c && c.sideSwitchCount % 2 === 1;
+  });
+
+  // Guard so the indoor side-switch dialog only opens once per pending state transition.
+  private sideSwitchDialogOpen = false;
+  // Track the count we last observed so we can detect beach auto-switches.
+  private lastObservedSwitchCount: number | null = null;
+
+  constructor() {
+    effect(() => {
+      const counter = this.store.counter();
+      if (!counter) return;
+
+      // 1. Pending confirmation — used by indoor (every set) and by beach when
+      //    auto-switch is OFF. The dialog wording is tweaked per sport.
+      if (counter.canEdit && counter.pendingSideSwitchConfirmation) {
+        if (!this.sideSwitchDialogOpen) {
+          this.sideSwitchDialogOpen = true;
+          this.openConfirmSwitchDialog(counter.rules.sideSwitchMode);
+        }
+      } else {
+        this.sideSwitchDialogOpen = false;
+      }
+
+      // 2. Beach (auto): the server has just bumped sideSwitchCount. Show an
+      //    info dialog that auto-dismisses after 5 seconds. Skip on the very
+      //    first observation so loading an existing counter doesn't pop one.
+      if (this.lastObservedSwitchCount !== null &&
+          counter.sideSwitchCount > this.lastObservedSwitchCount &&
+          counter.rules.sideSwitchMode === 'autoeverypoints' &&
+          counter.beachAutoSwitchSides) {
+        this.openSideSwitchInfoDialog();
+      }
+      this.lastObservedSwitchCount = counter.sideSwitchCount;
+    });
+  }
 
   async ngOnInit(): Promise<void> {
     await this.store.load(this.id());
@@ -152,6 +291,14 @@ export class CounterPageComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.store.ngOnDestroy();
+  }
+
+  toggleEditTeams(): void {
+    this.editingTeams.update((v) => !v);
+  }
+
+  toggleMatchInfo(): void {
+    this.showMatchInfo.update((v) => !v);
   }
 
   openShare(counterId: string): void {
@@ -164,7 +311,11 @@ export class CounterPageComponent implements OnInit, OnDestroy {
   async undo(): Promise<void> {
     const confirmed = await this.dialog
       .open<ConfirmDialogComponent, ConfirmDialogData, boolean>(ConfirmDialogComponent, {
-        data: { title: 'Undo last action', message: 'This will revert the last score change.' },
+        data: {
+          title: 'Undo last point',
+          message: 'This will revert the last score change. Are you sure?',
+          confirmLabel: 'Undo',
+        },
       })
       .afterClosed()
       .toPromise();
@@ -172,5 +323,53 @@ export class CounterPageComponent implements OnInit, OnDestroy {
     if (confirmed) {
       await this.store.undo();
     }
+  }
+
+  switchSidesManually(): void {
+    void this.store.switchSidesManually();
+  }
+
+  private async openConfirmSwitchDialog(mode: string): Promise<void> {
+    // Beach (auto OFF): the rule says it's time to switch but the user opted out
+    // of automatic switches. Indoor: the set just ended; ask whether they switched.
+    const isBeach = mode === 'autoeverypoints';
+    const data: ConfirmDialogData = isBeach
+      ? {
+          title: 'Switch sides?',
+          message: 'The points total just hit a switch boundary. Have the teams switched sides?',
+          confirmLabel: 'Yes, switched',
+          cancelLabel: 'Not yet',
+        }
+      : {
+          title: 'Switch sides',
+          message: 'End of set — teams must switch sides before the next set begins. Confirm when done.',
+          confirmLabel: 'Sides switched',
+          cancelLabel: 'Skip',
+        };
+
+    const result = await this.dialog
+      .open<ConfirmDialogComponent, ConfirmDialogData, boolean>(ConfirmDialogComponent, {
+        data,
+        disableClose: true,
+      })
+      .afterClosed()
+      .toPromise();
+
+    await this.store.resolveSideSwitch(result === true);
+  }
+
+  private openSideSwitchInfoDialog(): void {
+    this.dialog.open<ConfirmDialogComponent, ConfirmDialogData, boolean>(
+      ConfirmDialogComponent,
+      {
+        data: {
+          title: 'Sides switched',
+          message: 'Teams just switched sides — court change required.',
+          confirmLabel: 'Got it',
+          hideCancel: true,
+          autoDismissSeconds: 5,
+        },
+      },
+    );
   }
 }

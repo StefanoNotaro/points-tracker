@@ -15,6 +15,9 @@ const authConfig: AuthConfig = {
   showDebugInformation: !environment.production,
   clearHashAfterLogin: true,
   nonceStateSeparator: 'semicolon',
+  // Authentik's shared endpoints (authorize, token, userinfo) don't share
+  // the per-application issuer path — disable strict URL prefix validation.
+  strictDiscoveryDocumentValidation: false,
 };
 
 @Injectable({ providedIn: 'root' })
@@ -34,7 +37,25 @@ export class AuthService {
     this.oauthService.setupAutomaticSilentRefresh();
 
     try {
-      await this.oauthService.loadDiscoveryDocumentAndTryLogin();
+      // 1) Discovery only — DON'T try login yet, because token validation
+      //    needs JWKS and we have to redirect that through the dev proxy first
+      //    to avoid Authentik's cross-origin CORS error.
+      await this.oauthService.loadDiscoveryDocument();
+
+      if (!environment.production) {
+        const doc = (this.oauthService as any).discoveryDoc;
+        if (doc?.jwks_uri) {
+          const url = new URL(doc.jwks_uri);
+          // Same-origin relative URL — Angular dev proxy forwards /application/o/* to Authentik.
+          doc.jwks_uri = url.pathname + url.search;
+        }
+        // The library also caches jwks_uri on the service itself in some versions.
+        (this.oauthService as any).jwksUri = doc?.jwks_uri ?? (this.oauthService as any).jwksUri;
+      }
+
+      // 2) Now we can safely validate any token from the redirect.
+      await this.oauthService.tryLogin();
+
       this.syncUserFromToken();
     } catch {
       // Authentik unreachable or not configured — continue as anonymous

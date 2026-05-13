@@ -29,6 +29,6 @@ public class UndoHandler(
 
         counter.Undo(cmd.ActorUserId);
         await counterRepo.SaveChangesAsync(ct);
-        return mapper.ToDto(counter, cmd.ActorUserId, cmd.ShareToken);
+        return mapper.ToDto(counter, cmd.ActorUserId, cmd.SessionToken, cmd.ShareToken);
     }
 }

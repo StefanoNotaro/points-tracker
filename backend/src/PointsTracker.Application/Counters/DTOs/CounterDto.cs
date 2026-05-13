@@ -17,6 +17,35 @@ public record CounterDto(
     bool IsOwner,
     bool CanEdit,
     DateTime CreatedAt,
+    DateTime UpdatedAt,
+    SportRulesDto Rules,
+    int SideSwitchCount,
+    bool PendingSideSwitchConfirmation,
+    int? IndoorSwitchEverySets,
+    bool BeachAutoSwitchSides
+);
+
+public record SportRulesDto(
+    int PointsPerSet,
+    int LastSetPoints,
+    int SetsToWin,
+    int TotalSets,
+    bool WinByTwo,
+    string SideSwitchMode,
+    int SideSwitchInterval,
+    int SideSwitchIntervalLastSet);
+
+public record CounterSummaryDto(
+    Guid Id,
+    string SportType,
+    string TeamAName,
+    string TeamBName,
+    string Status,
+    int SetsWonA,
+    int SetsWonB,
+    int CurrentScoreA,
+    int CurrentScoreB,
+    DateTime CreatedAt,
     DateTime UpdatedAt
 );
 

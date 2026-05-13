@@ -1,6 +1,60 @@
 @import "tailwindcss";
+/* Material must load AFTER Tailwind's preflight so its styles win the cascade */
+@import "@angular/material/prebuilt-themes/azure-blue.css";
 @import "./styles/theme.css";
 
+/* ── Dark-mode token overrides ─────────────────────────────────────────────
+   The ThemeService sets data-theme="dark" on <html>.
+   Re-declare only the tokens that differ; the rest inherit from @theme.
+   ───────────────────────────────────────────────────────────────────────── */
+[data-theme="dark"] {
+  --color-bg:               oklch(0.11  0.012 265);
+  --color-surface:          oklch(0.16  0.010 265);
+  --color-surface-variant:  oklch(0.20  0.010 265);
+  --color-surface-raised:   oklch(0.19  0.010 265);
+  --color-on-surface:       oklch(0.95  0.005 265);
+  --color-on-surface-muted: oklch(0.65  0.012 265);
+  --color-border:           oklch(0.28  0.010 265);
+  --color-primary:          oklch(0.65  0.150 265.7);
+  --color-primary-light:    oklch(0.75  0.130 265.7);
+  --color-primary-dark:     oklch(0.50  0.160 265.7);
+  --color-on-primary:       oklch(0.10  0.010 265);
+  --color-team-a:           oklch(0.65  0.150 265.7);
+  --color-team-b:           oklch(0.62  0.100 181);
+  --shadow-card:            0 1px 4px oklch(0 0 0 / 0.30),
+                            0 1px 2px oklch(0 0 0 / 0.20);
+  --shadow-elevated:        0 4px 16px oklch(0 0 0 / 0.40),
+                            0 2px  6px oklch(0 0 0 / 0.25);
+  --shadow-dialog:          0 20px 60px oklch(0 0 0 / 0.60);
+}
+
+/* ── Material Symbols Rounded — icon font binding ───────────────────────
+   The Google Font is loaded in index.html but the CSS class that turns the
+   ligature text into glyphs must be declared here, otherwise every <span
+   class="material-symbols-rounded">share</span> renders as the literal word.
+   ───────────────────────────────────────────────────────────────────── */
+.material-symbols-rounded {
+  font-family: 'Material Symbols Rounded';
+  font-weight: normal;
+  font-style: normal;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+  font-variation-settings:
+    'FILL' 0,
+    'wght' 400,
+    'GRAD' 0,
+    'opsz' 24;
+  user-select: none;
+}
+
+/* ── Base ───────────────────────────────────────────────────────────────── */
 html,
 body {
   height: 100%;
@@ -22,4 +76,226 @@ body {
 :focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
+}
+
+/* ── Material Dialog overrides ─────────────────────────────────────────── */
+.mat-mdc-dialog-container .mdc-dialog__surface {
+  border-radius: 1.5rem !important;
+  background-color: var(--color-surface) !important;
+  color: var(--color-on-surface) !important;
+  box-shadow: var(--shadow-dialog) !important;
+  padding: 0 !important;
+}
+
+.mat-mdc-dialog-container {
+  --mdc-dialog-container-color: var(--color-surface);
+}
+
+/* ── Material Menu overrides ────────────────────────────────────────────── */
+.mat-mdc-menu-panel {
+  border-radius: 1rem !important;
+  border: 1px solid var(--color-border) !important;
+  box-shadow: var(--shadow-elevated) !important;
+  background-color: var(--color-surface) !important;
+}
+
+.mat-mdc-menu-item {
+  color: var(--color-on-surface) !important;
+}
+
+.mat-mdc-menu-item:hover {
+  background-color: color-mix(in oklch, var(--color-on-surface) 6%, transparent) !important;
+}
+
+/* ── Component classes (.pts-*) ─────────────────────────────────────────
+   All defined here in the main entry file so Tailwind's PostCSS can see
+   them. Imported CSS files do NOT get @apply or @layer expansion.
+   ───────────────────────────────────────────────────────────────────── */
+@layer components {
+
+  /* ── Card ── */
+  .pts-card {
+    background-color: var(--color-surface);
+    border-radius: 1.5rem;
+    padding: 1.25rem;
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--color-border);
+  }
+
+  /* ── Primary button ── */
+  .pts-btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    background-color: var(--color-primary);
+    color: var(--color-on-primary);
+    border: none;
+    border-radius: 0.75rem;
+    padding: 0.625rem 1.25rem;
+    font-weight: 600;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    cursor: pointer;
+    transition: opacity 150ms ease, transform 150ms ease,
+                box-shadow 150ms ease;
+    user-select: none;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .pts-btn-primary:hover:not(:disabled) {
+    opacity: 0.88;
+  }
+
+  .pts-btn-primary:active:not(:disabled) {
+    transform: scale(0.97);
+  }
+
+  .pts-btn-primary:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  .pts-btn-primary:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  /* ── Secondary / outline button ── */
+  .pts-btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    background-color: var(--color-surface-raised);
+    color: var(--color-on-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 0.75rem;
+    padding: 0.625rem 1.25rem;
+    font-weight: 600;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    cursor: pointer;
+    transition: background-color 150ms ease, border-color 150ms ease,
+                transform 150ms ease;
+    user-select: none;
+    white-space: nowrap;
+  }
+
+  .pts-btn-secondary:hover:not(:disabled) {
+    background-color: var(--color-surface-variant);
+    border-color: var(--color-on-surface-muted);
+  }
+
+  .pts-btn-secondary:active:not(:disabled) {
+    transform: scale(0.97);
+  }
+
+  .pts-btn-secondary:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  .pts-btn-secondary:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  /* ── Icon button (round, transparent) ── */
+  .pts-btn-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 9999px;
+    border: none;
+    background-color: transparent;
+    color: var(--color-on-surface-muted);
+    cursor: pointer;
+    transition: background-color 150ms ease, color 150ms ease,
+                transform 150ms ease;
+    user-select: none;
+    flex-shrink: 0;
+  }
+
+  .pts-btn-icon:hover:not(:disabled) {
+    background-color: color-mix(in oklch, var(--color-on-surface) 8%, transparent);
+    color: var(--color-on-surface);
+  }
+
+  .pts-btn-icon:active:not(:disabled) {
+    transform: scale(0.92);
+  }
+
+  .pts-btn-icon:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  .pts-btn-icon:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  /* ── Label (section heading inside a card) ── */
+  .pts-label {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-on-surface-muted);
+  }
+
+  /* ── Badge / chip ── */
+  .pts-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1.5;
+    user-select: none;
+  }
+
+  /* ── Large score number ── */
+  .pts-score {
+    font-size: var(--text-score);
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums;
+    display: block;
+  }
+
+  /* ── Text input ── */
+  .pts-input {
+    width: 100%;
+    background-color: var(--color-surface-raised);
+    border: 1px solid var(--color-border);
+    border-radius: 0.75rem;
+    padding: 0.625rem 0.875rem;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    color: var(--color-on-surface);
+    outline: none;
+    transition: border-color 150ms ease, box-shadow 150ms ease;
+  }
+
+  .pts-input::placeholder {
+    color: var(--color-on-surface-muted);
+  }
+
+  .pts-input:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px color-mix(in oklch, var(--color-primary) 20%, transparent);
+  }
+
+  .pts-input:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 }

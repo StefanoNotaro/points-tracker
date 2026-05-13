@@ -5,16 +5,12 @@ import { NgClass } from '@angular/common';
   selector: 'pts-set-indicator',
   imports: [NgClass],
   template: `
-    <div class="flex gap-1.5" [attr.aria-label]="label() + ' sets won: ' + setsWon()">
+    <div class="flex gap-1.5 items-center" [attr.aria-label]="label() + ' sets won: ' + setsWon()">
       @for (i of setArray(); track i) {
         <div
-          class="w-4 h-4 rounded-full border-2 transition-all"
-          [ngClass]="
-            i < setsWon()
-              ? 'bg-primary border-primary'
-              : 'bg-transparent border-border'
-          "
-          [attr.aria-hidden]="true"
+          class="w-2.5 h-2.5 rounded-full transition-all duration-300"
+          [ngClass]="i < setsWon() ? 'bg-primary scale-110' : 'bg-border'"
+          aria-hidden="true"
         ></div>
       }
     </div>

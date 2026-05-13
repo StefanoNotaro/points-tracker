@@ -9,8 +9,10 @@ public class CounterRepository(AppDbContext db) : ICounterRepository
 {
     public Task<Counter?> GetByIdAsync(Guid id, CancellationToken ct = default) =>
         db.Counters
-            .Include(c => c.Sets)
-            .Include(c => c.Events)
+            // Sort sets so Counter.CurrentSet (== _sets.Last()) is always the latest
+            // set, regardless of how the DB returns rows.
+            .Include(c => c.Sets.OrderBy(s => s.SetNumber))
+            .Include(c => c.Events.OrderBy(e => e.CreatedAt))
             .Include(c => c.ShareTokens)
             .FirstOrDefaultAsync(c => c.Id == id, ct);
 
@@ -19,6 +21,13 @@ public class CounterRepository(AppDbContext db) : ICounterRepository
         db.Counters.Add(counter);
         return counter;
     }
+
+    public async Task<IReadOnlyList<Counter>> ListByOwnerAsync(Guid ownerUserId, CancellationToken ct = default) =>
+        await db.Counters
+            .Include(c => c.Sets)
+            .Where(c => c.OwnerUserId == ownerUserId)
+            .OrderByDescending(c => c.UpdatedAt)
+            .ToListAsync(ct);
 
     public Task SaveChangesAsync(CancellationToken ct = default) =>
         db.SaveChangesAsync(ct);
