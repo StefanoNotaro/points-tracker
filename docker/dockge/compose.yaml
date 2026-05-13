@@ -1,16 +1,8 @@
-# Points Tracker — Dockge stack
-#
-# Self-contained: the nginx proxy config and the postgres bootstrap SQL
-# are inlined as `configs`, so there are no sidecar files to manage in
-# the Dockge stack directory beyond compose.yaml and .env.
-#
-# Persistent data lives on the host under
-#   /mnt/HDDs/Applications/github/points-tracker/<dataset>
-# create the datasets in TrueNAS before bringing the stack up.
-#
-# Edit .env in Dockge → restart the stack to apply.
-
 name: points-tracker
+
+networks:
+  pts-net:
+    driver: bridge
 
 services:
 
@@ -18,11 +10,9 @@ services:
     image: postgres:17-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_DB:       ${DB_NAME}
-      POSTGRES_USER:     ${DB_USER}
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
-    # Postgres data → TrueNAS dataset
-    #   /mnt/HDDs/Applications/github/points-tracker/db
     volumes:
       - /mnt/HDDs/Applications/github/points-tracker/db:/var/lib/postgresql/data
     configs:
@@ -30,37 +20,40 @@ services:
         target: /docker-entrypoint-initdb.d/init.sql
         mode: 0444
     healthcheck:
-      test:     ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
       interval: 10s
-      timeout:  5s
-      retries:  5
-    networks: [pts-net]
-    # Not exposed externally — proxy + api reach it on the internal network.
+      timeout: 5s
+      retries: 5
+    networks:
+      - pts-net
 
   api:
     image: ghcr.io/stefanonotaro/points-tracker-api:${IMAGE_TAG}
     pull_policy: always
     restart: unless-stopped
     environment:
-      ASPNETCORE_ENVIRONMENT:        Production
-      ASPNETCORE_URLS:               http://+:8080
-      ConnectionStrings__Default:    Host=db;Port=5432;Database=${DB_NAME};Username=${DB_USER};Password=${DB_PASSWORD}
-      Authentik__Authority:          ${AUTHENTIK_AUTHORITY}
-      Authentik__ClientId:           ${AUTHENTIK_CLIENT_ID}
-      ShareToken__Secret:            ${SHARE_TOKEN_SECRET}
-      Cors__AllowedOrigins__0:       ${APP_BASE_URL}
-      Frontend__BaseUrl:             ${APP_BASE_URL}
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__Default: Host=db;Port=5432;Database=${DB_NAME};Username=${DB_USER};Password=${DB_PASSWORD}
+      Authentik__Authority: ${AUTHENTIK_AUTHORITY}
+      Authentik__ClientId: ${AUTHENTIK_CLIENT_ID}
+      ShareToken__Secret: ${SHARE_TOKEN_SECRET}
+      Cors__AllowedOrigins__0: ${APP_BASE_URL}
+      Frontend__BaseUrl: ${APP_BASE_URL}
     depends_on:
       db:
         condition: service_healthy
-    networks: [pts-net]
+    networks:
+      - pts-net
 
   web:
     image: ghcr.io/stefanonotaro/points-tracker-web:${IMAGE_TAG}
     pull_policy: always
     restart: unless-stopped
-    depends_on: [api]
-    networks: [pts-net]
+    depends_on:
+      - api
+    networks:
+      - pts-net
 
   proxy:
     image: nginx:alpine
@@ -74,11 +67,8 @@ services:
     depends_on:
       - web
       - api
-    networks: [pts-net]
-
-networks:
-  pts-net:
-    driver: bridge
+    networks:
+      - pts-net
 
 configs:
 
@@ -117,5 +107,4 @@ configs:
 
   postgres_init_sql:
     content: |
-      -- Required by EF Core migrations for uuid generation helpers.
       CREATE EXTENSION IF NOT EXISTS "pgcrypto";

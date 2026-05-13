@@ -3,7 +3,7 @@ export const environment = {
   apiUrl: '/api',
   hubUrl: '/hubs',
   oidc: {
-    issuer: 'https://auth.yourdomain.com/application/o/points-tracker/',
+    issuer: 'https://auth.snotaro.dev/application/o/points-tracker/',
     clientId: 'points-tracker',
     scope: 'openid profile email offline_access',
     redirectUri: window.location.origin,
