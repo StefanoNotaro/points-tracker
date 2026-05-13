@@ -1,0 +1,81 @@
+# Production / TrueNAS deployment compose.
+# Pulls the latest images published to GHCR by the CI workflow.
+#
+# Usage:
+#   1. Copy .env.example → .env and fill in the secrets.
+#   2. docker compose -f compose.deploy.yml --env-file .env pull
+#   3. docker compose -f compose.deploy.yml --env-file .env up -d
+#
+# Single externally-exposed port: the reverse proxy on $PROXY_PORT.
+# Postgres is also exposed on $DB_PORT for ad-hoc admin (remove the
+# `ports:` block on the db service if you want it fully private).
+#
+# All exposed ports are > 30000 to avoid clashes with system services
+# and TrueNAS-managed ports.
+
+name: points-tracker
+
+services:
+
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB:       ${DB_NAME:-points_tracker}
+      POSTGRES_USER:     ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "${DB_PORT:-30432}:5432"
+    healthcheck:
+      test:     ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME:-points_tracker}"]
+      interval: 10s
+      timeout:  5s
+      retries:  5
+    networks: [pts-net]
+
+  api:
+    image: ghcr.io/stefanonotaro/points-tracker-api:${IMAGE_TAG:-latest}
+    pull_policy: always
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT:        Production
+      ASPNETCORE_URLS:               http://+:8080
+      ConnectionStrings__Default:    Host=db;Port=5432;Database=${DB_NAME:-points_tracker};Username=${DB_USER};Password=${DB_PASSWORD}
+      Authentik__Authority:          ${AUTHENTIK_AUTHORITY}
+      Authentik__ClientId:           ${AUTHENTIK_CLIENT_ID}
+      ShareToken__Secret:            ${SHARE_TOKEN_SECRET}
+      Cors__AllowedOrigins__0:       ${APP_BASE_URL}
+      Frontend__BaseUrl:             ${APP_BASE_URL}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks: [pts-net]
+
+  web:
+    image: ghcr.io/stefanonotaro/points-tracker-web:${IMAGE_TAG:-latest}
+    pull_policy: always
+    restart: unless-stopped
+    depends_on: [api]
+    networks: [pts-net]
+
+  proxy:
+    image: nginx:alpine
+    restart: unless-stopped
+    volumes:
+      - ./proxy/proxy.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      - "${PROXY_PORT:-30080}:8080"
+    depends_on:
+      - web
+      - api
+    networks: [pts-net]
+
+volumes:
+  db-data:
+
+networks:
+  pts-net:
+    driver: bridge

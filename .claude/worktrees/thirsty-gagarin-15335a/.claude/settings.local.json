@@ -21,7 +21,10 @@
       "Bash(\"C:/Program Files/PostgreSQL/17/bin/psql.exe\" --version)",
       "Bash(docker exec *)",
       "Bash(ASPNETCORE_ENVIRONMENT=Development dotnet ef migrations add AddBeachAutoSwitch --project src/PointsTracker.Infrastructure --startup-project src/PointsTracker.Api)",
-      "Bash(echo \"FE_EXIT=$?\")"
+      "Bash(echo \"FE_EXIT=$?\")",
+      "Bash(docker compose *)",
+      "Bash(git -C C:/Users/stefa/RiderProjects/points-tracker status docker/)",
+      "Bash(git -C C:/Users/stefa/RiderProjects/points-tracker check-ignore -v docker/dockge/.env.example docker/dockge/compose.yaml)"
     ]
   }
 }
