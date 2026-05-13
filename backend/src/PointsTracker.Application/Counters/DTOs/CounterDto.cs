@@ -5,6 +5,10 @@ namespace PointsTracker.Application.Counters.DTOs;
 public record CounterDto(
     Guid Id,
     string SportType,
+    // OwnerUserId is exposed so SignalR can dispatch updates to a per-user
+    // group (the dashboard subscribes to all of the signed-in user's
+    // counters). Anonymous counters have no owner — null is expected.
+    Guid? OwnerUserId,
     string TeamAName,
     string TeamBName,
     string Status,
@@ -25,8 +29,16 @@ public record CounterDto(
     bool BeachAutoSwitchSides,
     bool CanUndo,
     bool CanRedo,
+    int TimeoutsRemainingA,
+    int TimeoutsRemainingB,
+    ActiveTimeoutDto? ActiveTimeout,
     IReadOnlyList<CounterEventDto> Events
 );
+
+public record ActiveTimeoutDto(
+    string Team,
+    DateTime StartedAt,
+    int DurationSeconds);
 
 public record CounterEventDto(
     Guid Id,
@@ -50,7 +62,9 @@ public record SportRulesDto(
     bool WinByTwo,
     string SideSwitchMode,
     int SideSwitchInterval,
-    int SideSwitchIntervalLastSet);
+    int SideSwitchIntervalLastSet,
+    int TimeoutsPerSet,
+    int TimeoutDurationSeconds);
 
 public record CounterSummaryDto(
     Guid Id,

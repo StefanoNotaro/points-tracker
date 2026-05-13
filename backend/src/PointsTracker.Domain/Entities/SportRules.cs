@@ -10,16 +10,26 @@ public record SportRules(
     bool WinByTwo,
     SideSwitchMode SideSwitchMode = SideSwitchMode.None,
     int SideSwitchInterval = 0,
-    int SideSwitchIntervalLastSet = 0)
+    int SideSwitchIntervalLastSet = 0,
+    // Per-set, per-team team timeouts. Sport defaults follow FIVB:
+    //  - Indoor volleyball: 2 timeouts of 30 seconds per set
+    //  - Beach volleyball:  1 timeout  of 30 seconds per set
+    // The duration is informational (used by the UI countdown); the count is
+    // enforced server-side so a malicious client can't call more than allowed.
+    int TimeoutsPerSet = 2,
+    int TimeoutDurationSeconds = 30)
 {
     public static SportRules For(SportType sport) => sport switch
     {
         SportType.Volleyball =>
-            new(25, 15, 3, 5, true, SideSwitchMode.ConfirmEverySets, 1, 1),
+            new(25, 15, 3, 5, true, SideSwitchMode.ConfirmEverySets, 1, 1,
+                TimeoutsPerSet: 2, TimeoutDurationSeconds: 30),
         SportType.BeachVolleyball =>
-            new(21, 15, 2, 3, true, SideSwitchMode.AutoEveryPoints, 7, 5),
+            new(21, 15, 2, 3, true, SideSwitchMode.AutoEveryPoints, 7, 5,
+                TimeoutsPerSet: 1, TimeoutDurationSeconds: 30),
         SportType.Beach_Volleyball =>
-            new(21, 15, 2, 3, true, SideSwitchMode.AutoEveryPoints, 7, 5),
+            new(21, 15, 2, 3, true, SideSwitchMode.AutoEveryPoints, 7, 5,
+                TimeoutsPerSet: 1, TimeoutDurationSeconds: 30),
         SportType.Custom => throw new ArgumentException("Custom sport requires explicit rules; use Counter.EffectiveRules."),
         _ => throw new ArgumentOutOfRangeException(nameof(sport))
     };

@@ -32,6 +32,9 @@ public static class DependencyInjection
         // SignalR is registered in the API layer so its JsonProtocol options
         // can be configured alongside the rest of the API JSON pipeline.
 
+        services.Configure<CounterCleanupOptions>(config.GetSection(CounterCleanupOptions.SectionName));
+        services.AddHostedService<CounterCleanupService>();
+
         return services;
     }
 }

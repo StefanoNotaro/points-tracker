@@ -24,7 +24,8 @@
       "Bash(echo \"FE_EXIT=$?\")",
       "Bash(docker compose *)",
       "Bash(git -C C:/Users/stefa/RiderProjects/points-tracker status docker/)",
-      "Bash(git -C C:/Users/stefa/RiderProjects/points-tracker check-ignore -v docker/dockge/.env.example docker/dockge/compose.yaml)"
+      "Bash(git -C C:/Users/stefa/RiderProjects/points-tracker check-ignore -v docker/dockge/.env.example docker/dockge/compose.yaml)",
+      "Bash(rm C:/Users/stefa/RiderProjects/points-tracker/frontend/src/app/features/counter/counter.routes.ts)"
     ]
   }
 }

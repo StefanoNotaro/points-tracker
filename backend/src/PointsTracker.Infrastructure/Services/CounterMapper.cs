@@ -14,6 +14,7 @@ public class CounterMapper(ICounterAuthorizationService authService) : ICounterM
         return new CounterDto(
             counter.Id,
             counter.SportType.ToString().ToLowerInvariant(),
+            counter.OwnerUserId,
             counter.TeamAName,
             counter.TeamBName,
             counter.Status.ToString().ToLowerInvariant(),
@@ -36,13 +37,23 @@ public class CounterMapper(ICounterAuthorizationService authService) : ICounterM
                 rules.WinByTwo,
                 rules.SideSwitchMode.ToString().ToLowerInvariant(),
                 rules.SideSwitchInterval,
-                rules.SideSwitchIntervalLastSet),
+                rules.SideSwitchIntervalLastSet,
+                rules.TimeoutsPerSet,
+                rules.TimeoutDurationSeconds),
             counter.SideSwitchCount,
             counter.PendingSideSwitchConfirmation,
             counter.IndoorSwitchEverySets,
             counter.BeachAutoSwitchSides,
             counter.CanUndo,
             counter.CanRedo,
+            counter.TimeoutsRemaining(Domain.Enums.Team.A),
+            counter.TimeoutsRemaining(Domain.Enums.Team.B),
+            counter.GetActiveTimeout(DateTime.UtcNow) is { } active
+                ? new ActiveTimeoutDto(
+                    active.Team.ToString(),
+                    active.CreatedAt,
+                    rules.TimeoutDurationSeconds)
+                : null,
             counter.Events
                 .OrderBy(e => e.CreatedAt)
                 .Select(e => new CounterEventDto(

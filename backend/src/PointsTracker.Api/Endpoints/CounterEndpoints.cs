@@ -24,6 +24,8 @@ public static class CounterEndpoints
         group.MapPatch("/{id:guid}/teams", UpdateTeamName).AllowAnonymous();
         group.MapPost("/{id:guid}/side-switch", ResolveSideSwitch).AllowAnonymous();
         group.MapPost("/{id:guid}/switch-sides", SwitchSides).AllowAnonymous();
+        group.MapPost("/{id:guid}/timeout", CallTimeout).AllowAnonymous();
+        group.MapPost("/{id:guid}/timeout/cancel", CancelTimeout).AllowAnonymous();
         group.MapPost("/{id:guid}/share", CreateShareToken).AllowAnonymous();
         group.MapDelete("/{id:guid}", DeleteCounter).AllowAnonymous();
     }
@@ -39,11 +41,13 @@ public static class CounterEndpoints
     private static async Task<IResult> DeleteCounter(
         Guid id,
         IMediator mediator,
+        IHubContext<CounterHub> hub,
         HttpContext ctx)
     {
         var userId = ctx.User.GetUserId();
         var sessionToken = ctx.Request.Headers["X-Session-Token"].FirstOrDefault();
-        await mediator.Send(new DeleteCounterCommand(id, userId, sessionToken));
+        var ownerId = await mediator.Send(new DeleteCounterCommand(id, userId, sessionToken));
+        await hub.BroadcastCounterDeleted(id, ownerId);
         return Results.NoContent();
     }
 
@@ -61,7 +65,10 @@ public static class CounterEndpoints
                 req.CustomRules.SetsToWin,
                 req.CustomRules.TotalSets,
                 req.CustomRules.WinByTwo);
-        var result = await mediator.Send(new CreateCounterCommand(req.SportType, req.TeamAName, req.TeamBName, userId, customRules, req.IndoorSwitchEverySets, req.BeachAutoSwitchSides ?? true));
+        var result = await mediator.Send(new CreateCounterCommand(
+            req.SportType, req.TeamAName, req.TeamBName, userId, customRules,
+            req.IndoorSwitchEverySets, req.BeachAutoSwitchSides ?? true,
+            req.CustomTimeoutsPerSet, req.CustomTimeoutDurationSeconds));
         return Results.Created($"/api/counters/{result.Counter.Id}", result);
     }
 
@@ -177,6 +184,31 @@ public static class CounterEndpoints
         return Results.Ok(result);
     }
 
+    private static async Task<IResult> CallTimeout(
+        Guid id,
+        ScoreRequest req,
+        IMediator mediator,
+        IHubContext<CounterHub> hub,
+        HttpContext ctx)
+    {
+        var (userId, sessionToken, shareToken) = GetContext(ctx);
+        var result = await mediator.Send(new CallTimeoutCommand(id, req.Team, userId, sessionToken, shareToken));
+        await hub.BroadcastScoreUpdate(id, result);
+        return Results.Ok(result);
+    }
+
+    private static async Task<IResult> CancelTimeout(
+        Guid id,
+        IMediator mediator,
+        IHubContext<CounterHub> hub,
+        HttpContext ctx)
+    {
+        var (userId, sessionToken, shareToken) = GetContext(ctx);
+        var result = await mediator.Send(new CancelTimeoutCommand(id, userId, sessionToken, shareToken));
+        await hub.BroadcastScoreUpdate(id, result);
+        return Results.Ok(result);
+    }
+
     private static async Task<IResult> CreateShareToken(
         Guid id,
         CreateShareTokenRequest req,
@@ -225,7 +257,9 @@ public record CreateCounterRequest(
     string TeamBName,
     CustomRulesPayload? CustomRules,
     int? IndoorSwitchEverySets,
-    bool? BeachAutoSwitchSides
+    bool? BeachAutoSwitchSides,
+    int? CustomTimeoutsPerSet,
+    int? CustomTimeoutDurationSeconds
 );
 public record CustomRulesPayload(int PointsPerSet, int LastSetPoints, int SetsToWin, int TotalSets, bool WinByTwo);
 public record ScoreRequest(string Team);

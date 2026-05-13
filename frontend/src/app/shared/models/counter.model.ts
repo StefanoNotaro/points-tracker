@@ -22,11 +22,14 @@ export interface SportRulesDto {
   sideSwitchMode: SideSwitchMode;
   sideSwitchInterval: number;
   sideSwitchIntervalLastSet: number;
+  timeoutsPerSet: number;
+  timeoutDurationSeconds: number;
 }
 
 export interface Counter {
   id: string;
   sportType: SportType;
+  ownerUserId: string | null;
   teamAName: string;
   teamBName: string;
   status: CounterStatus;
@@ -47,14 +50,25 @@ export interface Counter {
   beachAutoSwitchSides: boolean;
   canUndo: boolean;
   canRedo: boolean;
+  timeoutsRemainingA: number;
+  timeoutsRemainingB: number;
+  activeTimeout: ActiveTimeout | null;
   events: CounterEvent[];
+}
+
+export interface ActiveTimeout {
+  team: Team;
+  startedAt: string;
+  durationSeconds: number;
 }
 
 export type CounterEventType =
   | 'score_increment'
   | 'score_decrement'
   | 'undo'
-  | 'redo';
+  | 'redo'
+  | 'timeout'
+  | 'timeout_canceled';
 
 export interface CounterEvent {
   id: string;
@@ -91,6 +105,8 @@ export interface CreateCounterRequest {
   customRules?: Pick<SportRulesDto, 'pointsPerSet' | 'lastSetPoints' | 'setsToWin' | 'totalSets' | 'winByTwo'>;
   indoorSwitchEverySets?: number | null;
   beachAutoSwitchSides?: boolean;
+  customTimeoutsPerSet?: number | null;
+  customTimeoutDurationSeconds?: number | null;
 }
 
 export interface CreateCounterResponse {

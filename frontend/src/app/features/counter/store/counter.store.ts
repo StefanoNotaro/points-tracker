@@ -14,6 +14,9 @@ export class CounterStore implements OnDestroy {
   private readonly hubService = inject(CounterHubService);
   private readonly notifications = inject(NotificationService);
   private hubSub: Subscription | null = null;
+  private deleteSub: Subscription | null = null;
+  private subscribedCounterId: string | null = null;
+  readonly counterDeleted = signal(false);
 
   private readonly _counter = signal<Counter | null>(null);
   private readonly _loadState = signal<LoadState>('idle');
@@ -72,6 +75,36 @@ export class CounterStore implements OnDestroy {
       this.applyUpdate(updated);
     } catch {
       this.notifications.error('Failed to record side switch.');
+    }
+  }
+
+  async callTimeout(team: Team): Promise<void> {
+    const counter = this._counter();
+    if (!counter || this._actionPending()) return;
+
+    this._actionPending.set(true);
+    try {
+      const updated = await this.counterService.callTimeout(counter.id, team);
+      this.applyUpdate(updated);
+    } catch {
+      this.notifications.error('Failed to record timeout.');
+    } finally {
+      this._actionPending.set(false);
+    }
+  }
+
+  async cancelTimeout(): Promise<void> {
+    const counter = this._counter();
+    if (!counter || this._actionPending()) return;
+
+    this._actionPending.set(true);
+    try {
+      const updated = await this.counterService.cancelTimeout(counter.id);
+      this.applyUpdate(updated);
+    } catch {
+      this.notifications.error('Failed to cancel timeout.');
+    } finally {
+      this._actionPending.set(false);
     }
   }
 
@@ -143,15 +176,33 @@ export class CounterStore implements OnDestroy {
   }
 
   ngOnDestroy(): void {
-    const id = this._counter()?.id;
-    if (id) {
-      this.hubService.disconnect(id);
+    if (this.subscribedCounterId) {
+      void this.hubService.leaveCounter(this.subscribedCounterId);
+      this.subscribedCounterId = null;
     }
     this.hubSub?.unsubscribe();
+    this.deleteSub?.unsubscribe();
+  }
+
+  async deleteCurrent(): Promise<void> {
+    const counter = this._counter();
+    if (!counter || this._actionPending()) return;
+    this._actionPending.set(true);
+    try {
+      await this.counterService.delete(counter.id);
+      this.counterDeleted.set(true);
+    } catch {
+      this.notifications.error('Failed to delete counter.');
+    } finally {
+      this._actionPending.set(false);
+    }
   }
 
   private async subscribeToHub(counterId: string): Promise<void> {
     this.hubSub = this.hubService.scoreUpdated$.subscribe((updated) => {
+      // Filter — the connection is shared with the dashboard's user group,
+      // so we'd otherwise react to every owned counter, not just this one.
+      if (updated.id !== counterId) return;
       // The broadcast carries isOwner/canEdit computed for whoever made the change,
       // not for this client. Preserve our own access flags so a viewer doesn't
       // suddenly see edit buttons just because the owner moved the score.
@@ -161,7 +212,11 @@ export class CounterStore implements OnDestroy {
         : updated;
       this.applyUpdate(merged);
     });
-    await this.hubService.connect(counterId);
+    this.deleteSub = this.hubService.counterDeleted$.subscribe((deletedId) => {
+      if (deletedId === counterId) this.counterDeleted.set(true);
+    });
+    this.subscribedCounterId = counterId;
+    await this.hubService.joinCounter(counterId);
   }
 
   private applyUpdate(next: Counter): void {

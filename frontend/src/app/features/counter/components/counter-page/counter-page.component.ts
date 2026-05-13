@@ -1,6 +1,8 @@
 import { Component, inject, input, signal, computed, OnInit, OnDestroy, effect } from '@angular/core';
+import { Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { MatMenuModule } from '@angular/material/menu';
+import { AuthService } from '../../../../core/auth/auth.service';
 import { ScoreBoardComponent } from '../../../../shared/components/score-board/score-board.component';
 import { ScoreButtonComponent } from '../../../../shared/components/score-button/score-button.component';
 import { TeamNameEditorComponent } from '../../../../shared/components/team-name-editor/team-name-editor.component';
@@ -123,6 +125,12 @@ import { CounterStore } from '../../store/counter.store';
                   Switch sides
                 </button>
               }
+              @if (counter.isOwner) {
+                <button mat-menu-item (click)="confirmDelete()" class="!text-error">
+                  <span class="material-symbols-rounded mr-2 text-base align-middle">delete</span>
+                  Delete counter
+                </button>
+              }
             </mat-menu>
           </div>
         </div>
@@ -178,6 +186,78 @@ import { CounterStore } from '../../store/counter.store';
               (increment)="store.incrementScore('B')"
               (decrement)="store.decrementScore('B')"
             />
+          </div>
+        }
+
+        <!-- Timeouts: per-team button with remaining indicator -->
+        @if (counter.status === 'active' && counter.rules.timeoutsPerSet > 0) {
+          <div class="flex gap-3 sm:gap-4" [class.flex-row-reverse]="swapSides()">
+            <button
+              type="button"
+              class="pts-card flex-1 min-w-0 flex items-center justify-between gap-2
+                     px-3 py-2 text-left hover:bg-surface-variant/40
+                     disabled:opacity-50 disabled:hover:bg-surface"
+              [disabled]="!counter.canEdit || counter.timeoutsRemainingA === 0 || store.actionPending() || timeoutActive()"
+              (click)="callTimeout('A')"
+              [attr.aria-label]="'Call timeout for ' + counter.teamAName"
+            >
+              <span class="flex items-center gap-2 min-w-0">
+                <span class="material-symbols-rounded text-base text-team-a">pause_circle</span>
+                <span class="text-xs uppercase tracking-wide text-on-surface-muted truncate">
+                  Timeout
+                </span>
+              </span>
+              <span class="pts-badge bg-team-a/10 text-team-a text-[11px] font-mono">
+                {{ counter.timeoutsRemainingA }}/{{ counter.rules.timeoutsPerSet }}
+              </span>
+            </button>
+            <button
+              type="button"
+              class="pts-card flex-1 min-w-0 flex items-center justify-between gap-2
+                     px-3 py-2 text-left hover:bg-surface-variant/40
+                     disabled:opacity-50 disabled:hover:bg-surface"
+              [disabled]="!counter.canEdit || counter.timeoutsRemainingB === 0 || store.actionPending() || timeoutActive()"
+              (click)="callTimeout('B')"
+              [attr.aria-label]="'Call timeout for ' + counter.teamBName"
+            >
+              <span class="flex items-center gap-2 min-w-0">
+                <span class="material-symbols-rounded text-base text-team-b">pause_circle</span>
+                <span class="text-xs uppercase tracking-wide text-on-surface-muted truncate">
+                  Timeout
+                </span>
+              </span>
+              <span class="pts-badge bg-team-b/10 text-team-b text-[11px] font-mono">
+                {{ counter.timeoutsRemainingB }}/{{ counter.rules.timeoutsPerSet }}
+              </span>
+            </button>
+          </div>
+        }
+
+        <!-- Active timeout countdown banner — visible to every connected client -->
+        @if (timeoutActive(); as active) {
+          <div class="flex items-center justify-between gap-3 rounded-2xl px-4 py-3
+                      bg-warning/10 border border-warning/30 text-warning">
+            <span class="flex items-center gap-2 text-sm font-semibold min-w-0">
+              <span class="material-symbols-rounded shrink-0">pause_circle</span>
+              <span class="truncate">
+                {{ active.team === 'A' ? counter.teamAName : counter.teamBName }} timeout
+              </span>
+            </span>
+            <span class="flex items-center gap-2 shrink-0">
+              <span class="font-mono text-lg tabular-nums">{{ active.remaining }}s</span>
+              @if (counter.canEdit) {
+                <button
+                  type="button"
+                  class="pts-btn-icon h-8 w-8"
+                  [disabled]="store.actionPending()"
+                  (click)="cancelTimeout()"
+                  aria-label="Cancel timeout"
+                  title="Cancel timeout"
+                >
+                  <span class="material-symbols-rounded text-lg">close</span>
+                </button>
+              }
+            </span>
           </div>
         }
 
@@ -263,6 +343,8 @@ export class CounterPageComponent implements OnInit, OnDestroy {
   readonly id    = input.required<string>();
   readonly store = inject(CounterStore);
   private readonly dialog = inject(MatDialog);
+  private readonly router = inject(Router);
+  private readonly auth = inject(AuthService);
 
   // Sharing is owner-only: share-link visitors and read-only viewers should
   // not be able to re-distribute access from this UI.
@@ -271,6 +353,25 @@ export class CounterPageComponent implements OnInit, OnDestroy {
   // Progressive disclosure — both off by default.
   readonly editingTeams = signal(false);
   readonly showMatchInfo = signal(false);
+
+  // Server-driven timeout countdown. The DTO carries activeTimeout = { team,
+  // startedAt, durationSeconds } whenever a timeout is currently running, so
+  // every subscribed client (this browser, other browsers, even read-only
+  // viewers) sees the same countdown from the same reference time.
+  //
+  // `now` ticks every second while a timeout is active so the template
+  // re-evaluates the remaining seconds.
+  private readonly now = signal(Date.now());
+  private nowInterval: ReturnType<typeof setInterval> | null = null;
+  readonly timeoutActive = computed(() => {
+    const t = this.store.counter()?.activeTimeout;
+    if (!t) return null;
+    const startedMs = new Date(t.startedAt).getTime();
+    const elapsed = Math.floor((this.now() - startedMs) / 1000);
+    const remaining = Math.max(0, t.durationSeconds - elapsed);
+    if (remaining <= 0) return null;
+    return { team: t.team, remaining };
+  });
 
   // True when teams have switched sides an odd number of times — used to
   // mirror the scoreboard and the score buttons so the team on the left of
@@ -295,6 +396,24 @@ export class CounterPageComponent implements OnInit, OnDestroy {
   private readonly HOLD_INTERVAL_MS = 180;
 
   constructor() {
+    // Either a successful local delete, or a remote delete relayed by SignalR
+    // (e.g. owner deletes from the dashboard while a viewer is on this page),
+    // navigates away to a sensible landing page.
+    effect(() => {
+      if (this.store.counterDeleted()) {
+        this.router.navigate([this.auth.isAuthenticated() ? '/dashboard' : '/new-counter']);
+      }
+    });
+
+    // Tick the `now` signal once per second only while a timeout is running,
+    // and stop when it ends — saves a permanent 1Hz interval on every counter
+    // page.
+    effect(() => {
+      const active = this.store.counter()?.activeTimeout;
+      if (active) this.startNowTicker();
+      else this.stopNowTicker();
+    });
+
     effect(() => {
       const counter = this.store.counter();
       if (!counter) return;
@@ -329,6 +448,7 @@ export class CounterPageComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.clearHoldTimers();
+    this.stopNowTicker();
     this.store.ngOnDestroy();
   }
 
@@ -383,6 +503,44 @@ export class CounterPageComponent implements OnInit, OnDestroy {
 
   switchSidesManually(): void {
     void this.store.switchSidesManually();
+  }
+
+  async confirmDelete(): Promise<void> {
+    const counter = this.store.counter();
+    if (!counter) return;
+    const confirmed = await this.dialog
+      .open<ConfirmDialogComponent, ConfirmDialogData, boolean>(ConfirmDialogComponent, {
+        data: {
+          title: 'Delete this counter?',
+          message: `"${counter.teamAName} vs ${counter.teamBName}" and its history will be removed. This can't be undone.`,
+          confirmLabel: 'Delete',
+        },
+      })
+      .afterClosed()
+      .toPromise();
+    if (confirmed) await this.store.deleteCurrent();
+  }
+
+  async callTimeout(team: 'A' | 'B'): Promise<void> {
+    await this.store.callTimeout(team);
+    // The countdown is now driven from store.counter().activeTimeout, which
+    // every subscribed client receives via SignalR. No local timer to seed.
+  }
+
+  async cancelTimeout(): Promise<void> {
+    await this.store.cancelTimeout();
+  }
+
+  private startNowTicker(): void {
+    if (this.nowInterval) return;
+    this.nowInterval = setInterval(() => this.now.set(Date.now()), 1000);
+  }
+
+  private stopNowTicker(): void {
+    if (this.nowInterval) {
+      clearInterval(this.nowInterval);
+      this.nowInterval = null;
+    }
   }
 
   private beginHold(action: () => Promise<void>): void {

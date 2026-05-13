@@ -34,6 +34,12 @@ public class Counter
     // points boundary; the user is expected to use the manual switch action.
     public bool BeachAutoSwitchSides { get; private set; } = true;
 
+    // Optional timeout-rule overrides. Null falls back to the sport's defaults
+    // (see SportRules.For). Server enforces the count, the duration is shown
+    // to the user as a countdown.
+    public int? CustomTimeoutsPerSet { get; private set; }
+    public int? CustomTimeoutDurationSeconds { get; private set; }
+
     public SportRules EffectiveRules
     {
         get
@@ -62,11 +68,30 @@ public class Counter
                     CustomWinByTwo.Value,
                     mode,
                     interval,
-                    lastInterval);
+                    lastInterval,
+                    CustomTimeoutsPerSet ?? DefaultTimeoutsForSport(SportType),
+                    CustomTimeoutDurationSeconds ?? DefaultTimeoutDurationForSport(SportType));
             }
-            return SportRules.For(SportType);
+            var sport = SportRules.For(SportType);
+            // Even without the full custom rules block, a timeout-only override
+            // (e.g. "indoor with 3 timeouts per set") must take precedence.
+            if (CustomTimeoutsPerSet.HasValue || CustomTimeoutDurationSeconds.HasValue)
+            {
+                return sport with
+                {
+                    TimeoutsPerSet = CustomTimeoutsPerSet ?? sport.TimeoutsPerSet,
+                    TimeoutDurationSeconds = CustomTimeoutDurationSeconds ?? sport.TimeoutDurationSeconds,
+                };
+            }
+            return sport;
         }
     }
+
+    private static int DefaultTimeoutsForSport(SportType sport) =>
+        sport == SportType.Custom ? 2 : SportRules.For(sport).TimeoutsPerSet;
+
+    private static int DefaultTimeoutDurationForSport(SportType sport) =>
+        sport == SportType.Custom ? 30 : SportRules.For(sport).TimeoutDurationSeconds;
 
     // Return the backing field directly. AsReadOnly() returned a new
     // ReadOnlyCollection<T> wrapper on every property access, which can confuse
@@ -84,12 +109,17 @@ public class Counter
 
     public static Counter Create(SportType sportType, string teamAName, string teamBName,
         Guid? ownerUserId, string? sessionTokenHash, SportRules? customRules = null,
-        int? indoorSwitchEverySets = null, bool beachAutoSwitchSides = true)
+        int? indoorSwitchEverySets = null, bool beachAutoSwitchSides = true,
+        int? customTimeoutsPerSet = null, int? customTimeoutDurationSeconds = null)
     {
         if (sportType == SportType.Custom && customRules is null)
             throw new DomainException("Custom sport requires explicit rules.");
         if (indoorSwitchEverySets is not null and not (1 or 2))
             throw new DomainException("Indoor side-switch interval must be 1 or 2.");
+        if (customTimeoutsPerSet is < 0 or > 9)
+            throw new DomainException("Timeouts per set must be between 0 and 9.");
+        if (customTimeoutDurationSeconds is < 5 or > 600)
+            throw new DomainException("Timeout duration must be between 5 and 600 seconds.");
 
         var counter = new Counter
         {
@@ -99,7 +129,9 @@ public class Counter
             OwnerUserId = ownerUserId,
             SessionTokenHash = sessionTokenHash,
             IndoorSwitchEverySets = indoorSwitchEverySets,
-            BeachAutoSwitchSides = beachAutoSwitchSides
+            BeachAutoSwitchSides = beachAutoSwitchSides,
+            CustomTimeoutsPerSet = customTimeoutsPerSet,
+            CustomTimeoutDurationSeconds = customTimeoutDurationSeconds,
         };
         if (customRules is not null)
         {
@@ -111,6 +143,65 @@ public class Counter
         }
         counter._sets.Add(CounterSet.StartNew(counter.Id, 1));
         return counter;
+    }
+
+    /// <summary>
+    /// Number of timeouts the given team still has available in the current
+    /// set. Canceled timeouts (IsUndone) are refunded.
+    /// </summary>
+    public int TimeoutsRemaining(Team team)
+    {
+        var allowance = EffectiveRules.TimeoutsPerSet;
+        var used = _events.Count(e =>
+            e.EventType == "timeout"
+            && !e.IsUndone
+            && e.SetNumber == CurrentSetNumber
+            && e.Team == team);
+        return Math.Max(0, allowance - used);
+    }
+
+    public void CallTimeout(Team team, Guid? actorUserId)
+    {
+        EnsureActive();
+        if (TimeoutsRemaining(team) <= 0)
+            throw new DomainException("No timeouts remaining for this team in the current set.");
+
+        RecordEvent("timeout", team, actorUserId);
+        Touch();
+    }
+
+    /// <summary>
+    /// The currently-running timeout, if any: the most recent non-canceled
+    /// timeout event in the current set whose duration has not yet elapsed.
+    /// </summary>
+    public CounterEvent? GetActiveTimeout(DateTime now)
+    {
+        var duration = TimeSpan.FromSeconds(EffectiveRules.TimeoutDurationSeconds);
+        var last = _events
+            .Where(e => e.EventType == "timeout"
+                        && !e.IsUndone
+                        && e.SetNumber == CurrentSetNumber)
+            .OrderByDescending(e => e.CreatedAt)
+            .FirstOrDefault();
+        if (last is null) return null;
+        if (now >= last.CreatedAt + duration) return null;
+        return last;
+    }
+
+    /// <summary>
+    /// Cancel the currently-running timeout (e.g. mis-click). The original
+    /// timeout event is marked as canceled — which refunds the team's
+    /// allowance — and a small audit event is recorded for the history log.
+    /// </summary>
+    public void CancelTimeout(Guid? actorUserId)
+    {
+        EnsureActive();
+        var active = GetActiveTimeout(DateTime.UtcNow)
+            ?? throw new DomainException("No active timeout to cancel.");
+
+        active.IsUndone = true;
+        RecordEvent("timeout_canceled", active.Team, actorUserId, relatedEventId: active.Id);
+        Touch();
     }
 
     public CounterSet CurrentSet => _sets.Last();

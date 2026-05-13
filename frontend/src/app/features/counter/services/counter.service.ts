@@ -58,6 +58,18 @@ export class CounterService {
     );
   }
 
+  callTimeout(id: string, team: 'A' | 'B'): Promise<Counter> {
+    return firstValueFrom(
+      this.http.post<Counter>(`${this.base}/${id}/timeout`, { team }),
+    );
+  }
+
+  cancelTimeout(id: string): Promise<Counter> {
+    return firstValueFrom(
+      this.http.post<Counter>(`${this.base}/${id}/timeout/cancel`, {}),
+    );
+  }
+
   switchSidesManually(id: string): Promise<Counter> {
     return firstValueFrom(
       this.http.post<Counter>(`${this.base}/${id}/switch-sides`, {}),

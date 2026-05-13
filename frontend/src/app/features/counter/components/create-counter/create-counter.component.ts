@@ -167,6 +167,49 @@ import { SportType, SPORT_CONFIGS } from '../../../../shared/models/sport.model'
           </div>
         }
 
+        <!-- Timeouts — collapsed by default, seeded from sport rules -->
+        @if (form.value.sportType) {
+          <div class="pts-card flex flex-col gap-3" [formGroup]="form.controls.timeouts">
+            <button
+              type="button"
+              class="flex items-center justify-between gap-2 -m-1 p-1 rounded-lg
+                     hover:bg-surface-variant transition-colors"
+              (click)="toggleCustomizeTimeouts(!customizeTimeouts())"
+            >
+              <span class="flex items-center gap-2">
+                <span class="material-symbols-rounded text-base text-on-surface-muted">pause_circle</span>
+                <span class="pts-label">Timeouts</span>
+                @if (!customizeTimeouts()) {
+                  <span class="text-xs text-on-surface-muted font-normal normal-case tracking-normal">
+                    · {{ form.controls.timeouts.value.timeoutsPerSet }} ×
+                    {{ form.controls.timeouts.value.timeoutDurationSeconds }}s per set
+                  </span>
+                }
+              </span>
+              <span class="material-symbols-rounded text-on-surface-muted text-lg transition-transform"
+                    [style.transform]="customizeTimeouts() ? 'rotate(180deg)' : 'rotate(0deg)'">
+                expand_more
+              </span>
+            </button>
+
+            @if (customizeTimeouts()) {
+              <div class="grid grid-cols-2 gap-3">
+                <label class="flex flex-col gap-1">
+                  <span class="text-xs text-on-surface-muted">Per team, per set</span>
+                  <input type="number" min="0" max="9" formControlName="timeoutsPerSet" class="pts-input" />
+                </label>
+                <label class="flex flex-col gap-1">
+                  <span class="text-xs text-on-surface-muted">Duration (seconds)</span>
+                  <input type="number" min="5" max="600" formControlName="timeoutDurationSeconds" class="pts-input" />
+                </label>
+              </div>
+              <p class="text-xs text-on-surface-muted">
+                FIVB defaults: indoor volleyball 2 × 30 s, beach volleyball 1 × 30 s. Set count to 0 to disable timeouts.
+              </p>
+            }
+          </div>
+        }
+
         <!-- Team names -->
         <div class="pts-card flex flex-col gap-4">
           <p class="pts-label">Teams</p>
@@ -229,7 +272,15 @@ export class CreateCounterComponent implements OnInit {
   readonly sports     = Object.values(SPORT_CONFIGS);
   readonly submitting = signal(false);
   readonly customizeRules = signal(false);
+  readonly customizeTimeouts = signal(false);
   readonly resumeCounterId = signal<string | null>(null);
+
+  // FIVB defaults per sport — used to seed the timeout form on sport pick.
+  private readonly TIMEOUT_DEFAULTS: Record<SportType, { count: number; seconds: number }> = {
+    volleyball:       { count: 2, seconds: 30 },
+    beach_volleyball: { count: 1, seconds: 30 },
+    custom:           { count: 2, seconds: 30 },
+  };
 
   readonly form = this.fb.group({
     sportType:  this.fb.control<SportType | null>(null, Validators.required),
@@ -247,6 +298,12 @@ export class CreateCounterComponent implements OnInit {
     // Beach volleyball only: when off, server stops auto-switching at the
     // points boundary and the user is expected to use the manual switch button.
     beachAutoSwitchSides: this.fb.control<boolean>(true),
+    // Timeout overrides. Defaults seeded from the picked sport (FIVB rules):
+    //   indoor = 2 × 30 s, beach = 1 × 30 s.
+    timeouts: this.fb.group({
+      timeoutsPerSet:         [ 2, [Validators.required, Validators.min(0), Validators.max(9)]],
+      timeoutDurationSeconds: [30, [Validators.required, Validators.min(5), Validators.max(600)]],
+    }),
   });
 
   ngOnInit(): void {
@@ -273,6 +330,21 @@ export class CreateCounterComponent implements OnInit {
       this.customizeRules.set(true);
       this.form.controls.rules.enable();
     }
+
+    // Seed timeouts with the sport defaults and collapse the section.
+    const t = this.TIMEOUT_DEFAULTS[type];
+    this.form.controls.timeouts.patchValue({
+      timeoutsPerSet:         t.count,
+      timeoutDurationSeconds: t.seconds,
+    });
+    this.customizeTimeouts.set(false);
+    this.form.controls.timeouts.disable();
+  }
+
+  toggleCustomizeTimeouts(on: boolean): void {
+    this.customizeTimeouts.set(on);
+    if (on) this.form.controls.timeouts.enable();
+    else this.form.controls.timeouts.disable();
   }
 
   onProModeToggle(on: boolean): void {
@@ -294,6 +366,8 @@ export class CreateCounterComponent implements OnInit {
     const sportType = this.form.value.sportType!;
     const sendCustom = sportType === 'custom' || this.customizeRules();
     const rulesValue = this.form.controls.rules.getRawValue();
+    const timeoutsValue = this.form.controls.timeouts.getRawValue();
+    const sendTimeouts = this.customizeTimeouts();
 
     this.submitting.set(true);
     try {
@@ -314,6 +388,8 @@ export class CreateCounterComponent implements OnInit {
         beachAutoSwitchSides: sportType === 'beach_volleyball'
           ? this.form.value.beachAutoSwitchSides ?? true
           : true,
+        customTimeoutsPerSet:         sendTimeouts ? timeoutsValue.timeoutsPerSet         ?? null : null,
+        customTimeoutDurationSeconds: sendTimeouts ? timeoutsValue.timeoutDurationSeconds ?? null : null,
       });
       await this.router.navigate(['/counter', counter.id]);
     } catch {

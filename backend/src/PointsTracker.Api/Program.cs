@@ -94,6 +94,10 @@ builder.Services.AddSignalR()
         opts.PayloadSerializerOptions.DictionaryKeyPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
     });
 
+// Map SignalR's UserIdentifier to our internal pts_id so per-user broadcast
+// groups (user-{OwnerUserId}) line up with what the client joins.
+builder.Services.AddSingleton<Microsoft.AspNetCore.SignalR.IUserIdProvider, PointsTracker.Infrastructure.Hubs.PtsIdUserIdProvider>();
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 

@@ -17,7 +17,9 @@ public record CreateCounterCommand(
     Guid? ActorUserId,
     CustomRulesInput? CustomRules,
     int? IndoorSwitchEverySets = null,
-    bool BeachAutoSwitchSides = true
+    bool BeachAutoSwitchSides = true,
+    int? CustomTimeoutsPerSet = null,
+    int? CustomTimeoutDurationSeconds = null
 ) : IRequest<CreateCounterResponseDto>;
 
 public class CreateCounterValidator : AbstractValidator<CreateCounterCommand>
@@ -41,6 +43,11 @@ public class CreateCounterValidator : AbstractValidator<CreateCounterCommand>
         RuleFor(x => x.IndoorSwitchEverySets)
             .Must(v => v is null or 1 or 2)
             .WithMessage("Indoor side-switch interval must be 1 or 2.");
+
+        RuleFor(x => x.CustomTimeoutsPerSet)
+            .InclusiveBetween(0, 9).When(x => x.CustomTimeoutsPerSet is not null);
+        RuleFor(x => x.CustomTimeoutDurationSeconds)
+            .InclusiveBetween(5, 600).When(x => x.CustomTimeoutDurationSeconds is not null);
 
         When(x => x.CustomRules is not null, () =>
         {
@@ -82,7 +89,10 @@ public class CreateCounterHandler(
                 cmd.CustomRules.TotalSets,
                 cmd.CustomRules.WinByTwo);
 
-        var counter = Counter.Create(sport, cmd.TeamAName, cmd.TeamBName, cmd.ActorUserId, tokenHash, customRules, cmd.IndoorSwitchEverySets, cmd.BeachAutoSwitchSides);
+        var counter = Counter.Create(
+            sport, cmd.TeamAName, cmd.TeamBName, cmd.ActorUserId, tokenHash,
+            customRules, cmd.IndoorSwitchEverySets, cmd.BeachAutoSwitchSides,
+            cmd.CustomTimeoutsPerSet, cmd.CustomTimeoutDurationSeconds);
         await counterRepo.AddAsync(counter, ct);
         await counterRepo.SaveChangesAsync(ct);
 

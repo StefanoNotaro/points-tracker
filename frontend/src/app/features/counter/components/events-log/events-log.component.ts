@@ -96,15 +96,23 @@ export class EventsLogComponent {
 
   readonly expanded = signal(false);
 
-  readonly count = computed(() => this.events().length);
+  // Undo / redo / timeout-cancel events are not shown as separate rows —
+  // the score (or timeout) row they affect already reflects the change via
+  // the strike-through / faded style.
+  private readonly visible = computed(() =>
+    this.events().filter(
+      (e) =>
+        e.eventType !== 'undo'
+        && e.eventType !== 'redo'
+        && e.eventType !== 'timeout_canceled',
+    ),
+  );
 
-  // Newest first, with undo/redo entries rewritten to reference the action
-  // they affect (so the row says "Undo · Team A +1" instead of "undo").
-  readonly display = computed<DisplayEvent[]>(() => {
-    const all = this.events();
-    const byId = new Map(all.map((e) => [e.id, e]));
-    return [...all].reverse().map((e) => this.toDisplay(e, byId));
-  });
+  readonly count = computed(() => this.visible().length);
+
+  readonly display = computed<DisplayEvent[]>(() =>
+    [...this.visible()].reverse().map((e) => this.toDisplay(e)),
+  );
 
   toggle(): void {
     this.expanded.update((v) => !v);
@@ -114,39 +122,25 @@ export class EventsLogComponent {
     return team === 'A' ? this.teamAName() : this.teamBName();
   }
 
-  private actionLabel(e: CounterEvent): string {
-    const team = this.teamName(e.team);
-    switch (e.eventType) {
-      case 'score_increment':
-        return `${team} +1`;
-      case 'score_decrement':
-        return `${team} −1`;
-      default:
-        return `${team}`;
-    }
-  }
-
   private scoreLine(e: CounterEvent): string {
     return `${e.scoreABefore}–${e.scoreBBefore} → ${e.scoreAAfter}–${e.scoreBAfter}`;
   }
 
-  private toDisplay(e: CounterEvent, byId: Map<string, CounterEvent>): DisplayEvent {
-    if (e.eventType === 'undo' || e.eventType === 'redo') {
-      const related = e.relatedEventId ? byId.get(e.relatedEventId) ?? null : null;
-      const verb = e.eventType === 'undo' ? 'Undo' : 'Redo';
-      const icon = e.eventType === 'undo' ? 'undo' : 'redo';
-      const label = related
-        ? `${verb} · ${this.actionLabel(related)}`
-        : verb;
+  private toDisplay(e: CounterEvent): DisplayEvent {
+    const team = this.teamName(e.team);
+    const teamTint = e.team === 'A' ? 'text-team-a' : 'text-team-b';
+
+    if (e.eventType === 'timeout') {
       return {
         id: e.id,
         setNumber: e.setNumber,
         createdAt: e.createdAt,
-        icon,
-        iconClass: e.eventType === 'undo' ? 'text-warning' : 'text-primary',
-        label,
-        scoreLine: this.scoreLine(e),
-        isUndone: false,
+        icon: 'pause_circle',
+        iconClass: teamTint,
+        label: e.isUndone ? `${team} timeout (canceled)` : `${team} timeout`,
+        // Timeouts don't change the score; the parenthetical clarifies that.
+        scoreLine: `Score ${e.scoreAAfter}–${e.scoreBAfter}`,
+        isUndone: e.isUndone,
         isMeta: true,
       };
     }
@@ -157,8 +151,8 @@ export class EventsLogComponent {
       setNumber: e.setNumber,
       createdAt: e.createdAt,
       icon: isInc ? 'add' : 'remove',
-      iconClass: e.team === 'A' ? 'text-team-a' : 'text-team-b',
-      label: this.actionLabel(e),
+      iconClass: teamTint,
+      label: isInc ? `${team} +1` : `${team} −1`,
       scoreLine: this.scoreLine(e),
       isUndone: e.isUndone,
       isMeta: false,

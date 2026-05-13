@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { NavBarComponent } from '../nav-bar/nav-bar.component';
 import { ToastContainerComponent } from '../../shared/components/toast/toast.component';
@@ -24,10 +24,10 @@ import { AuthService } from '../../core/auth/auth.service';
     }
   `,
 })
-export class ShellComponent implements OnInit {
+export class ShellComponent {
+  // AuthService.initialize() is wired into provideAppInitializer so it has
+  // already resolved by the time this component renders. The isInitialized
+  // gate above is kept as a defensive fallback (e.g. if the initializer is
+  // ever removed during a refactor).
   readonly auth = inject(AuthService);
-
-  async ngOnInit(): Promise<void> {
-    await this.auth.initialize();
-  }
 }

@@ -19,7 +19,7 @@ import { SPORT_CONFIGS } from '../../../../shared/models/sport.model';
 
       <div class="flex items-center justify-between gap-2">
         <h1 class="text-xl sm:text-2xl font-bold text-on-surface">My Counters</h1>
-        <a routerLink="/counter/new" class="pts-btn-primary" aria-label="New counter">
+        <a routerLink="/new-counter" class="pts-btn-primary" aria-label="New counter">
           <span class="material-symbols-rounded text-lg">add</span>
           <span class="hidden sm:inline">New</span>
         </a>
@@ -34,7 +34,7 @@ import { SPORT_CONFIGS } from '../../../../shared/models/sport.model';
           <span class="material-symbols-rounded text-5xl text-on-surface-muted">scoreboard</span>
           <p class="text-on-surface font-semibold">No counters yet</p>
           <p class="text-sm text-on-surface-muted">Create your first counter to track a match.</p>
-          <a routerLink="/counter/new" class="pts-btn-primary mt-2">
+          <a routerLink="/new-counter" class="pts-btn-primary mt-2">
             <span class="material-symbols-rounded">add</span>
             <span>Start a counter</span>
           </a>

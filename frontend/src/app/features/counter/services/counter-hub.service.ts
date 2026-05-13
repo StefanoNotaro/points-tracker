@@ -10,75 +10,53 @@ import { environment } from '../../../../environments/environment';
 import { Counter } from '../../../shared/models/counter.model';
 import { AuthService } from '../../../core/auth/auth.service';
 
+/** Group bookkeeping — group key, server method names, ref count. */
+type GroupKind = 'counter' | 'user';
+interface GroupSubscription {
+  kind: GroupKind;
+  id: string;
+  refs: number;
+}
+
+/**
+ * Singleton SignalR connection shared by the counter page and the dashboard.
+ *
+ * Each subscriber asks for a group (counter-id or user-id); the service
+ * ref-counts joins so the connection is established once, groups are joined
+ * lazily, and a "leave" only fires when the last subscriber drops out.
+ */
 @Injectable({ providedIn: 'root' })
 export class CounterHubService implements OnDestroy {
   private readonly auth = inject(AuthService);
   private connection: HubConnection | null = null;
-  private currentCounterId: string | null = null;
+  private connecting: Promise<void> | null = null;
+  private readonly groups = new Map<string, GroupSubscription>();
 
   readonly scoreUpdated$ = new Subject<Counter>();
+  readonly counterDeleted$ = new Subject<string>();
   readonly connectionStateChanged$ = new Subject<HubConnectionState>();
 
-  async connect(counterId: string): Promise<void> {
-    // If a connection already exists, just switch groups instead of rebuilding.
-    if (this.connection) {
-      if (this.connection.state === HubConnectionState.Connected) {
-        await this.switchGroup(counterId);
-        return;
-      }
-      // Stale/failed connection — tear it down before rebuilding.
-      try { await this.connection.stop(); } catch { /* ignore */ }
-      this.connection = null;
-    }
-
-    this.connection = new HubConnectionBuilder()
-      .withUrl(`${environment.hubUrl}/counter`, {
-        // Returning undefined (not '') tells SignalR not to send an Authorization header.
-        accessTokenFactory: () => this.auth.getAccessToken() ?? undefined as unknown as string,
-      })
-      .withAutomaticReconnect()
-      .configureLogging(environment.production ? LogLevel.Error : LogLevel.Warning)
-      .build();
-
-    this.connection.on('ScoreUpdated', (counter: Counter) => {
-      this.scoreUpdated$.next(counter);
-    });
-
-    this.connection.onreconnecting(() => {
-      this.connectionStateChanged$.next(HubConnectionState.Reconnecting);
-    });
-
-    this.connection.onreconnected(async () => {
-      this.connectionStateChanged$.next(HubConnectionState.Connected);
-      // Rejoin whatever counter is currently active, not the one captured at connect time.
-      if (this.currentCounterId) {
-        await this.joinGroup(this.currentCounterId);
-      }
-    });
-
-    this.connection.onclose(() => {
-      this.connectionStateChanged$.next(HubConnectionState.Disconnected);
-    });
-
-    await this.connection.start();
-    await this.switchGroup(counterId);
-    this.connectionStateChanged$.next(HubConnectionState.Connected);
+  // ── Counter group ────────────────────────────────────────────────────
+  joinCounter(counterId: string): Promise<void> {
+    return this.join('counter', counterId);
   }
 
-  async disconnect(counterId: string): Promise<void> {
-    if (!this.connection) return;
+  leaveCounter(counterId: string): Promise<void> {
+    return this.leave('counter', counterId);
+  }
 
-    if (this.connection.state === HubConnectionState.Connected) {
-      try {
-        await this.connection.invoke('LeaveCounter', counterId);
-      } catch {
-        /* ignore — we're tearing down anyway */
-      }
-    }
+  // ── User group (dashboard) ───────────────────────────────────────────
+  // No userId param: the server picks the authenticated identity. Internally
+  // we tag the subscription with a sentinel so the ref-count logic still
+  // works (only one user-group per connection makes sense anyway).
+  private static readonly USER_KEY = '__self__';
 
-    try { await this.connection.stop(); } catch { /* ignore */ }
-    this.connection = null;
-    this.currentCounterId = null;
+  joinUser(): Promise<void> {
+    return this.join('user', CounterHubService.USER_KEY);
+  }
+
+  leaveUser(): Promise<void> {
+    return this.leave('user', CounterHubService.USER_KEY);
   }
 
   async ngOnDestroy(): Promise<void> {
@@ -87,20 +65,95 @@ export class CounterHubService implements OnDestroy {
       this.connection = null;
     }
     this.scoreUpdated$.complete();
+    this.counterDeleted$.complete();
     this.connectionStateChanged$.complete();
   }
 
-  private async switchGroup(counterId: string): Promise<void> {
-    if (this.currentCounterId && this.currentCounterId !== counterId) {
-      try {
-        await this.connection!.invoke('LeaveCounter', this.currentCounterId);
-      } catch { /* ignore — best-effort */ }
-    }
-    await this.joinGroup(counterId);
-    this.currentCounterId = counterId;
+  private key(kind: GroupKind, id: string): string {
+    return `${kind}:${id}`;
   }
 
-  private async joinGroup(counterId: string): Promise<void> {
-    await this.connection!.invoke('JoinCounter', counterId);
+  private async join(kind: GroupKind, id: string): Promise<void> {
+    await this.ensureConnected();
+
+    const key = this.key(kind, id);
+    const existing = this.groups.get(key);
+    if (existing) {
+      existing.refs += 1;
+      return;
+    }
+
+    this.groups.set(key, { kind, id, refs: 1 });
+    await this.invokeJoin(kind, id);
+  }
+
+  private async leave(kind: GroupKind, id: string): Promise<void> {
+    const key = this.key(kind, id);
+    const existing = this.groups.get(key);
+    if (!existing) return;
+
+    existing.refs -= 1;
+    if (existing.refs > 0) return;
+
+    this.groups.delete(key);
+    if (this.connection?.state === HubConnectionState.Connected) {
+      try { await this.invokeLeave(kind, id); } catch { /* best-effort */ }
+    }
+  }
+
+  private invokeJoin(kind: GroupKind, id: string): Promise<void> {
+    return kind === 'counter'
+      ? this.connection!.invoke('JoinCounter', id)
+      : this.connection!.invoke('JoinMyUpdates');
+  }
+
+  private invokeLeave(kind: GroupKind, id: string): Promise<void> {
+    return kind === 'counter'
+      ? this.connection!.invoke('LeaveCounter', id)
+      : this.connection!.invoke('LeaveMyUpdates');
+  }
+
+  private async ensureConnected(): Promise<void> {
+    if (this.connection?.state === HubConnectionState.Connected) return;
+    if (this.connecting) return this.connecting;
+
+    this.connecting = (async () => {
+      this.connection = new HubConnectionBuilder()
+        .withUrl(`${environment.hubUrl}/counter`, {
+          accessTokenFactory: () =>
+            this.auth.getAccessToken() ?? (undefined as unknown as string),
+        })
+        .withAutomaticReconnect()
+        .configureLogging(environment.production ? LogLevel.Error : LogLevel.Warning)
+        .build();
+
+      this.connection.on('ScoreUpdated', (counter: Counter) => {
+        this.scoreUpdated$.next(counter);
+      });
+      this.connection.on('CounterDeleted', (counterId: string) => {
+        this.counterDeleted$.next(counterId);
+      });
+
+      this.connection.onreconnecting(() => {
+        this.connectionStateChanged$.next(HubConnectionState.Reconnecting);
+      });
+      this.connection.onreconnected(async () => {
+        // Rejoin every group from scratch — the server forgot us during the
+        // disconnect.
+        for (const g of this.groups.values()) {
+          try { await this.invokeJoin(g.kind, g.id); } catch { /* ignore */ }
+        }
+        this.connectionStateChanged$.next(HubConnectionState.Connected);
+      });
+      this.connection.onclose(() => {
+        this.connectionStateChanged$.next(HubConnectionState.Disconnected);
+      });
+
+      await this.connection.start();
+      this.connectionStateChanged$.next(HubConnectionState.Connected);
+    })();
+
+    try { await this.connecting; }
+    finally { this.connecting = null; }
   }
 }

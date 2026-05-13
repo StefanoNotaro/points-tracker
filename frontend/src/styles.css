@@ -107,6 +107,27 @@ body {
   background-color: color-mix(in oklch, var(--color-on-surface) 6%, transparent) !important;
 }
 
+/* Interactive elements get the pointer cursor by default. Browsers default
+   <button> to the arrow cursor, which makes custom-styled buttons (cards,
+   chips, toggles) feel unclickable on hover. The :disabled rule keeps the
+   "not-allowed" cursor on disabled controls. */
+button:not(:disabled),
+[role='button']:not([aria-disabled='true']),
+a[href],
+summary,
+label:has(> input[type='checkbox']),
+label:has(> input[type='radio']),
+input[type='checkbox']:not(:disabled),
+input[type='radio']:not(:disabled),
+select:not(:disabled) {
+  cursor: pointer;
+}
+
+button:disabled,
+[role='button'][aria-disabled='true'] {
+  cursor: not-allowed;
+}
+
 /* ── Component classes (.pts-*) ─────────────────────────────────────────
    All defined here in the main entry file so Tailwind's PostCSS can see
    them. Imported CSS files do NOT get @apply or @layer expansion.

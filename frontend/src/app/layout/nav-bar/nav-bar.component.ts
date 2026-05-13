@@ -36,6 +36,14 @@ import { ThemeService } from '../../core/services/theme.service';
 
           @if (auth.isAuthenticated()) {
             <a
+              routerLink="/dashboard"
+              class="pts-btn-icon"
+              aria-label="Dashboard"
+              title="Dashboard"
+            >
+              <span class="material-symbols-rounded text-xl">space_dashboard</span>
+            </a>
+            <a
               routerLink="/my-counters"
               class="pts-btn-icon"
               aria-label="My counters"
@@ -58,6 +66,10 @@ import { ThemeService } from '../../core/services/theme.service';
                 <p class="text-sm font-semibold text-on-surface">{{ auth.user()?.displayName }}</p>
                 <p class="text-xs text-on-surface-muted mt-0.5">{{ auth.user()?.email }}</p>
               </div>
+              <button mat-menu-item routerLink="/dashboard">
+                <span class="material-symbols-rounded mr-2 text-base align-middle">space_dashboard</span>
+                Dashboard
+              </button>
               <button mat-menu-item routerLink="/my-counters">
                 <span class="material-symbols-rounded mr-2 text-base align-middle">list_alt</span>
                 My Counters

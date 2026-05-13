@@ -37,6 +37,8 @@ public class CounterConfiguration : IEntityTypeConfiguration<Counter>
         builder.Property(c => c.PendingSideSwitchConfirmation).HasColumnName("pending_side_switch_confirmation").HasDefaultValue(false);
         builder.Property(c => c.IndoorSwitchEverySets).HasColumnName("indoor_switch_every_sets");
         builder.Property(c => c.BeachAutoSwitchSides).HasColumnName("beach_auto_switch_sides").HasDefaultValue(true);
+        builder.Property(c => c.CustomTimeoutsPerSet).HasColumnName("custom_timeouts_per_set");
+        builder.Property(c => c.CustomTimeoutDurationSeconds).HasColumnName("custom_timeout_duration_seconds");
 
         // Computed read-only properties. EF Core 9 may otherwise try to interpret
         // CurrentSet as a single-cardinality navigation (and create a shadow FK),

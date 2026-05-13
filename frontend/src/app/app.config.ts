@@ -1,5 +1,7 @@
 import {
   ApplicationConfig,
+  inject,
+  provideAppInitializer,
   provideZonelessChangeDetection,
   importProvidersFrom,
 } from '@angular/core';
@@ -15,6 +17,7 @@ import { OAuthModule } from 'angular-oauth2-oidc';
 import { routes } from './app.routes';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
 import { errorInterceptor } from './core/interceptors/error.interceptor';
+import { AuthService } from './core/auth/auth.service';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -23,5 +26,10 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(withFetch(), withInterceptors([authInterceptor, errorInterceptor])),
     provideAnimationsAsync(),
     importProvidersFrom(OAuthModule.forRoot({ resourceServer: { sendAccessToken: false } })),
+    // Resolve the OIDC session BEFORE the router starts activating routes.
+    // Without this, refreshing on a guarded route fired the auth guard while
+    // AuthService was still loading — it saw isAuthenticated() === false,
+    // kicked off a fresh login, and lost the original URL on the redirect.
+    provideAppInitializer(() => inject(AuthService).initialize()),
   ],
 };
