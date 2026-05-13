@@ -54,6 +54,13 @@ export interface Counter {
   timeoutsRemainingB: number;
   activeTimeout: ActiveTimeout | null;
   events: CounterEvent[];
+  linkedTournament: LinkedTournament | null;
+}
+
+export interface LinkedTournament {
+  tournamentId: string;
+  tournamentName: string;
+  matchId: string;
 }
 
 export interface ActiveTimeout {

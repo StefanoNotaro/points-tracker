@@ -29,6 +29,20 @@ public class CounterRepository(AppDbContext db) : ICounterRepository
             .OrderByDescending(c => c.UpdatedAt)
             .ToListAsync(ct);
 
+    public async Task<IReadOnlyList<Counter>> ListByIdsAsync(IReadOnlyCollection<Guid> ids, CancellationToken ct = default)
+    {
+        if (ids.Count == 0) return [];
+        return await db.Counters
+            .Include(c => c.Sets)
+            .Where(c => ids.Contains(c.Id))
+            .ToListAsync(ct);
+    }
+
+    public async Task<IReadOnlyList<Counter>> ListByTournamentAsync(Guid tournamentId, CancellationToken ct = default) =>
+        await db.Counters
+            .Where(c => c.LinkedTournamentId == tournamentId)
+            .ToListAsync(ct);
+
     public Task SaveChangesAsync(CancellationToken ct = default) =>
         db.SaveChangesAsync(ct);
 }

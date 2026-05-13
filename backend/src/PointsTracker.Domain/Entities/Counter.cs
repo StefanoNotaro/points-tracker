@@ -40,6 +40,13 @@ public class Counter
     public int? CustomTimeoutsPerSet { get; private set; }
     public int? CustomTimeoutDurationSeconds { get; private set; }
 
+    // Tournament linkage — persisted so every DTO build (including SignalR
+    // broadcasts) can include the "back to tournament" hint without an extra
+    // DB query. Set by Tournament when a counter is spawned for a match.
+    public Guid? LinkedTournamentId { get; private set; }
+    public Guid? LinkedTournamentMatchId { get; private set; }
+    public string? LinkedTournamentName { get; private set; }
+
     public SportRules EffectiveRules
     {
         get
@@ -361,6 +368,21 @@ public class Counter
         Touch();
     }
 
+    public void LinkToTournament(Guid tournamentId, Guid matchId, string tournamentName)
+    {
+        LinkedTournamentId      = tournamentId;
+        LinkedTournamentMatchId = matchId;
+        LinkedTournamentName    = tournamentName;
+        Touch();
+    }
+
+    public void UpdateLinkedTournamentName(string tournamentName)
+    {
+        if (LinkedTournamentId is null) return;
+        LinkedTournamentName = tournamentName;
+        Touch();
+    }
+
     public void ClaimByUser(Guid userId)
     {
         if (OwnerUserId.HasValue) throw new DomainException("Counter already owned.");
@@ -373,6 +395,41 @@ public class Counter
     {
         DeletedAt = DateTime.UtcNow;
         Touch();
+    }
+
+    /// <summary>
+    /// Force the match to finish before the regular set-win condition is met
+    /// (e.g. time-capped tournament matches). The winner is determined by
+    /// sets won; ties are broken by total points across all sets (current set
+    /// inclusive). On a perfect tie A wins by virtue of being first in the
+    /// listing — callers should expose this convention in the UI.
+    /// </summary>
+    public void EndMatchManually(Guid? actorUserId)
+    {
+        EnsureActive();
+
+        if (CurrentSet.Winner is null)
+        {
+            // Close the current set off in the same direction the score points to,
+            // so set tallies and points totals stay consistent.
+            var winner = CurrentScoreA == CurrentScoreB
+                ? Team.A
+                : (CurrentScoreA > CurrentScoreB ? Team.A : Team.B);
+            CurrentSet.Complete(winner);
+        }
+
+        RecordEvent("match_ended", DetermineOverallWinner(), actorUserId);
+        Status = CounterStatus.Finished;
+        Touch();
+    }
+
+    private Team DetermineOverallWinner()
+    {
+        if (SetsWonA != SetsWonB) return SetsWonA > SetsWonB ? Team.A : Team.B;
+
+        var pointsA = _sets.Sum(s => s.ScoreA);
+        var pointsB = _sets.Sum(s => s.ScoreB);
+        return pointsA >= pointsB ? Team.A : Team.B;
     }
 
     private void EnsureActive()

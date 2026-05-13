@@ -40,6 +40,11 @@ public class CounterConfiguration : IEntityTypeConfiguration<Counter>
         builder.Property(c => c.CustomTimeoutsPerSet).HasColumnName("custom_timeouts_per_set");
         builder.Property(c => c.CustomTimeoutDurationSeconds).HasColumnName("custom_timeout_duration_seconds");
 
+        builder.Property(c => c.LinkedTournamentId).HasColumnName("linked_tournament_id");
+        builder.Property(c => c.LinkedTournamentMatchId).HasColumnName("linked_tournament_match_id");
+        builder.Property(c => c.LinkedTournamentName).HasColumnName("linked_tournament_name").HasMaxLength(200);
+        builder.HasIndex(c => c.LinkedTournamentId).HasFilter("linked_tournament_id IS NOT NULL");
+
         // Computed read-only properties. EF Core 9 may otherwise try to interpret
         // CurrentSet as a single-cardinality navigation (and create a shadow FK),
         // or interpret EffectiveRules as a complex/owned type, both of which break

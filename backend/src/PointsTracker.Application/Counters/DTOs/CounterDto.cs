@@ -32,8 +32,11 @@ public record CounterDto(
     int TimeoutsRemainingA,
     int TimeoutsRemainingB,
     ActiveTimeoutDto? ActiveTimeout,
-    IReadOnlyList<CounterEventDto> Events
+    IReadOnlyList<CounterEventDto> Events,
+    LinkedTournamentDto? LinkedTournament
 );
+
+public record LinkedTournamentDto(Guid TournamentId, string TournamentName, Guid MatchId);
 
 public record ActiveTimeoutDto(
     string Team,

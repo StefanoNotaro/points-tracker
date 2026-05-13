@@ -68,7 +68,11 @@ public class CounterMapper(ICounterAuthorizationService authService) : ICounterM
                     e.IsUndone,
                     e.RelatedEventId,
                     e.CreatedAt))
-                .ToList()
+                .ToList(),
+            LinkedTournament: counter.LinkedTournamentId is { } tid
+                && counter.LinkedTournamentMatchId is { } mid
+                ? new LinkedTournamentDto(tid, counter.LinkedTournamentName ?? string.Empty, mid)
+                : null
         );
     }
 }

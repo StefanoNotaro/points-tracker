@@ -32,6 +32,17 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     if (shareToken) headers['X-Share-Token'] = shareToken;
   }
 
+  // Tournaments use the same X-Session-Token scheme for anonymous ownership.
+  // Storage key is namespaced ("tournament:{id}") so it doesn't collide with
+  // a counter of the same UUID. For tournament create POST the token isn't
+  // known yet — the response carries it, then TournamentService.create stores it.
+  const tournamentIdMatch = req.url.match(/\/tournaments\/([0-9a-f-]{36})/i);
+  if (tournamentIdMatch && !accessToken) {
+    const tournamentId = tournamentIdMatch[1];
+    const sessionToken = sessionTokens.getToken(`tournament:${tournamentId}`);
+    if (sessionToken) headers['X-Session-Token'] = sessionToken;
+  }
+
   return Object.keys(headers).length === 0
     ? next(req)
     : next(req.clone({ setHeaders: headers }));

@@ -142,7 +142,9 @@ if (app.Environment.IsDevelopment())
 // Endpoints
 app.MapHealthEndpoints();
 app.MapCounterEndpoints();
+app.MapTournamentEndpoints();
 app.MapHub<CounterHub>("/hubs/counter");
+app.MapHub<TournamentHub>("/hubs/tournament");
 
 app.Run();
 

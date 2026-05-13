@@ -15,7 +15,7 @@ public record GetCounterByIdQuery(
 
 public class GetCounterByIdHandler(
     ICounterRepository counterRepo,
-    ICounterAuthorizationService authService,
+    ITournamentRepository tournamentRepo,
     ICounterMapper mapper
 ) : IRequestHandler<GetCounterByIdQuery, CounterDto>
 {
@@ -24,7 +24,23 @@ public class GetCounterByIdHandler(
         var counter = await counterRepo.GetByIdAsync(query.CounterId, ct)
             ?? throw new NotFoundException(nameof(Domain.Entities.Counter), query.CounterId);
 
-        var access = authService.GetAccess(counter, query.ActorUserId, query.SessionToken, query.ShareToken);
+        // Legacy backfill: counters spawned before the linkage columns existed
+        // have null link fields. Look up the owning tournament once via the
+        // tournament_matches index and populate so future reads are zero-query.
+        if (counter.LinkedTournamentId is null)
+        {
+            var t = await tournamentRepo.GetByLinkedCounterAsync(counter.Id, ct);
+            if (t is not null)
+            {
+                var match = t.Matches.FirstOrDefault(m => m.CounterId == counter.Id);
+                if (match is not null)
+                {
+                    counter.LinkToTournament(t.Id, match.Id, t.Name);
+                    await counterRepo.SaveChangesAsync(ct);
+                }
+            }
+        }
+
         return mapper.ToDto(counter, query.ActorUserId, query.SessionToken, query.ShareToken);
     }
 }

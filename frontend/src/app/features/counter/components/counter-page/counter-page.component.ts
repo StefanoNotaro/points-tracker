@@ -1,5 +1,5 @@
 import { Component, inject, input, signal, computed, OnInit, OnDestroy, effect } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { MatMenuModule } from '@angular/material/menu';
 import { AuthService } from '../../../../core/auth/auth.service';
@@ -27,6 +27,7 @@ import { CounterStore } from '../../store/counter.store';
     LoadingSpinnerComponent,
     EventsLogComponent,
     MatMenuModule,
+    RouterLink,
   ],
   providers: [CounterStore],
   template: `
@@ -47,6 +48,19 @@ import { CounterStore } from '../../store/counter.store';
     <!-- Counter loaded -->
     } @else if (store.counter(); as counter) {
       <div class="flex flex-col gap-4 sm:gap-5">
+
+        <!-- Tournament link bar — only when this counter was spawned for a match -->
+        @if (counter.linkedTournament; as link) {
+          <a [routerLink]="['/tournaments', link.tournamentId]"
+             class="pts-card !p-2.5 flex items-center gap-2 hover:border-primary transition-colors">
+            <span class="material-symbols-rounded text-primary text-xl shrink-0">emoji_events</span>
+            <span class="flex-1 min-w-0">
+              <span class="block text-xs uppercase tracking-wide text-on-surface-muted">Tournament match</span>
+              <span class="block text-sm font-semibold text-on-surface truncate">{{ link.tournamentName }}</span>
+            </span>
+            <span class="material-symbols-rounded text-on-surface-muted">chevron_right</span>
+          </a>
+        }
 
         <!-- Top bar: small sport chip + action menu -->
         <div class="flex items-center justify-between gap-2">
@@ -123,6 +137,10 @@ import { CounterStore } from '../../store/counter.store';
                 <button mat-menu-item (click)="switchSidesManually()">
                   <span class="material-symbols-rounded mr-2 text-base align-middle">swap_horiz</span>
                   Switch sides
+                </button>
+                <button mat-menu-item (click)="confirmEndMatch()">
+                  <span class="material-symbols-rounded mr-2 text-base align-middle">stop_circle</span>
+                  End match now
                 </button>
               }
               @if (counter.isOwner) {
@@ -503,6 +521,23 @@ export class CounterPageComponent implements OnInit, OnDestroy {
 
   switchSidesManually(): void {
     void this.store.switchSidesManually();
+  }
+
+  async confirmEndMatch(): Promise<void> {
+    const counter = this.store.counter();
+    if (!counter) return;
+    const confirmed = await this.dialog
+      .open<ConfirmDialogComponent, ConfirmDialogData, boolean>(ConfirmDialogComponent, {
+        data: {
+          title: 'End match now?',
+          message:
+            'The match will be marked finished. The winner will be the team with more sets — or, on a tie, more total points.',
+          confirmLabel: 'End match',
+        },
+      })
+      .afterClosed()
+      .toPromise();
+    if (confirmed) await this.store.endMatch();
   }
 
   async confirmDelete(): Promise<void> {

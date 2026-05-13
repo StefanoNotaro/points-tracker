@@ -70,6 +70,10 @@ export class CounterService {
     );
   }
 
+  endMatch(id: string): Promise<Counter> {
+    return firstValueFrom(this.http.post<Counter>(`${this.base}/${id}/end`, {}));
+  }
+
   switchSidesManually(id: string): Promise<Counter> {
     return firstValueFrom(
       this.http.post<Counter>(`${this.base}/${id}/switch-sides`, {}),

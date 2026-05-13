@@ -5,8 +5,10 @@ import { Subscription } from 'rxjs';
 import { AuthService } from '../../core/auth/auth.service';
 import { CounterService } from '../counter/services/counter.service';
 import { CounterHubService } from '../counter/services/counter-hub.service';
+import { TournamentService } from '../tournament/services/tournament.service';
 import { LoadingSpinnerComponent } from '../../shared/components/loading-spinner/loading-spinner.component';
 import { Counter, CounterSummary } from '../../shared/models/counter.model';
+import { TournamentSummary, TOURNAMENT_FORMATS } from '../../shared/models/tournament.model';
 import { SPORT_CONFIGS } from '../../shared/models/sport.model';
 import { NotificationService } from '../../core/services/notification.service';
 
@@ -32,11 +34,11 @@ import { NotificationService } from '../../core/services/notification.service';
           <p class="font-semibold text-on-surface text-sm">New counter</p>
           <p class="text-xs text-on-surface-muted">Start tracking a match.</p>
         </a>
-        <a routerLink="/my-counters"
+        <a routerLink="/tournaments/new"
            class="pts-card flex flex-col gap-1 hover:border-primary transition-colors">
-          <span class="material-symbols-rounded text-primary text-2xl">list_alt</span>
-          <p class="font-semibold text-on-surface text-sm">All counters</p>
-          <p class="text-xs text-on-surface-muted">Resume or review past matches.</p>
+          <span class="material-symbols-rounded text-primary text-2xl">emoji_events</span>
+          <p class="font-semibold text-on-surface text-sm">New tournament</p>
+          <p class="text-xs text-on-surface-muted">Bracket your teams.</p>
         </a>
       </div>
 
@@ -110,6 +112,48 @@ import { NotificationService } from '../../core/services/notification.service';
         }
       </section>
 
+      <!-- Tournaments -->
+      <section class="flex flex-col gap-2">
+        <div class="flex items-center justify-between">
+          <h2 class="pts-label">Tournaments</h2>
+          @if (tournaments().length > 0) {
+            <a routerLink="/tournaments" class="text-xs text-primary hover:underline">View all</a>
+          }
+        </div>
+        @if (loadingTournaments()) {
+          <div class="flex items-center justify-center py-6"><pts-loading-spinner size="sm" /></div>
+        } @else if (activeTournaments().length === 0) {
+          <div class="pts-card flex flex-col items-center text-center gap-2 py-6">
+            <span class="material-symbols-rounded text-3xl text-on-surface-muted">emoji_events</span>
+            <p class="text-sm text-on-surface-muted">No active tournaments.</p>
+            <a routerLink="/tournaments/new" class="pts-btn-primary mt-1">
+              <span class="material-symbols-rounded text-lg">add</span>
+              <span>Create one</span>
+            </a>
+          </div>
+        } @else {
+          <ul class="flex flex-col gap-2">
+            @for (t of activeTournaments(); track t.id) {
+              <li>
+                <a [routerLink]="['/tournaments', t.id]"
+                   class="pts-card !p-3 flex items-center gap-3 hover:border-primary transition-colors">
+                  <span class="material-symbols-rounded text-2xl text-primary shrink-0">emoji_events</span>
+                  <span class="flex-1 min-w-0">
+                    <span class="block font-semibold text-on-surface truncate">{{ t.name }}</span>
+                    <span class="block text-xs text-on-surface-muted truncate">
+                      {{ formatLabel(t.format) }} · {{ t.participantCount }} teams
+                    </span>
+                  </span>
+                  <span class="inline-flex items-center gap-1 text-success text-xs shrink-0">
+                    <span class="w-1.5 h-1.5 rounded-full bg-success"></span>Live
+                  </span>
+                </a>
+              </li>
+            }
+          </ul>
+        }
+      </section>
+
       <!-- Recent finished -->
       @if (!loading() && recent().length > 0) {
         <section class="flex flex-col gap-2">
@@ -145,13 +189,24 @@ import { NotificationService } from '../../core/services/notification.service';
   `,
 })
 export class DashboardComponent implements OnInit, OnDestroy {
-  readonly auth                   = inject(AuthService);
-  private readonly counterService = inject(CounterService);
-  private readonly hub            = inject(CounterHubService);
-  private readonly notifications  = inject(NotificationService);
+  readonly auth                      = inject(AuthService);
+  private readonly counterService    = inject(CounterService);
+  private readonly tournamentService = inject(TournamentService);
+  private readonly hub               = inject(CounterHubService);
+  private readonly notifications     = inject(NotificationService);
 
-  readonly loading  = signal(true);
-  readonly counters = signal<CounterSummary[]>([]);
+  readonly loading            = signal(true);
+  readonly loadingTournaments = signal(true);
+  readonly counters           = signal<CounterSummary[]>([]);
+  readonly tournaments        = signal<TournamentSummary[]>([]);
+
+  readonly activeTournaments = computed(() =>
+    this.tournaments().filter((t) => t.status === 'active' || t.status === 'draft' || t.status === 'registration'),
+  );
+
+  formatLabel(f: string): string {
+    return TOURNAMENT_FORMATS.find((x) => x.value === f)?.label ?? f;
+  }
   private subscribedToUser = false;
   private readonly subs: Subscription[] = [];
 
@@ -183,6 +238,16 @@ export class DashboardComponent implements OnInit, OnDestroy {
       this.notifications.error('Could not load your counters.');
     } finally {
       this.loading.set(false);
+    }
+
+    try {
+      const ts = await this.tournamentService.listMine();
+      ts.sort((a, b) => +new Date(b.updatedAt) - +new Date(a.updatedAt));
+      this.tournaments.set(ts);
+    } catch {
+      // Tournament list is best-effort; don't block the dashboard.
+    } finally {
+      this.loadingTournaments.set(false);
     }
 
     // Subscribe to the per-user SignalR group. The server broadcasts every

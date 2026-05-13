@@ -108,6 +108,21 @@ export class CounterStore implements OnDestroy {
     }
   }
 
+  async endMatch(): Promise<void> {
+    const counter = this._counter();
+    if (!counter || this._actionPending()) return;
+    this._actionPending.set(true);
+    try {
+      const updated = await this.counterService.endMatch(counter.id);
+      this.applyUpdate(updated);
+      this.notifications.success('Match ended.');
+    } catch {
+      this.notifications.error('Failed to end match.');
+    } finally {
+      this._actionPending.set(false);
+    }
+  }
+
   async switchSidesManually(): Promise<void> {
     const counter = this._counter();
     if (!counter) return;

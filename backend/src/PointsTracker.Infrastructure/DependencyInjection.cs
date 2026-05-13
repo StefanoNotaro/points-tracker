@@ -23,10 +23,14 @@ public static class DependencyInjection
         services.AddScoped<ICounterRepository, CounterRepository>();
         services.AddScoped<IShareTokenRepository, ShareTokenRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<ITournamentRepository, TournamentRepository>();
 
         services.AddSingleton<IShareTokenService, ShareTokenService>();
         services.AddScoped<ICounterAuthorizationService, CounterAuthorizationService>();
         services.AddScoped<ICounterMapper, CounterMapper>();
+        services.AddScoped<ITournamentAuthorizationService, TournamentAuthorizationService>();
+        services.AddScoped<ITournamentMapper, TournamentMapper>();
+        services.AddScoped<ITournamentLiveBridge, TournamentLiveBridge>();
         services.AddScoped<UserSyncService>();
 
         // SignalR is registered in the API layer so its JsonProtocol options

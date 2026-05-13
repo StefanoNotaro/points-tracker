@@ -75,6 +75,19 @@ namespace PointsTracker.Infrastructure.Persistence.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("indoor_switch_every_sets");
 
+                    b.Property<Guid?>("LinkedTournamentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("linked_tournament_id");
+
+                    b.Property<Guid?>("LinkedTournamentMatchId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("linked_tournament_match_id");
+
+                    b.Property<string>("LinkedTournamentName")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("linked_tournament_name");
+
                     b.Property<Guid?>("OwnerUserId")
                         .HasColumnType("uuid")
                         .HasColumnName("owner_user_id");
@@ -123,6 +136,9 @@ namespace PointsTracker.Infrastructure.Persistence.Migrations
                         .HasColumnName("updated_at");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("LinkedTournamentId")
+                        .HasFilter("linked_tournament_id IS NOT NULL");
 
                     b.HasIndex("OwnerUserId")
                         .HasFilter("deleted_at IS NULL");
@@ -288,6 +304,310 @@ namespace PointsTracker.Infrastructure.Persistence.Migrations
                     b.ToTable("share_tokens", (string)null);
                 });
 
+            modelBuilder.Entity("PointsTracker.Domain.Entities.Tournament", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<int?>("AdvancePerGroup")
+                        .HasColumnType("integer")
+                        .HasColumnName("advance_per_group");
+
+                    b.Property<bool>("BeachAutoSwitchSides")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true)
+                        .HasColumnName("beach_auto_switch_sides");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<int?>("CustomLastSetPoints")
+                        .HasColumnType("integer")
+                        .HasColumnName("custom_last_set_points");
+
+                    b.Property<int?>("CustomPointsPerSet")
+                        .HasColumnType("integer")
+                        .HasColumnName("custom_points_per_set");
+
+                    b.Property<int?>("CustomSetsToWin")
+                        .HasColumnType("integer")
+                        .HasColumnName("custom_sets_to_win");
+
+                    b.Property<int?>("CustomTimeoutDurationSeconds")
+                        .HasColumnType("integer")
+                        .HasColumnName("custom_timeout_duration_seconds");
+
+                    b.Property<int?>("CustomTimeoutsPerSet")
+                        .HasColumnType("integer")
+                        .HasColumnName("custom_timeouts_per_set");
+
+                    b.Property<int?>("CustomTotalSets")
+                        .HasColumnType("integer")
+                        .HasColumnName("custom_total_sets");
+
+                    b.Property<bool?>("CustomWinByTwo")
+                        .HasColumnType("boolean")
+                        .HasColumnName("custom_win_by_two");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at");
+
+                    b.Property<DateTime?>("EndsAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("ends_at");
+
+                    b.Property<int?>("FinalLastSetPoints")
+                        .HasColumnType("integer")
+                        .HasColumnName("final_last_set_points");
+
+                    b.Property<int?>("FinalPointsPerSet")
+                        .HasColumnType("integer")
+                        .HasColumnName("final_points_per_set");
+
+                    b.Property<int?>("FinalSetsToWin")
+                        .HasColumnType("integer")
+                        .HasColumnName("final_sets_to_win");
+
+                    b.Property<int?>("FinalTimeoutDurationSeconds")
+                        .HasColumnType("integer")
+                        .HasColumnName("final_timeout_duration_seconds");
+
+                    b.Property<int?>("FinalTimeoutsPerSet")
+                        .HasColumnType("integer")
+                        .HasColumnName("final_timeouts_per_set");
+
+                    b.Property<int?>("FinalTotalSets")
+                        .HasColumnType("integer")
+                        .HasColumnName("final_total_sets");
+
+                    b.Property<bool?>("FinalWinByTwo")
+                        .HasColumnType("boolean")
+                        .HasColumnName("final_win_by_two");
+
+                    b.Property<string>("Format")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("format");
+
+                    b.Property<int?>("GroupCount")
+                        .HasColumnType("integer")
+                        .HasColumnName("group_count");
+
+                    b.Property<int?>("IndoorSwitchEverySets")
+                        .HasColumnType("integer")
+                        .HasColumnName("indoor_switch_every_sets");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("name");
+
+                    b.Property<Guid?>("OwnerUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("owner_user_id");
+
+                    b.Property<int?>("SemifinalLastSetPoints")
+                        .HasColumnType("integer")
+                        .HasColumnName("semifinal_last_set_points");
+
+                    b.Property<int?>("SemifinalPointsPerSet")
+                        .HasColumnType("integer")
+                        .HasColumnName("semifinal_points_per_set");
+
+                    b.Property<int?>("SemifinalSetsToWin")
+                        .HasColumnType("integer")
+                        .HasColumnName("semifinal_sets_to_win");
+
+                    b.Property<int?>("SemifinalTimeoutDurationSeconds")
+                        .HasColumnType("integer")
+                        .HasColumnName("semifinal_timeout_duration_seconds");
+
+                    b.Property<int?>("SemifinalTimeoutsPerSet")
+                        .HasColumnType("integer")
+                        .HasColumnName("semifinal_timeouts_per_set");
+
+                    b.Property<int?>("SemifinalTotalSets")
+                        .HasColumnType("integer")
+                        .HasColumnName("semifinal_total_sets");
+
+                    b.Property<bool?>("SemifinalWinByTwo")
+                        .HasColumnType("boolean")
+                        .HasColumnName("semifinal_win_by_two");
+
+                    b.Property<string>("SessionTokenHash")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("session_token_hash");
+
+                    b.Property<string>("SportType")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("sport_type");
+
+                    b.Property<DateTime?>("StartsAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("starts_at");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("status");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OwnerUserId")
+                        .HasFilter("deleted_at IS NULL");
+
+                    b.HasIndex("SessionTokenHash")
+                        .HasFilter("deleted_at IS NULL");
+
+                    b.ToTable("tournaments", (string)null);
+                });
+
+            modelBuilder.Entity("PointsTracker.Domain.Entities.TournamentMatch", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("BracketSide")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("bracket_side");
+
+                    b.Property<Guid?>("CounterId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("counter_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<int?>("GroupNumber")
+                        .HasColumnType("integer")
+                        .HasColumnName("group_number");
+
+                    b.Property<Guid?>("LoserParticipantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("loser_participant_id");
+
+                    b.Property<bool>("LoserToSideA")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true)
+                        .HasColumnName("loser_to_side_a");
+
+                    b.Property<int>("MatchNumber")
+                        .HasColumnType("integer")
+                        .HasColumnName("match_number");
+
+                    b.Property<Guid?>("NextLoserMatchId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("next_loser_match_id");
+
+                    b.Property<Guid?>("NextMatchId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("next_match_id");
+
+                    b.Property<Guid?>("ParticipantAId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("participant_a_id");
+
+                    b.Property<Guid?>("ParticipantBId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("participant_b_id");
+
+                    b.Property<int>("RoundNumber")
+                        .HasColumnType("integer")
+                        .HasColumnName("round_number");
+
+                    b.Property<DateTime?>("ScheduledAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("scheduled_at");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("status");
+
+                    b.Property<Guid>("TournamentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tournament_id");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<Guid?>("WinnerParticipantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("winner_participant_id");
+
+                    b.Property<bool>("WinnerToSideA")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true)
+                        .HasColumnName("winner_to_side_a");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CounterId")
+                        .HasFilter("counter_id IS NOT NULL");
+
+                    b.HasIndex("TournamentId");
+
+                    b.ToTable("tournament_matches", (string)null);
+                });
+
+            modelBuilder.Entity("PointsTracker.Domain.Entities.TournamentParticipant", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("RegisteredAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("registered_at");
+
+                    b.Property<int?>("Seed")
+                        .HasColumnType("integer")
+                        .HasColumnName("seed");
+
+                    b.Property<string>("TeamName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("team_name");
+
+                    b.Property<Guid>("TournamentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tournament_id");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TournamentId");
+
+                    b.HasIndex("TournamentId", "TeamName")
+                        .IsUnique();
+
+                    b.ToTable("tournament_participants", (string)null);
+                });
+
             modelBuilder.Entity("PointsTracker.Domain.Entities.User", b =>
                 {
                     b.Property<Guid>("Id")
@@ -369,6 +689,24 @@ namespace PointsTracker.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("PointsTracker.Domain.Entities.TournamentMatch", b =>
+                {
+                    b.HasOne("PointsTracker.Domain.Entities.Tournament", null)
+                        .WithMany("Matches")
+                        .HasForeignKey("TournamentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("PointsTracker.Domain.Entities.TournamentParticipant", b =>
+                {
+                    b.HasOne("PointsTracker.Domain.Entities.Tournament", null)
+                        .WithMany("Participants")
+                        .HasForeignKey("TournamentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("PointsTracker.Domain.Entities.Counter", b =>
                 {
                     b.Navigation("Events");
@@ -376,6 +714,13 @@ namespace PointsTracker.Infrastructure.Persistence.Migrations
                     b.Navigation("Sets");
 
                     b.Navigation("ShareTokens");
+                });
+
+            modelBuilder.Entity("PointsTracker.Domain.Entities.Tournament", b =>
+                {
+                    b.Navigation("Matches");
+
+                    b.Navigation("Participants");
                 });
 #pragma warning restore 612, 618
         }
