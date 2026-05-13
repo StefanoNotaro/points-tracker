@@ -9,6 +9,6 @@ export const environment = {
     redirectUri: window.location.origin,
     postLogoutRedirectUri: window.location.origin,
     responseType: 'code',
-    useSilentRefresh: true,
+    useSilentRefresh: false,
   },
 };
