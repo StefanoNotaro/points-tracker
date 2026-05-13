@@ -11,12 +11,13 @@ const authConfig: AuthConfig = {
   redirectUri: environment.oidc.redirectUri,
   postLogoutRedirectUri: environment.oidc.postLogoutRedirectUri,
   responseType: environment.oidc.responseType,
-  useSilentRefresh: environment.oidc.useSilentRefresh,
+
+  useSilentRefresh: false,
+  sessionChecksEnabled: false,
+
   showDebugInformation: !environment.production,
   clearHashAfterLogin: true,
   nonceStateSeparator: 'semicolon',
-  // Authentik's shared endpoints (authorize, token, userinfo) don't share
-  // the per-application issuer path — disable strict URL prefix validation.
   strictDiscoveryDocumentValidation: false,
 };
 
