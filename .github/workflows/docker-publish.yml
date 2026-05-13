@@ -54,9 +54,20 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ steps.repo.outputs.name }}-${{ matrix.image_suffix }}
+          # Tag strategy:
+          #   latest          → only on the default branch (pin to "latest stable")
+          #   <branch>        → "main" or "feature-foo" — moves with each push
+          #   <branch>-<sha>  → immutable per-commit reference, easy to roll back to
+          #   sha-<short>     → keeps the original sha-only tag for direct commit lookups
           tags: |
             type=raw,value=latest,enable={{is_default_branch}}
+            type=ref,event=branch
+            type=sha,prefix={{branch}}-,format=short
             type=sha,format=short
+          labels: |
+            org.opencontainers.image.title=${{ matrix.image_suffix }}
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
 
       - name: Build and push ${{ matrix.name }}
         uses: docker/build-push-action@v6

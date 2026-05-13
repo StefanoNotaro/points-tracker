@@ -19,9 +19,9 @@ RUN dotnet publish "src/PointsTracker.Api/PointsTracker.Api.csproj" \
 FROM mcr.microsoft.com/dotnet/aspnet:9.0-alpine AS runtime
 WORKDIR /app
 
-# Run as non-root.
-RUN addgroup -S app && adduser -S -G app app
-USER app
+# The official aspnet:9.0-alpine image ships a non-root user named "app"
+# (UID 1654). Use it directly — recreating it breaks the build.
+USER $APP_UID
 
 COPY --from=build /app/publish .
 
