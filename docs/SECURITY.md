@@ -9,7 +9,7 @@ Security is not a feature — it is a foundation. Every design decision starts h
 | Threat                              | Mitigation                                              |
 |-------------------------------------|---------------------------------------------------------|
 | Unauthenticated score manipulation  | Server-side ownership validation on every write         |
-| Share token forgery                 | HMAC-signed tokens; server validates signature         |
+| Share token forgery                 | Cryptographically random opaque tokens + DB lookup     |
 | JWT tampering                       | RS256 / ES256 signature verification via Authentik JWKS |
 | CSRF                                | SameSite=Strict cookies; no cookie-based session auth  |
 | XSS                                 | Angular template escaping; strict CSP header           |
@@ -17,7 +17,7 @@ Security is not a feature — it is a foundation. Every design decision starts h
 | Insecure direct object reference    | All resource access checks user/token ownership        |
 | Enumeration attacks                 | Resources use UUID v4 IDs; no sequential IDs exposed   |
 | Brute-force share tokens            | Rate limiting per IP + per endpoint                    |
-| Sensitive data exposure             | No PII in logs; tokens never in URLs                   |
+| Sensitive data exposure             | No PII in logs; opaque short-lived share links only    |
 
 ---
 
@@ -84,13 +84,12 @@ See `docs/ROLES_PERMISSIONS.md`.
 ## Share Token Design
 
 ```
-shareToken = base64url(counter_id + ":" + scope + ":" + expiry_unix_ts)
-           + "." + HMAC_SHA256(server_secret, payload)
+shareToken = base64url(random 96-bit value)
 ```
 
-- `server_secret` is an environment variable — never in source code.
-- Tokens are also stored in the database for revocation lookups.
-- The server checks both signature validity AND database presence (revocation).
+- Tokens are opaque, URL-safe, and intentionally short enough for easy sharing.
+- Tokens are stored in the database for lookup, expiry, and revocation checks.
+- Access is granted only when the token exists server-side and is still valid.
 - Scope values: `read`, `edit`.
 
 ---

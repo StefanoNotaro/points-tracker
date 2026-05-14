@@ -1,19 +1,16 @@
 using System.Security.Cryptography;
 using System.Text;
-using Microsoft.Extensions.Configuration;
 using PointsTracker.Application.Services;
-using PointsTracker.Domain.Enums;
 
 namespace PointsTracker.Infrastructure.Services;
 
-public class ShareTokenService(IConfiguration config) : IShareTokenService
+public class ShareTokenService : IShareTokenService
 {
-    private readonly string _secret = config["ShareToken:Secret"]
-        ?? throw new InvalidOperationException("ShareToken:Secret is not configured.");
+    private const int SessionTokenBytes = 32;
+    private const int ShareTokenBytes = 12;
 
     public string GenerateSessionToken() =>
-        Convert.ToBase64String(RandomNumberGenerator.GetBytes(32))
-            .Replace("+", "-").Replace("/", "_").TrimEnd('=');
+        ToBase64Url(RandomNumberGenerator.GetBytes(SessionTokenBytes));
 
     public string HashToken(string token)
     {
@@ -24,15 +21,12 @@ public class ShareTokenService(IConfiguration config) : IShareTokenService
     public bool VerifyToken(string token, string hash) =>
         HashToken(token) == hash;
 
-    public string GenerateShareToken(Guid counterId, ShareScope scope)
-    {
-        var payload = $"{counterId}:{scope}:{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}";
-        var payloadBytes = Encoding.UTF8.GetBytes(payload);
-        var secretBytes = Encoding.UTF8.GetBytes(_secret);
+    public string GenerateShareToken() =>
+        ToBase64Url(RandomNumberGenerator.GetBytes(ShareTokenBytes));
 
-        var hmac = HMACSHA256.HashData(secretBytes, payloadBytes);
-        var signature = Convert.ToBase64String(hmac).Replace("+", "-").Replace("/", "_").TrimEnd('=');
-
-        return $"{Convert.ToBase64String(payloadBytes).Replace("+", "-").Replace("/", "_").TrimEnd('=')}.{signature}";
-    }
+    private static string ToBase64Url(byte[] bytes) =>
+        Convert.ToBase64String(bytes)
+            .Replace("+", "-")
+            .Replace("/", "_")
+            .TrimEnd('=');
 }
