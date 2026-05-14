@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+﻿import { Component, inject } from '@angular/core';
 import { NgClass } from '@angular/common';
 import { TranslatePipe } from '@ngx-translate/core';
 import { NotificationService, Toast } from '../../../core/services/notification.service';
@@ -6,36 +6,7 @@ import { NotificationService, Toast } from '../../../core/services/notification.
 @Component({
   selector: 'pts-toast-container',
   imports: [NgClass, TranslatePipe],
-  template: `
-    <div
-      class="fixed top-[calc(env(safe-area-inset-top)+4rem)] right-3 left-3
-             sm:top-auto sm:bottom-5 sm:left-auto sm:right-4
-             z-50 flex flex-col gap-2 sm:max-w-sm sm:w-full"
-      aria-live="polite"
-      aria-atomic="false"
-    >
-      @for (toast of notifications.toasts(); track toast.id) {
-        <div
-          class="flex items-start gap-3 rounded-2xl px-4 py-3.5 shadow-dialog text-sm font-medium
-                 animate-in slide-in-from-bottom-2 duration-200"
-          [ngClass]="toastClass(toast)"
-          role="alert"
-        >
-          <span class="material-symbols-rounded text-lg leading-none flex-shrink-0 mt-px">
-            {{ toastIcon(toast) }}
-          </span>
-          <span class="flex-1 leading-snug">{{ toast.message }}</span>
-          <button
-            class="opacity-70 hover:opacity-100 transition-opacity flex-shrink-0 ml-1"
-            (click)="notifications.dismiss(toast.id)"
-            [attr.aria-label]="'toast.dismiss' | translate"
-          >
-            <span class="material-symbols-rounded text-base leading-none">close</span>
-          </button>
-        </div>
-      }
-    </div>
-  `,
+  templateUrl: './toast.component.html',
 })
 export class ToastContainerComponent {
   readonly notifications = inject(NotificationService);

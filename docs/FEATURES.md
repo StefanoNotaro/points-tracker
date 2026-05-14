@@ -64,7 +64,7 @@ These rules live in a configurable Sport Rules engine — not hardcoded UI logic
 **Behaviour:**
 - Owner opens share dialog.
 - Selects permission level: **View** or **Edit**.
-- System generates a share link: `/counter/join/{shareToken}`.
+- System generates a short share link: `/counter/join/{shareToken}`.
 - Anyone opening that link sees (or can edit) the counter.
 - Owner can revoke any share token at any time.
 - Share tokens expire after a configurable duration (default: 7 days; configurable by authenticated users).

@@ -103,7 +103,7 @@ Append-only audit log of all score changes. Enables undo and replay.
 |----------------|---------------------|-----------------------------------------------|
 | `id`           | UUID PK             |                                               |
 | `counter_id`   | UUID FK             | `counters.id`                                 |
-| `token`        | VARCHAR(512) UNIQUE | Full signed token string                      |
+| `token`        | VARCHAR(512) UNIQUE | Short opaque URL-safe share token             |
 | `scope`        | VARCHAR(20)         | `read`, `edit`                                |
 | `created_by_user_id` | UUID NULLABLE | Null for anonymous-created tokens           |
 | `expires_at`   | TIMESTAMPTZ         |                                               |

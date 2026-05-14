@@ -32,6 +32,8 @@ export class AuthService {
   readonly isInitialized = this._isInitialized.asReadonly();
 
   async initialize(): Promise<void> {
+    // Keep tokens scoped to the browser tab and avoid JWT persistence in localStorage.
+    this.oauthService.setStorage(sessionStorage);
     this.oauthService.configure(authConfig);
     this.oauthService.setupAutomaticSilentRefresh();
 
@@ -75,11 +77,89 @@ export class AuthService {
       return;
     }
 
+    const accessClaims = this.parseJwtClaims(this.oauthService.getAccessToken());
+
     this._user.set({
       id: claims['sub'] as string,
       email: claims['email'] as string,
       displayName: (claims['name'] as string) ?? (claims['email'] as string),
-      role: (claims['pts_role'] as GlobalRole) ?? 'user',
+      role: this.resolveRole(claims, accessClaims),
     });
+  }
+
+  private resolveRole(
+    idClaims: Record<string, unknown>,
+    accessClaims: Record<string, unknown> | null,
+  ): GlobalRole {
+    const candidate =
+      this.pickRoleFromClaims(accessClaims)
+      ?? this.pickRoleFromClaims(idClaims);
+    return candidate ?? 'user';
+  }
+
+  private pickRoleFromClaims(claims: Record<string, unknown> | null): GlobalRole | null {
+    if (!claims) return null;
+
+    const singular = this.toRole(claims['pts_role']);
+    if (singular) return singular;
+
+    const multi = claims['pts_roles'];
+    if (Array.isArray(multi)) {
+      return this.highestRole(multi.map((x) => this.toRole(x)).filter((x): x is GlobalRole => !!x));
+    }
+
+    if (typeof multi === 'string') {
+      // Accept either JSON array encoded as string or delimited role values.
+      try {
+        const parsed = JSON.parse(multi);
+        if (Array.isArray(parsed)) {
+          return this.highestRole(parsed.map((x) => this.toRole(x)).filter((x): x is GlobalRole => !!x));
+        }
+      } catch {
+        const roles = multi
+          .split(/[\s,;]+/)
+          .map((x) => this.toRole(x))
+          .filter((x): x is GlobalRole => !!x);
+        return this.highestRole(roles);
+      }
+    }
+
+    return null;
+  }
+
+  private highestRole(roles: GlobalRole[]): GlobalRole | null {
+    if (roles.length === 0) return null;
+    return roles.sort((a, b) => ROLE_HIERARCHY.indexOf(b) - ROLE_HIERARCHY.indexOf(a))[0] ?? null;
+  }
+
+  private toRole(raw: unknown): GlobalRole | null {
+    if (typeof raw !== 'string') return null;
+    const normalized = raw.trim().toLowerCase();
+    if (normalized === 'super_admin' || normalized === 'super-admin') return 'super_admin';
+    if (normalized === 'admin') return 'admin';
+    if (normalized === 'user') return 'user';
+    return null;
+  }
+
+  private parseJwtClaims(token: string | null): Record<string, unknown> | null {
+    if (!token) return null;
+    const parts = token.split('.');
+    if (parts.length < 2) return null;
+
+    try {
+      const payload = parts[1]
+        .replace(/-/g, '+')
+        .replace(/_/g, '/');
+      const padded = payload + '='.repeat((4 - (payload.length % 4)) % 4);
+      const json = decodeURIComponent(
+        atob(padded)
+          .split('')
+          .map((c) => `%${(`00${c.charCodeAt(0).toString(16)}`).slice(-2)}`)
+          .join(''),
+      );
+      return JSON.parse(json) as Record<string, unknown>;
+    } catch {
+      return null;
+    }
   }
 }

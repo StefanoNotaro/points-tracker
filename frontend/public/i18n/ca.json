@@ -91,6 +91,11 @@
   "toast": {
     "dismiss": "Descarta"
   },
+  "apiErrors": {
+    "generic": "Alguna cosa ha fallat. Torna-ho a provar.",
+    "rateLimited": "Massa sol·licituds. Espera un moment i torna-ho a provar.",
+    "rateLimitedRetry": "Massa sol·licituds. Torna-ho a provar d'aquí a {{seconds}} s."
+  },
   "sport": {
     "volleyball": "Voleibol",
     "beach_volleyball": "Voleibol platja",
@@ -238,6 +243,10 @@
       "invalidTitle": "Enllaç invàlid o caducat",
       "joiningTitle": "Unint-se al marcador…",
       "invalidMessage": "Aquest enllaç no és vàlid o ha caducat."
+    },
+    "live": {
+      "accessDenied": "Les actualitzacions en directe estan bloquejades per a aquest marcador. Pots continuar a la pàgina, però el resultat no s'actualitzarà automàticament.",
+      "unavailable": "Les actualitzacions en directe no estan disponibles temporalment. Pots continuar a la pàgina, però el resultat no s'actualitzarà automàticament."
     },
     "status": {
       "active": "En curs",

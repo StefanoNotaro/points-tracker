@@ -14,19 +14,19 @@ public static class TournamentEndpoints
     {
         var group = app.MapGroup("/api/tournaments").WithTags("Tournaments");
 
-        group.MapPost("/",                CreateTournament).AllowAnonymous();
-        group.MapGet("/mine",             ListMine).RequireAuthorization();
-        group.MapPost("/mine-anonymous",  ListMineAnonymous).AllowAnonymous();
-        group.MapGet("/{id:guid}",        GetTournament).AllowAnonymous();
-        group.MapPatch("/{id:guid}/rules", UpdateRules).AllowAnonymous();
-        group.MapDelete("/{id:guid}",     DeleteTournament).AllowAnonymous();
+        group.MapPost("/",                CreateTournament).AllowAnonymous().RequireRateLimiting("write");
+        group.MapGet("/mine",             ListMine).RequireAuthorization().RequireRateLimiting("read");
+        group.MapPost("/mine-anonymous",  ListMineAnonymous).AllowAnonymous().RequireRateLimiting("read");
+        group.MapGet("/{id:guid}",        GetTournament).AllowAnonymous().RequireRateLimiting("read");
+        group.MapPatch("/{id:guid}/rules", UpdateRules).AllowAnonymous().RequireRateLimiting("write");
+        group.MapDelete("/{id:guid}",     DeleteTournament).AllowAnonymous().RequireRateLimiting("write");
 
-        group.MapPost("/{id:guid}/participants",                  AddParticipant).AllowAnonymous();
-        group.MapDelete("/{id:guid}/participants/{participantId:guid}", RemoveParticipant).AllowAnonymous();
+        group.MapPost("/{id:guid}/participants",                  AddParticipant).AllowAnonymous().RequireRateLimiting("write");
+        group.MapDelete("/{id:guid}/participants/{participantId:guid}", RemoveParticipant).AllowAnonymous().RequireRateLimiting("write");
 
-        group.MapPost("/{id:guid}/start",                                  Start).AllowAnonymous();
-        group.MapPost("/{id:guid}/matches/{matchId:guid}/counter",         OpenMatchCounter).AllowAnonymous();
-        group.MapPost("/{id:guid}/matches/{matchId:guid}/result",          RecordResult).AllowAnonymous();
+        group.MapPost("/{id:guid}/start",                                  Start).AllowAnonymous().RequireRateLimiting("write");
+        group.MapPost("/{id:guid}/matches/{matchId:guid}/counter",         OpenMatchCounter).AllowAnonymous().RequireRateLimiting("write");
+        group.MapPost("/{id:guid}/matches/{matchId:guid}/result",          RecordResult).AllowAnonymous().RequireRateLimiting("write");
     }
 
     private static async Task<IResult> CreateTournament(

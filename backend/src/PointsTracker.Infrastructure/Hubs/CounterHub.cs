@@ -1,14 +1,41 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Logging;
 using PointsTracker.Application.Counters.DTOs;
+using PointsTracker.Application.Services;
+using PointsTracker.Domain.Interfaces;
+using System.Security.Claims;
 
 namespace PointsTracker.Infrastructure.Hubs;
 
 [AllowAnonymous]
-public class CounterHub : Hub
+public class CounterHub(
+    ICounterRepository counterRepository,
+    ICounterAuthorizationService authorizationService,
+    ILogger<CounterHub> logger) : Hub
 {
-    public async Task JoinCounter(string counterId)
+    public async Task JoinCounter(string counterId, string? sessionToken = null, string? shareToken = null)
     {
+        if (!Guid.TryParse(counterId, out var parsedCounterId))
+            throw new HubException("counter.liveAccessDenied");
+
+        var counter = await counterRepository.GetByIdAsync(parsedCounterId, Context.ConnectionAborted);
+        if (counter is null)
+            throw new HubException("counter.liveAccessDenied");
+
+        var userId = GetUserId();
+        var isSuperAdmin = HasRole("super_admin");
+        var access = authorizationService.GetLiveAccess(counter, userId, sessionToken, shareToken, isSuperAdmin);
+        if (!access.CanRead)
+        {
+            logger.LogWarning(
+                "Denied SignalR counter join for counter {CounterId}. ConnectionId={ConnectionId}, UserId={UserId}",
+                counterId,
+                Context.ConnectionId,
+                userId);
+            throw new HubException("counter.liveAccessDenied");
+        }
+
         await Groups.AddToGroupAsync(Context.ConnectionId, $"counter-{counterId}");
     }
 
@@ -37,6 +64,19 @@ public class CounterHub : Hub
         var userId = Context.UserIdentifier;
         if (string.IsNullOrEmpty(userId)) return;
         await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"user-{userId}");
+    }
+
+    private Guid? GetUserId()
+    {
+        var value = Context.User?.FindFirstValue("pts_id");
+        return Guid.TryParse(value, out var id) ? id : null;
+    }
+
+    private bool HasRole(string role)
+    {
+        var hierarchy = new[] { "user", "admin", "super_admin" };
+        var userRole = Context.User?.FindFirstValue("pts_role") ?? "user";
+        return Array.IndexOf(hierarchy, userRole) >= Array.IndexOf(hierarchy, role);
     }
 }
 

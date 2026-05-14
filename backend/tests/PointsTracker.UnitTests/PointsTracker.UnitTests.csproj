@@ -25,6 +25,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\PointsTracker.Application\PointsTracker.Application.csproj" />
     <ProjectReference Include="..\..\src\PointsTracker.Domain\PointsTracker.Domain.csproj" />
+    <ProjectReference Include="..\..\src\PointsTracker.Infrastructure\PointsTracker.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

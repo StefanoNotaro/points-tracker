@@ -1,4 +1,4 @@
-import { Component, computed, inject, input, output } from '@angular/core';
+﻿import { Component, computed, inject, input, output } from '@angular/core';
 import { NgClass } from '@angular/common';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { TournamentMatch, BracketSide } from '../../../../shared/models/tournament.model';
@@ -12,47 +12,7 @@ interface Round {
 @Component({
   selector: 'pts-bracket-view',
   imports: [NgClass, TranslatePipe],
-  template: `
-    <div class="flex flex-col gap-6">
-      @for (group of grouped(); track group.side + ':' + group.roundNumber) {
-        <section class="flex flex-col gap-2">
-          <h3 class="pts-label flex items-center gap-2">
-            <span>{{ labelFor(group.side, group.roundNumber) }}</span>
-          </h3>
-          <ul class="flex flex-col gap-2">
-            @for (m of group.matches; track m.id) {
-              <li>
-                <button type="button"
-                        class="w-full pts-card !p-3 text-left flex items-center gap-3 transition-colors"
-                        [class.hover:border-primary]="canOpen(m)"
-                        [class.opacity-60]="!canOpen(m) && !m.winnerParticipantId"
-                        (click)="openMatch(m)">
-                  <span class="flex-1 min-w-0 flex flex-col gap-1">
-                    <span class="flex items-center justify-between gap-2">
-                      <span class="text-sm truncate"
-                            [ngClass]="winnerIs(m, 'A') ? 'font-bold text-on-surface' : 'text-on-surface'">
-                        {{ m.participantAName ?? ('tournament.bracket.tbd' | translate) }}
-                      </span>
-                      <span class="text-xs text-on-surface-muted">{{ winnerIs(m, 'A') ? ('tournament.bracket.winShort' | translate) : '' }}</span>
-                    </span>
-                    <span class="flex items-center justify-between gap-2">
-                      <span class="text-sm truncate"
-                            [ngClass]="winnerIs(m, 'B') ? 'font-bold text-on-surface' : 'text-on-surface'">
-                        {{ m.participantBName ?? ('tournament.bracket.tbd' | translate) }}
-                      </span>
-                      <span class="text-xs text-on-surface-muted">{{ winnerIs(m, 'B') ? ('tournament.bracket.winShort' | translate) : '' }}</span>
-                    </span>
-                  </span>
-                  <span class="pts-badge shrink-0"
-                        [ngClass]="badgeClass(m.status)">{{ 'tournament.bracket.status.' + m.status | translate }}</span>
-                </button>
-              </li>
-            }
-          </ul>
-        </section>
-      }
-    </div>
-  `,
+  templateUrl: './bracket-view.component.html',
 })
 export class BracketViewComponent {
   readonly matches = input.required<TournamentMatch[]>();

@@ -28,6 +28,7 @@ public class ExceptionMiddleware(RequestDelegate next, ILogger<ExceptionMiddlewa
         {
             ValidationException ve => (HttpStatusCode.BadRequest, "Validation failed",
                 ve.Errors.GroupBy(e => e.PropertyName).ToDictionary(g => g.Key, g => g.Select(e => e.ErrorMessage).ToArray())),
+            DbUpdateConcurrencyException => (HttpStatusCode.Conflict, "Resource was modified by another operation. Please refresh and retry.", (Dictionary<string, string[]>?)null),
             NotFoundException => (HttpStatusCode.NotFound, ex.Message, (Dictionary<string, string[]>?)null),
             ForbiddenException => (HttpStatusCode.Forbidden, ex.Message, null),
             DomainException => (HttpStatusCode.UnprocessableEntity, ex.Message, null),

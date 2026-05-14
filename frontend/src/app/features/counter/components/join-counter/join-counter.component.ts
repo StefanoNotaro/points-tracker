@@ -1,4 +1,4 @@
-import { Component, inject, input, OnInit } from '@angular/core';
+﻿import { Component, inject, input, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { CounterService } from '../../services/counter.service';
@@ -9,22 +9,7 @@ import { NotificationService } from '../../../../core/services/notification.serv
 @Component({
   selector: 'pts-join-counter',
   imports: [LoadingSpinnerComponent, TranslatePipe],
-  template: `
-    <div class="flex flex-col items-center justify-center min-h-[60vh] gap-4 text-center">
-      @if (_error) {
-        <div class="w-16 h-16 rounded-2xl bg-error/10 flex items-center justify-center">
-          <span class="material-symbols-rounded text-4xl text-error">link_off</span>
-        </div>
-        <div>
-          <h2 class="text-lg font-bold text-on-surface">{{ 'counter.join.invalidTitle' | translate }}</h2>
-          <p class="text-on-surface-muted text-sm mt-1">{{ _error }}</p>
-        </div>
-      } @else {
-        <pts-loading-spinner size="lg" />
-        <p class="text-on-surface-muted text-sm font-medium">{{ 'counter.join.joiningTitle' | translate }}</p>
-      }
-    </div>
-  `,
+  templateUrl: './join-counter.component.html',
 })
 export class JoinCounterComponent implements OnInit {
   readonly token = input.required<string>();

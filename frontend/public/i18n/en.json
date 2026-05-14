@@ -91,6 +91,11 @@
   "toast": {
     "dismiss": "Dismiss"
   },
+  "apiErrors": {
+    "generic": "Something went wrong. Please try again.",
+    "rateLimited": "Too many requests. Please wait a moment and try again.",
+    "rateLimitedRetry": "Too many requests. Please retry in {{seconds}}s."
+  },
   "sport": {
     "volleyball": "Volleyball",
     "beach_volleyball": "Beach volleyball",
@@ -238,6 +243,10 @@
       "invalidTitle": "Link invalid or expired",
       "joiningTitle": "Joining counter…",
       "invalidMessage": "This share link is invalid or has expired."
+    },
+    "live": {
+      "accessDenied": "Live updates are blocked for this counter. You can stay on the page, but the score will not refresh automatically.",
+      "unavailable": "Live updates are temporarily unavailable. You can stay on the page, but the score will not refresh automatically."
     },
     "status": {
       "active": "In progress",

@@ -1,0 +1,30 @@
+﻿<div class="flex items-center gap-2">
+  @if (editing()) {
+    <input
+      type="text"
+      class="border-b-2 border-primary bg-transparent text-on-surface text-center font-semibold
+             outline-none w-full max-w-[160px] pb-1 text-sm"
+      [ngModel]="draft()"
+      (ngModelChange)="draft.set($event)"
+      (blur)="commit()"
+      (keydown.enter)="commit()"
+      (keydown.escape)="cancel()"
+      [attr.aria-label]="editLabel()"
+      #input
+    />
+  } @else {
+    <button
+      type="button"
+      class="text-sm font-semibold text-on-surface hover:text-primary transition-colors flex items-center gap-1"
+      (click)="startEditing()"
+      [attr.aria-label]="editLabelNamed()"
+      [disabled]="!canEdit()"
+    >
+      {{ teamName() }}
+      @if (canEdit()) {
+        <span class="material-symbols-rounded text-base text-on-surface-muted">edit</span>
+      }
+    </button>
+  }
+</div>
+

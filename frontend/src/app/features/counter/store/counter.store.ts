@@ -1,9 +1,10 @@
 import { Injectable, signal, computed, inject, OnDestroy } from '@angular/core';
 import { Subscription } from 'rxjs';
+import { TranslateService } from '@ngx-translate/core';
 import { Counter, Team } from '../../../shared/models/counter.model';
 import { SportConfig, SPORT_CONFIGS } from '../../../shared/models/sport.model';
 import { CounterService } from '../services/counter.service';
-import { CounterHubService } from '../services/counter-hub.service';
+import { CounterHubAccessDeniedError, CounterHubService } from '../services/counter-hub.service';
 import { NotificationService } from '../../../core/services/notification.service';
 
 type LoadState = 'idle' | 'loading' | 'loaded' | 'error';
@@ -13,8 +14,10 @@ export class CounterStore implements OnDestroy {
   private readonly counterService = inject(CounterService);
   private readonly hubService = inject(CounterHubService);
   private readonly notifications = inject(NotificationService);
+  private readonly i18n = inject(TranslateService);
   private hubSub: Subscription | null = null;
   private deleteSub: Subscription | null = null;
+  private liveDeniedSub: Subscription | null = null;
   private subscribedCounterId: string | null = null;
   readonly counterDeleted = signal(false);
 
@@ -48,7 +51,11 @@ export class CounterStore implements OnDestroy {
       await this.subscribeToHub(counterId);
     } catch (err) {
       console.warn('Real-time updates unavailable:', err);
-      this.notifications.error('Live updates unavailable. Scores will not refresh automatically.');
+      if (err instanceof CounterHubAccessDeniedError) {
+        this.notifications.warning(this.i18n.instant('counter.live.accessDenied'));
+      } else {
+        this.notifications.warning(this.i18n.instant('counter.live.unavailable'));
+      }
     }
   }
 
@@ -197,6 +204,7 @@ export class CounterStore implements OnDestroy {
     }
     this.hubSub?.unsubscribe();
     this.deleteSub?.unsubscribe();
+    this.liveDeniedSub?.unsubscribe();
   }
 
   async deleteCurrent(): Promise<void> {
@@ -229,6 +237,10 @@ export class CounterStore implements OnDestroy {
     });
     this.deleteSub = this.hubService.counterDeleted$.subscribe((deletedId) => {
       if (deletedId === counterId) this.counterDeleted.set(true);
+    });
+    this.liveDeniedSub = this.hubService.liveAccessDenied$.subscribe((deniedId) => {
+      if (deniedId !== counterId) return;
+      this.notifications.warning(this.i18n.instant('counter.live.accessDenied'));
     });
     this.subscribedCounterId = counterId;
     await this.hubService.joinCounter(counterId);

@@ -1,0 +1,10 @@
+﻿<div class="flex gap-1.5 items-center" [attr.aria-label]="ariaLabel()">
+  @for (i of setArray(); track i) {
+    <div
+      class="w-2.5 h-2.5 rounded-full transition-all duration-300"
+      [ngClass]="i < setsWon() ? 'bg-primary scale-110' : 'bg-border'"
+      aria-hidden="true"
+    ></div>
+  }
+</div>
+
