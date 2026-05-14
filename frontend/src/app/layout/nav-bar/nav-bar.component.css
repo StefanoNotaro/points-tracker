@@ -1,0 +1,8 @@
+﻿/* nav-bar drawer and scrim transitions */
+:host { display: contents; }
+header { backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+.drawer { transform: translateX(-100%); transition: transform 220ms ease; }
+.drawer.open { transform: translateX(0); }
+.scrim { opacity: 0; pointer-events: none; transition: opacity 220ms ease; }
+.scrim.open { opacity: 1; pointer-events: auto; }
+

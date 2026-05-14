@@ -1,21 +1,11 @@
-import { Component, inject, input } from '@angular/core';
+﻿import { Component, inject, input } from '@angular/core';
 import { NgClass } from '@angular/common';
 import { TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'pts-set-indicator',
   imports: [NgClass],
-  template: `
-    <div class="flex gap-1.5 items-center" [attr.aria-label]="ariaLabel()">
-      @for (i of setArray(); track i) {
-        <div
-          class="w-2.5 h-2.5 rounded-full transition-all duration-300"
-          [ngClass]="i < setsWon() ? 'bg-primary scale-110' : 'bg-border'"
-          aria-hidden="true"
-        ></div>
-      }
-    </div>
-  `,
+  templateUrl: './set-indicator.component.html',
 })
 export class SetIndicatorComponent {
   setsWon = input.required<number>();

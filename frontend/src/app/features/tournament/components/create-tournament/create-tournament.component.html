@@ -1,0 +1,93 @@
+﻿<div class="flex flex-col gap-5 pb-8">
+  <header class="flex flex-col gap-1">
+    <p class="text-xs uppercase tracking-wide text-on-surface-muted">{{ 'tournament.create.kicker' | translate }}</p>
+    <h1 class="text-xl sm:text-2xl font-bold text-on-surface">{{ 'tournament.create.title' | translate }}</h1>
+  </header>
+
+  <div class="flex flex-col gap-1">
+    <label class="pts-label" for="t-name">{{ 'tournament.create.name.label' | translate }}</label>
+    <input id="t-name" type="text" maxlength="200" required
+           class="pts-input" [(ngModel)]="name"
+           [placeholder]="'tournament.create.name.placeholder' | translate" />
+    <p class="text-xs text-on-surface-muted">{{ 'tournament.create.name.help' | translate }}</p>
+  </div>
+
+  <section class="flex flex-col gap-1">
+    <h2 class="pts-label">{{ 'tournament.create.sport.label' | translate }}</h2>
+    <pts-sport-selector [sports]="sportOptions" [selected]="sport()"
+                        (sportSelected)="sport.set($event)" />
+    <p class="text-xs text-on-surface-muted">{{ 'tournament.create.sport.help' | translate }}</p>
+  </section>
+
+  <section class="flex flex-col gap-1">
+    <h2 class="pts-label">{{ 'tournament.create.format.label' | translate }}</h2>
+    <div class="grid grid-cols-1 gap-2">
+      @for (f of formats; track f.value) {
+        <button type="button"
+                class="flex items-center gap-3 p-3 rounded-xl border-2 text-left transition-all"
+                [ngClass]="format() === f.value
+                  ? 'border-primary bg-primary/8'
+                  : 'border-border bg-surface-raised hover:border-primary/30'"
+                (click)="format.set(f.value)">
+          <span class="material-symbols-rounded text-2xl"
+                [class.text-primary]="format() === f.value"
+                [class.text-on-surface-muted]="format() !== f.value">{{ f.icon }}</span>
+          <span class="flex-1 min-w-0">
+            <span class="block font-semibold text-sm">
+              {{ 'tournament.format.' + f.value + '.label' | translate }}
+            </span>
+            <span class="block text-xs text-on-surface-muted">
+              {{ 'tournament.format.' + f.value + '.description' | translate }}
+            </span>
+          </span>
+          @if (format() === f.value) {
+            <span class="material-symbols-rounded text-primary">check_circle</span>
+          }
+        </button>
+      }
+    </div>
+    <p class="text-xs text-on-surface-muted">{{ 'tournament.create.format.help' | translate }}</p>
+  </section>
+
+  @if (format() === 'groupstageelimination') {
+    <section class="grid grid-cols-2 gap-3">
+      <label class="flex flex-col gap-1">
+        <span class="text-xs text-on-surface-muted">{{ 'tournament.create.groups.groupsLabel' | translate }}</span>
+        <input type="number" class="pts-input" min="2" max="8"
+               [ngModel]="groupCount()" (ngModelChange)="groupCount.set($event)" />
+        <span class="text-[11px] text-on-surface-muted">{{ 'tournament.create.groups.groupsHelp' | translate }}</span>
+      </label>
+      <label class="flex flex-col gap-1">
+        <span class="text-xs text-on-surface-muted">{{ 'tournament.create.groups.advanceLabel' | translate }}</span>
+        <input type="number" class="pts-input" min="1" max="4"
+               [ngModel]="advancePerGroup()" (ngModelChange)="advancePerGroup.set($event)" />
+        <span class="text-[11px] text-on-surface-muted">{{ 'tournament.create.groups.advanceHelp' | translate }}</span>
+      </label>
+      <p class="col-span-2 text-xs"
+         [class.text-on-surface-muted]="groupConfigValid()"
+         [class.text-error]="!groupConfigValid()">
+        @if (groupConfigValid()) {
+          {{ 'tournament.create.groups.constraint' | translate }}
+        } @else {
+          {{ 'tournament.create.groups.invalid' | translate }}
+        }
+      </p>
+    </section>
+  }
+
+  <div class="flex gap-2 pt-2">
+    <button type="button" class="pts-btn-secondary flex-1" (click)="cancel()">
+      {{ 'common.cancel' | translate }}
+    </button>
+    <button type="button" class="pts-btn-primary flex-1"
+            [disabled]="!canSubmit() || submitting()" (click)="submit()">
+      @if (submitting()) {
+        <span class="material-symbols-rounded animate-spin text-lg">progress_activity</span>
+      } @else {
+        <span class="material-symbols-rounded text-lg">arrow_forward</span>
+      }
+      <span>{{ 'tournament.create.submit' | translate }}</span>
+    </button>
+  </div>
+</div>
+

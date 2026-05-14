@@ -1,0 +1,85 @@
+﻿<div class="flex flex-col gap-5 pb-8">
+
+  <div class="pt-2">
+    <h1 class="text-2xl font-bold text-on-surface">{{ 'settings.title' | translate }}</h1>
+    <p class="text-on-surface-muted text-sm mt-1">{{ 'settings.subtitle' | translate }}</p>
+  </div>
+
+  <div class="pts-card flex flex-col gap-4">
+    <p class="pts-label">{{ 'settings.account' | translate }}</p>
+    <div class="flex items-center gap-3">
+      <div class="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+        <span class="material-symbols-rounded text-2xl text-primary">account_circle</span>
+      </div>
+      <div class="min-w-0">
+        <p class="font-semibold text-on-surface truncate">{{ auth.user()?.displayName }}</p>
+        <p class="text-sm text-on-surface-muted truncate">{{ auth.user()?.email }}</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="pts-card flex flex-col gap-4">
+    <p class="pts-label">{{ 'settings.appearance' | translate }}</p>
+    <div class="flex items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <span class="material-symbols-rounded text-on-surface-muted">
+          {{ theme.isDark() ? 'dark_mode' : 'light_mode' }}
+        </span>
+        <div>
+          <p class="text-sm font-medium text-on-surface">{{ 'settings.theme' | translate }}</p>
+          <p class="text-xs text-on-surface-muted">
+            {{ 'settings.themeActive' | translate: { mode: ((theme.isDark() ? 'settings.themeDark' : 'settings.themeLight') | translate) } }}
+          </p>
+        </div>
+      </div>
+      <button
+        class="relative inline-flex h-7 w-12 items-center rounded-full transition-colors duration-200
+               focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+        [class]="theme.isDark() ? 'bg-primary' : 'bg-border'"
+        (click)="theme.toggle()"
+        role="switch"
+        [attr.aria-checked]="theme.isDark()"
+        [attr.aria-label]="'settings.toggleDarkAria' | translate"
+      >
+        <span
+          class="inline-block h-5 w-5 rounded-full bg-white shadow-elevated transition-transform duration-200"
+          [class]="theme.isDark() ? 'translate-x-6' : 'translate-x-1'"
+        ></span>
+      </button>
+    </div>
+  </div>
+
+  <div class="pts-card flex flex-col gap-3">
+    <p class="pts-label">{{ 'settings.language' | translate }}</p>
+    <p class="text-xs text-on-surface-muted">{{ 'settings.languageHelp' | translate }}</p>
+    <div class="grid grid-cols-3 gap-2">
+      @for (l of locales; track l) {
+        <button type="button"
+                class="px-3 py-2 rounded-xl border-2 text-sm font-medium transition-colors"
+                [class.border-primary]="currentLang() === l"
+                [class.bg-primary]="currentLang() === l"
+                [class.text-on-primary]="currentLang() === l"
+                [class.border-border]="currentLang() !== l"
+                [class.bg-surface-raised]="currentLang() !== l"
+                [class.text-on-surface]="currentLang() !== l"
+                (click)="setLang(l)">
+          {{ 'settings.languages.' + l | translate }}
+        </button>
+      }
+    </div>
+  </div>
+
+  <div class="pts-card flex flex-col gap-4">
+    <p class="pts-label">{{ 'settings.session' | translate }}</p>
+    <button
+      class="flex items-center gap-3 text-error hover:bg-error/8 rounded-xl p-3 -mx-1
+             transition-colors text-sm font-medium w-full text-left"
+      (click)="auth.logout()"
+    >
+      <span class="material-symbols-rounded text-xl">logout</span>
+      {{ 'settings.signOut' | translate }}
+    </button>
+  </div>
+
+</div>
+

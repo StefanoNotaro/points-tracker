@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+﻿import { Component, inject, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
@@ -15,77 +15,7 @@ import { SPORT_CONFIGS } from '../../../../shared/models/sport.model';
 @Component({
   selector: 'pts-my-counters',
   imports: [RouterLink, LoadingSpinnerComponent, TranslatePipe],
-  template: `
-    <div class="flex flex-col gap-4 pb-8">
-
-      <div class="flex items-center justify-between gap-2">
-        <h1 class="text-xl sm:text-2xl font-bold text-on-surface">{{ 'counter.list.title' | translate }}</h1>
-        <a routerLink="/new-counter" class="pts-btn-primary" [attr.aria-label]="'counter.list.newAria' | translate">
-          <span class="material-symbols-rounded text-lg">add</span>
-          <span class="hidden sm:inline">{{ 'counter.list.new' | translate }}</span>
-        </a>
-      </div>
-
-      @if (loading()) {
-        <div class="flex items-center justify-center py-20">
-          <pts-loading-spinner size="lg" />
-        </div>
-      } @else if (counters().length === 0) {
-        <div class="pts-card flex flex-col items-center text-center gap-3 py-10">
-          <span class="material-symbols-rounded text-5xl text-on-surface-muted">scoreboard</span>
-          <p class="text-on-surface font-semibold">{{ 'counter.list.emptyTitle' | translate }}</p>
-          <p class="text-sm text-on-surface-muted">{{ 'counter.list.emptySubtitle' | translate }}</p>
-          <a routerLink="/new-counter" class="pts-btn-primary mt-2">
-            <span class="material-symbols-rounded">add</span>
-            <span>{{ 'counter.list.emptyCta' | translate }}</span>
-          </a>
-        </div>
-      } @else {
-        <ul class="flex flex-col gap-2">
-          @for (c of counters(); track c.id) {
-            <li class="pts-card !p-3 flex items-center gap-3">
-              <span class="material-symbols-rounded text-2xl text-primary shrink-0">
-                {{ iconFor(c.sportType) }}
-              </span>
-              <a
-                [routerLink]="['/counter', c.id]"
-                class="flex-1 min-w-0 active:opacity-70 transition-opacity"
-              >
-                <p class="font-semibold text-on-surface truncate">
-                  {{ c.teamAName }} <span class="text-on-surface-muted font-normal">{{ 'dashboard.vs' | translate }}</span> {{ c.teamBName }}
-                </p>
-                <p class="text-xs text-on-surface-muted truncate flex items-center gap-1.5 mt-0.5">
-                  <span class="font-mono font-medium text-on-surface">
-                    {{ c.setsWonA }}–{{ c.setsWonB }}
-                  </span>
-                  @if (c.status === 'active') {
-                    <span class="inline-flex items-center gap-1 text-success">
-                      <span class="w-1.5 h-1.5 rounded-full bg-success"></span>{{ 'common.live' | translate }}
-                    </span>
-                  } @else {
-                    <span class="inline-flex items-center gap-1">
-                      <span class="material-symbols-rounded text-sm">flag</span>
-                      {{ 'counter.status.' + c.status | translate }}
-                    </span>
-                  }
-                </p>
-              </a>
-              <button
-                type="button"
-                class="pts-btn-icon shrink-0"
-                (click)="confirmDelete(c)"
-                [attr.aria-label]="'counter.list.deleteAria' | translate"
-              >
-                <span class="material-symbols-rounded text-on-surface-muted hover:text-error">
-                  delete_outline
-                </span>
-              </button>
-            </li>
-          }
-        </ul>
-      }
-    </div>
-  `,
+  templateUrl: './my-counters.component.html',
 })
 export class MyCountersComponent implements OnInit {
   private readonly counterService = inject(CounterService);
