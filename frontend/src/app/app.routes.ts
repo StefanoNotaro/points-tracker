@@ -38,17 +38,17 @@ export const routes: Routes = [
           ),
       },
       {
-        path: 'counter/:id',
-        loadComponent: () =>
-          import('./features/counter/components/counter-page/counter-page.component').then(
-            (m) => m.CounterPageComponent,
-          ),
-      },
-      {
         path: 'counter/join/:token',
         loadComponent: () =>
           import('./features/counter/components/join-counter/join-counter.component').then(
             (m) => m.JoinCounterComponent,
+          ),
+      },
+      {
+        path: 'counter/:id',
+        loadComponent: () =>
+          import('./features/counter/components/counter-page/counter-page.component').then(
+            (m) => m.CounterPageComponent,
           ),
       },
       {
