@@ -27,10 +27,13 @@ builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(opts =>
     {
-        opts.Authority = builder.Configuration["Authentik:Authority"];
-        opts.Audience = builder.Configuration["Authentik:ClientId"];
+        var authority = builder.Configuration["Authentik:Authority"];
+        var clientId = builder.Configuration["Authentik:ClientId"];
+
+        opts.Authority = authority;
+        opts.Audience = clientId;
         opts.RequireHttpsMetadata = !builder.Environment.IsDevelopment();
-        opts.TokenValidationParameters.ValidateAudience = false;
+        opts.TokenValidationParameters.ValidateAudience = true;
         opts.Events = new JwtBearerEvents
         {
             OnMessageReceived = context =>
