@@ -24,12 +24,19 @@ public class CounterCleanupOptions
     /// days are soft-deleted. Authenticated users' counters are never
     /// touched here — they manage their own data.
     /// </summary>
-    public int AnonymousInactiveDays { get; set; } = 30;
+    public int AnonymousInactiveDays { get; set; } = 14;
 
     /// <summary>
     /// After a counter has been soft-deleted for this many days, the row
     /// (and its child sets/events/share tokens via cascade) is permanently
     /// removed. Gives a short recovery window before bytes are gone.
     /// </summary>
-    public int HardDeleteGraceDays { get; set; } = 7;
+    public int HardDeleteGraceDays { get; set; } = 30;
+
+    /// <summary>
+    /// Anonymous tournaments whose status is Completed/Abandoned are
+    /// soft-deleted after this many days even if their UpdatedAt is recent
+    /// (the bracket-result write touches UpdatedAt at completion time).
+    /// </summary>
+    public int TournamentCompletedRetentionDays { get; set; } = 90;
 }

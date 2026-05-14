@@ -24,6 +24,7 @@ public static class DependencyInjection
         services.AddScoped<IShareTokenRepository, ShareTokenRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IRoleAuditLogRepository, RoleAuditLogRepository>();
+        services.AddScoped<ICleanupAuditLogRepository, CleanupAuditLogRepository>();
         services.AddScoped<ITournamentRepository, TournamentRepository>();
 
         services.AddSingleton<IShareTokenService, ShareTokenService>();
@@ -38,6 +39,7 @@ public static class DependencyInjection
         // can be configured alongside the rest of the API JSON pipeline.
 
         services.Configure<CounterCleanupOptions>(config.GetSection(CounterCleanupOptions.SectionName));
+        services.AddScoped<ICleanupService, CleanupService>();
         services.AddHostedService<CounterCleanupService>();
 
         return services;

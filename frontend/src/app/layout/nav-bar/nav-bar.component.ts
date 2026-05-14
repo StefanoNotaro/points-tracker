@@ -10,6 +10,7 @@ interface DrawerItem {
   icon: string;
   routerLink: string;
   authedOnly?: boolean;
+  adminOnly?: boolean;
 }
 
 @Component({
@@ -32,10 +33,15 @@ export class NavBarComponent {
     { labelKey: 'nav.items.counters',     icon: 'list_alt',        routerLink: '/my-counters', authedOnly: true },
     { labelKey: 'nav.items.tournaments',  icon: 'emoji_events',    routerLink: '/tournaments' },
     { labelKey: 'nav.items.settings',     icon: 'settings',        routerLink: '/settings', authedOnly: true },
+    { labelKey: 'nav.items.adminCleanup', icon: 'cleaning_services', routerLink: '/admin/cleanup', authedOnly: true, adminOnly: true },
   ];
 
   readonly visibleItems = computed(() =>
-    this.items.filter((i) => !i.authedOnly || this.auth.isAuthenticated()),
+    this.items.filter((i) => {
+      if (i.authedOnly && !this.auth.isAuthenticated()) return false;
+      if (i.adminOnly && !this.auth.hasRole('admin')) return false;
+      return true;
+    }),
   );
 
   constructor() {

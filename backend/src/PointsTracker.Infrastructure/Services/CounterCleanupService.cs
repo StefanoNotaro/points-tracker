@@ -1,24 +1,21 @@
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using PointsTracker.Infrastructure.Persistence;
+using PointsTracker.Application.Services;
+using PointsTracker.Domain.Entities;
+using PointsTracker.Domain.Enums;
+using PointsTracker.Domain.Interfaces;
 
 namespace PointsTracker.Infrastructure.Services;
 
 /// <summary>
-/// Periodically removes orphaned anonymous counters and tournaments.
-/// Authenticated users' data is out of scope — they manage it through the UI.
+/// Periodic background sweep that delegates to <see cref="ICleanupService"/>
+/// — the same code path the admin dashboard's "Run policy now" button uses.
+/// Writes a single <c>cleanup_audit_log</c> row per pass with actor
+/// <c>system:background</c>.
 ///
-/// The cleanup runs in two phases for each entity type:
-///   1. Soft-delete anonymous rows whose UpdatedAt is older than
-///      <see cref="CounterCleanupOptions.AnonymousInactiveDays"/>. Soft-deleted
-///      rows disappear from the API thanks to the global query filter.
-///   2. Hard-delete any soft-deleted row whose DeletedAt is older than
-///      <see cref="CounterCleanupOptions.HardDeleteGraceDays"/>. EF cascades
-///      drop child rows (counter sets/events/share tokens, tournament
-///      participants/matches) via the relational delete behavior.
+/// See docs/ADMIN_CLEANUP.md for the retention windows.
 /// </summary>
 public class CounterCleanupService(
     IServiceScopeFactory scopeFactory,
@@ -59,62 +56,34 @@ public class CounterCleanupService(
 
     private async Task RunOnceAsync(CancellationToken ct)
     {
-        var opts = options.CurrentValue;
         using var scope = scopeFactory.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var cleanup = scope.ServiceProvider.GetRequiredService<ICleanupService>();
+        var auditRepo = scope.ServiceProvider.GetRequiredService<ICleanupAuditLogRepository>();
 
-        var now = DateTime.UtcNow;
-        var softDeleteCutoff = now - TimeSpan.FromDays(opts.AnonymousInactiveDays);
-        var hardDeleteCutoff = now - TimeSpan.FromDays(opts.HardDeleteGraceDays);
+        var result = await cleanup.RunPolicyAsync(ct);
+        var total = result.CountersSoftDeleted + result.TournamentsSoftDeleted
+                    + result.CountersHardPurged + result.TournamentsHardPurged
+                    + result.ShareTokensPurged;
 
-        // Phase 1 — soft-delete stale anonymous tournaments first so that
-        // their linked counters are caught by the counter sweep below.
-        var tournamentsSoftDeleted = await db.Tournaments
-            .IgnoreQueryFilters()
-            .Where(t => t.DeletedAt == null
-                        && t.OwnerUserId == null
-                        && t.UpdatedAt < softDeleteCutoff)
-            .ExecuteUpdateAsync(s => s
-                .SetProperty(t => t.DeletedAt, _ => now)
-                .SetProperty(t => t.UpdatedAt, _ => now), ct);
-
-        // Phase 2 — soft-delete counters that are either stale-and-anonymous
-        // OR linked to an already-soft-deleted tournament. The second clause
-        // catches counters spawned by tournament matches (which carry the
-        // tournament's ownership, not their own session token) and ensures
-        // they don't outlive their parent tournament.
-        var countersSoftDeleted = await db.Counters
-            .IgnoreQueryFilters()
-            .Where(c => c.DeletedAt == null
-                        && ((c.OwnerUserId == null && c.UpdatedAt < softDeleteCutoff)
-                            || (c.LinkedTournamentId != null
-                                && db.Tournaments
-                                    .IgnoreQueryFilters()
-                                    .Any(t => t.Id == c.LinkedTournamentId && t.DeletedAt != null))))
-            .ExecuteUpdateAsync(s => s
-                .SetProperty(c => c.DeletedAt, _ => now)
-                .SetProperty(c => c.UpdatedAt, _ => now), ct);
-
-        // Phase 3 — hard-delete tournaments and counters past the grace
-        // window. EF cascades drop participants/matches/sets/events/share
-        // tokens via the relational delete behaviour.
-        var tournamentsHardDeleted = await db.Tournaments
-            .IgnoreQueryFilters()
-            .Where(t => t.DeletedAt != null && t.DeletedAt < hardDeleteCutoff)
-            .ExecuteDeleteAsync(ct);
-
-        var countersHardDeleted = await db.Counters
-            .IgnoreQueryFilters()
-            .Where(c => c.DeletedAt != null && c.DeletedAt < hardDeleteCutoff)
-            .ExecuteDeleteAsync(ct);
-
-        if (countersSoftDeleted > 0 || countersHardDeleted > 0
-            || tournamentsSoftDeleted > 0 || tournamentsHardDeleted > 0)
+        if (total > 0)
         {
+            await auditRepo.AddAsync(
+                CleanupAuditLog.Record(
+                    CleanupAction.RunPolicy,
+                    actor: "system:background",
+                    targetCount: total,
+                    targetIds: null,
+                    reason: $"counters soft={result.CountersSoftDeleted}/hard={result.CountersHardPurged}, "
+                            + $"tournaments soft={result.TournamentsSoftDeleted}/hard={result.TournamentsHardPurged}, "
+                            + $"tokens purged={result.ShareTokensPurged}"),
+                ct);
+            await auditRepo.SaveChangesAsync(ct);
+
             logger.LogInformation(
-                "Cleanup: tournaments soft={TSoft}/hard={THard}, counters soft={CSoft}/hard={CHard}.",
-                tournamentsSoftDeleted, tournamentsHardDeleted,
-                countersSoftDeleted, countersHardDeleted);
+                "Cleanup: tournaments soft={TSoft}/hard={THard}, counters soft={CSoft}/hard={CHard}, tokens={Tokens}.",
+                result.TournamentsSoftDeleted, result.TournamentsHardPurged,
+                result.CountersSoftDeleted, result.CountersHardPurged,
+                result.ShareTokensPurged);
         }
     }
 }

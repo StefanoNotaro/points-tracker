@@ -37,7 +37,44 @@
       "dashboard": "Panel",
       "counters": "Marcadores",
       "tournaments": "Torneos",
-      "settings": "Ajustes"
+      "settings": "Ajustes",
+      "adminCleanup": "Limpieza"
+    }
+  },
+  "admin": {
+    "cleanup": {
+      "title": "Limpieza",
+      "subtitle": "Elimina datos anónimos obsoletos y tokens caducados.",
+      "refresh": "Actualizar",
+      "candidates": "Candidatos",
+      "staleCounters": "Marcadores obsoletos",
+      "staleTournaments": "Torneos obsoletos",
+      "expiredTokens": "Tokens caducados",
+      "pastGrace": "Más allá del periodo de gracia",
+      "reason": "Motivo (opcional, requerido para purga definitiva)",
+      "reasonPlaceholder": "Por qué se ejecuta esta limpieza",
+      "policy": "Ejecutar política de retención",
+      "policyHelp": "Elimina (soft) filas anónimas obsoletas, purga las que están más allá del periodo de gracia y borra los tokens caducados. Mismo proceso que el trabajador en segundo plano.",
+      "runPolicy": "Ejecutar política ahora",
+      "confirmPolicy": "Esto aplica las ventanas de retención configuradas a todas las filas elegibles. Las purgas son irreversibles. ¿Continuar?",
+      "lastRunSummary": "Última ejecución — marcadores: soft {{cs}} / hard {{ch}}, torneos: soft {{ts}} / hard {{th}}, tokens: {{tok}}.",
+      "expiredTokensHelp": "Elimina los tokens cuya expiración ya pasó o que han sido revocados.",
+      "purgeExpiredTokens": "Purgar tokens caducados",
+      "sampleCounters": "Muestra de marcadores obsoletos",
+      "sampleTournaments": "Muestra de torneos obsoletos",
+      "sampleHelp": "Hasta 50 candidatos más antiguos. Desmarca las filas que quieras conservar.",
+      "softDeleteSelected": "Soft-delete seleccionados ({{count}})",
+      "hardPurgeSelected": "Purgar seleccionados",
+      "confirmHardPurge": "¿Purgar {{count}} fila(s) definitivamente? No se puede deshacer.",
+      "auditLog": "Acciones recientes",
+      "auditEmpty": "Aún no hay acciones de limpieza registradas.",
+      "auditRow": "{{actor}} — {{count}} fila(s)",
+      "toasts": {
+        "policyRun": "Política de limpieza ejecutada.",
+        "softDeleted": "Soft-delete aplicado a {{count}} fila(s).",
+        "hardPurged": "{{count}} fila(s) purgada(s) definitivamente.",
+        "tokensPurged": "{{count}} token(s) caducado(s) eliminado(s)."
+      }
     }
   },
   "dashboard": {

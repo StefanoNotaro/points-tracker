@@ -1,0 +1,222 @@
+<div class="flex flex-col gap-5 pb-8">
+
+  <div class="pt-2 flex items-start justify-between gap-3">
+    <div>
+      <h1 class="text-2xl font-bold text-on-surface">{{ 'admin.cleanup.title' | translate }}</h1>
+      <p class="text-on-surface-muted text-sm mt-1">{{ 'admin.cleanup.subtitle' | translate }}</p>
+    </div>
+    <button
+      type="button"
+      class="material-symbols-rounded text-on-surface-muted p-2 rounded-full hover:bg-surface-raised"
+      [disabled]="loading()"
+      [attr.aria-label]="'admin.cleanup.refresh' | translate"
+      (click)="refresh()">
+      refresh
+    </button>
+  </div>
+
+  @if (preview(); as p) {
+    <div class="pts-card flex flex-col gap-3">
+      <p class="pts-label">{{ 'admin.cleanup.candidates' | translate }}</p>
+      <ul class="grid grid-cols-2 gap-3 text-sm">
+        <li class="flex flex-col">
+          <span class="text-on-surface-muted">{{ 'admin.cleanup.staleCounters' | translate }}</span>
+          <span class="text-xl font-semibold">{{ p.staleAnonymousCounters }}</span>
+        </li>
+        <li class="flex flex-col">
+          <span class="text-on-surface-muted">{{ 'admin.cleanup.staleTournaments' | translate }}</span>
+          <span class="text-xl font-semibold">{{ p.staleAnonymousTournaments }}</span>
+        </li>
+        <li class="flex flex-col">
+          <span class="text-on-surface-muted">{{ 'admin.cleanup.expiredTokens' | translate }}</span>
+          <span class="text-xl font-semibold">{{ p.expiredShareTokens }}</span>
+        </li>
+        <li class="flex flex-col">
+          <span class="text-on-surface-muted">{{ 'admin.cleanup.pastGrace' | translate }}</span>
+          <span class="text-xl font-semibold">{{ p.countersPastGrace + p.tournamentsPastGrace }}</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Reason field reused across actions. Required for hard-purge, optional otherwise. -->
+    <div class="pts-card flex flex-col gap-2">
+      <label class="pts-label" for="cleanup-reason">{{ 'admin.cleanup.reason' | translate }}</label>
+      <input
+        id="cleanup-reason"
+        type="text"
+        class="pts-input"
+        [ngModel]="reason()"
+        (ngModelChange)="reason.set($event)"
+        [placeholder]="'admin.cleanup.reasonPlaceholder' | translate" />
+    </div>
+
+    <!-- Run policy --------------------------------------------------------- -->
+    <div class="pts-card flex flex-col gap-3">
+      <p class="pts-label">{{ 'admin.cleanup.policy' | translate }}</p>
+      <p class="text-xs text-on-surface-muted">{{ 'admin.cleanup.policyHelp' | translate }}</p>
+      @if (!confirmingPolicy()) {
+        <button type="button" class="pts-btn-primary"
+                [disabled]="loading()" (click)="confirmingPolicy.set(true)">
+          {{ 'admin.cleanup.runPolicy' | translate }}
+        </button>
+      } @else {
+        <div class="flex flex-col gap-2 rounded-xl border-2 border-warning bg-warning/8 p-3">
+          <p class="text-sm">{{ 'admin.cleanup.confirmPolicy' | translate }}</p>
+          <div class="flex gap-2">
+            <button class="pts-btn-primary flex-1"
+                    [disabled]="loading()" (click)="runPolicy()">
+              {{ 'common.confirm' | translate }}
+            </button>
+            <button class="pts-btn-secondary flex-1"
+                    (click)="confirmingPolicy.set(false)">
+              {{ 'common.cancel' | translate }}
+            </button>
+          </div>
+        </div>
+      }
+      @if (lastRun(); as r) {
+        <p class="text-xs text-on-surface-muted">
+          {{ 'admin.cleanup.lastRunSummary' | translate: {
+            cs: r.countersSoftDeleted, ch: r.countersHardPurged,
+            ts: r.tournamentsSoftDeleted, th: r.tournamentsHardPurged,
+            tok: r.shareTokensPurged
+          } }}
+        </p>
+      }
+    </div>
+
+    <!-- Expired share tokens ----------------------------------------------- -->
+    <div class="pts-card flex flex-col gap-3">
+      <p class="pts-label">{{ 'admin.cleanup.expiredTokens' | translate }}</p>
+      <p class="text-xs text-on-surface-muted">{{ 'admin.cleanup.expiredTokensHelp' | translate }}</p>
+      <button type="button" class="pts-btn-secondary"
+              [disabled]="loading() || p.expiredShareTokens === 0"
+              (click)="purgeExpiredTokens()">
+        {{ 'admin.cleanup.purgeExpiredTokens' | translate }}
+      </button>
+    </div>
+
+    <!-- Ad-hoc counters ---------------------------------------------------- -->
+    @if (p.sampleCounterIds.length > 0) {
+      <div class="pts-card flex flex-col gap-3">
+        <p class="pts-label">{{ 'admin.cleanup.sampleCounters' | translate }}</p>
+        <p class="text-xs text-on-surface-muted">{{ 'admin.cleanup.sampleHelp' | translate }}</p>
+        <ul class="flex flex-col gap-1">
+          @for (id of p.sampleCounterIds; track id) {
+            <li>
+              <label class="flex items-center gap-2 text-xs font-mono cursor-pointer">
+                <input type="checkbox"
+                       [checked]="selectedCounterIds().has(id)"
+                       (change)="toggleCounter(id)" />
+                <span>{{ id }}</span>
+              </label>
+            </li>
+          }
+        </ul>
+        <div class="flex flex-wrap gap-2">
+          <button type="button" class="pts-btn-secondary flex-1"
+                  [disabled]="loading() || selectedCounterIds().size === 0"
+                  (click)="softDeleteCounters()">
+            {{ 'admin.cleanup.softDeleteSelected' | translate: { count: selectedCounterIds().size } }}
+          </button>
+          @if (auth.hasRole('super_admin')) {
+            @if (confirmingHardPurge() !== 'counters') {
+              <button type="button" class="pts-btn-primary bg-error text-on-error hover:bg-error/90 flex-1"
+                      [disabled]="loading() || selectedCounterIds().size === 0 || !reason().trim()"
+                      (click)="confirmingHardPurge.set('counters')">
+                {{ 'admin.cleanup.hardPurgeSelected' | translate }}
+              </button>
+            } @else {
+              <div class="flex w-full flex-col gap-2 rounded-xl border-2 border-error bg-error/8 p-3">
+                <p class="text-sm font-medium">{{ 'admin.cleanup.confirmHardPurge' | translate: { count: selectedCounterIds().size } }}</p>
+                <div class="flex gap-2">
+                  <button class="pts-btn-primary bg-error text-on-error hover:bg-error/90 flex-1"
+                          [disabled]="loading()" (click)="hardPurgeCounters()">
+                    {{ 'common.confirm' | translate }}
+                  </button>
+                  <button class="pts-btn-secondary flex-1"
+                          (click)="confirmingHardPurge.set(null)">
+                    {{ 'common.cancel' | translate }}
+                  </button>
+                </div>
+              </div>
+            }
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Ad-hoc tournaments ------------------------------------------------- -->
+    @if (p.sampleTournamentIds.length > 0) {
+      <div class="pts-card flex flex-col gap-3">
+        <p class="pts-label">{{ 'admin.cleanup.sampleTournaments' | translate }}</p>
+        <ul class="flex flex-col gap-1">
+          @for (id of p.sampleTournamentIds; track id) {
+            <li>
+              <label class="flex items-center gap-2 text-xs font-mono cursor-pointer">
+                <input type="checkbox"
+                       [checked]="selectedTournamentIds().has(id)"
+                       (change)="toggleTournament(id)" />
+                <span>{{ id }}</span>
+              </label>
+            </li>
+          }
+        </ul>
+        <div class="flex flex-wrap gap-2">
+          <button type="button" class="pts-btn-secondary flex-1"
+                  [disabled]="loading() || selectedTournamentIds().size === 0"
+                  (click)="softDeleteTournaments()">
+            {{ 'admin.cleanup.softDeleteSelected' | translate: { count: selectedTournamentIds().size } }}
+          </button>
+          @if (auth.hasRole('super_admin')) {
+            @if (confirmingHardPurge() !== 'tournaments') {
+              <button type="button" class="pts-btn-primary bg-error text-on-error hover:bg-error/90 flex-1"
+                      [disabled]="loading() || selectedTournamentIds().size === 0 || !reason().trim()"
+                      (click)="confirmingHardPurge.set('tournaments')">
+                {{ 'admin.cleanup.hardPurgeSelected' | translate }}
+              </button>
+            } @else {
+              <div class="flex w-full flex-col gap-2 rounded-xl border-2 border-error bg-error/8 p-3">
+                <p class="text-sm font-medium">{{ 'admin.cleanup.confirmHardPurge' | translate: { count: selectedTournamentIds().size } }}</p>
+                <div class="flex gap-2">
+                  <button class="pts-btn-primary bg-error text-on-error hover:bg-error/90 flex-1"
+                          [disabled]="loading()" (click)="hardPurgeTournaments()">
+                    {{ 'common.confirm' | translate }}
+                  </button>
+                  <button class="pts-btn-secondary flex-1"
+                          (click)="confirmingHardPurge.set(null)">
+                    {{ 'common.cancel' | translate }}
+                  </button>
+                </div>
+              </div>
+            }
+          }
+        </div>
+      </div>
+    }
+  }
+
+  <!-- Audit log ------------------------------------------------------------ -->
+  <div class="pts-card flex flex-col gap-3">
+    <p class="pts-label">{{ 'admin.cleanup.auditLog' | translate }}</p>
+    @if (audit().length === 0) {
+      <p class="text-xs text-on-surface-muted">{{ 'admin.cleanup.auditEmpty' | translate }}</p>
+    } @else {
+      <ul class="flex flex-col gap-2 text-xs">
+        @for (entry of audit(); track entry.id) {
+          <li class="border-l-2 border-border pl-3">
+            <div class="flex items-center justify-between gap-2">
+              <span class="font-mono font-medium">{{ entry.action }}</span>
+              <span class="text-on-surface-muted">{{ entry.occurredAt | date:'short' }}</span>
+            </div>
+            <p class="text-on-surface-muted">
+              {{ 'admin.cleanup.auditRow' | translate: { actor: entry.actor, count: entry.targetCount } }}
+              @if (entry.reason) { — {{ entry.reason }} }
+            </p>
+          </li>
+        }
+      </ul>
+    }
+  </div>
+
+</div>

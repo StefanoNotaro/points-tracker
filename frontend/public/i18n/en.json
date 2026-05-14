@@ -37,7 +37,44 @@
       "dashboard": "Dashboard",
       "counters": "Counters",
       "tournaments": "Tournaments",
-      "settings": "Settings"
+      "settings": "Settings",
+      "adminCleanup": "Admin cleanup"
+    }
+  },
+  "admin": {
+    "cleanup": {
+      "title": "Cleanup",
+      "subtitle": "Remove stale anonymous data and expired tokens.",
+      "refresh": "Refresh",
+      "candidates": "Candidates",
+      "staleCounters": "Stale counters",
+      "staleTournaments": "Stale tournaments",
+      "expiredTokens": "Expired tokens",
+      "pastGrace": "Past grace window",
+      "reason": "Reason (optional, required for hard-purge)",
+      "reasonPlaceholder": "Why this cleanup is being run",
+      "policy": "Run retention policy",
+      "policyHelp": "Soft-deletes stale anonymous rows, hard-purges rows past the grace window, and removes expired share tokens. Same code path the background worker runs.",
+      "runPolicy": "Run policy now",
+      "confirmPolicy": "This applies the configured retention windows to all eligible rows. Hard-purges are irreversible. Continue?",
+      "lastRunSummary": "Last run — counters: soft {{cs}} / hard {{ch}}, tournaments: soft {{ts}} / hard {{th}}, tokens: {{tok}}.",
+      "expiredTokensHelp": "Deletes share tokens whose expiry has passed or that have been revoked.",
+      "purgeExpiredTokens": "Purge expired tokens",
+      "sampleCounters": "Sample stale counters",
+      "sampleTournaments": "Sample stale tournaments",
+      "sampleHelp": "Up to 50 oldest candidates shown. Untick rows you want to keep.",
+      "softDeleteSelected": "Soft-delete selected ({{count}})",
+      "hardPurgeSelected": "Hard-purge selected",
+      "confirmHardPurge": "Hard-purge {{count}} row(s)? This cannot be undone.",
+      "auditLog": "Recent actions",
+      "auditEmpty": "No cleanup actions recorded yet.",
+      "auditRow": "{{actor}} — {{count}} row(s)",
+      "toasts": {
+        "policyRun": "Cleanup policy run completed.",
+        "softDeleted": "Soft-deleted {{count}} row(s).",
+        "hardPurged": "Hard-purged {{count}} row(s).",
+        "tokensPurged": "Purged {{count}} expired token(s)."
+      }
     }
   },
   "dashboard": {

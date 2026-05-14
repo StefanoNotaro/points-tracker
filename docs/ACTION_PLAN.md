@@ -60,7 +60,7 @@ Source: Architecture/security review against `docs/ARCHITECTURE.md`, `docs/SECUR
 | RBAC-03 | Implement Option B authority model: token claim + DB persisted effective global role (runtime checks read effective role from DB) |  | [x] | Completed 2026-05-14: `GlobalRole`/`RoleSource` enums, persisted `role_source`/`role_updated_at`/`role_updated_by` columns, migration `AddRoleSourceMetadata` |
 | RBAC-04 | Add emergency admin controls: immediate role revoke/downgrade path and "last active super_admin" guard |  | [x] | Completed 2026-05-14: `PATCH /api/admin/users/{id}/role` (super_admin only) with `Confirm` flag; `LastSuperAdminException` enforced in IdP-sync and manual paths |
 | RBAC-05 | Add role-change audit trail and source metadata (`idp_claim`, `manual_override`, actor, timestamp) |  | [x] | Completed 2026-05-14: `RoleAuditLog` entity + `IRoleAuditLogRepository` + migration `AddRoleAuditLog`; written from both IdP-sync and manual override paths, incl. `drift_detected` |
-| ADMIN-01 | Add admin dashboard MVP for cleanups (stale anonymous counters/tournaments, expired tokens, orphaned records) |  | [ ] | Include dry-run mode, confirmations, and audit log events |
+| ADMIN-01 | Add admin dashboard MVP for cleanups (stale anonymous counters/tournaments, expired tokens, orphaned records) |  | [x] | Completed 2026-05-14: `ICleanupService` + `CleanupAuditLog` + `/api/admin/cleanup/*` endpoints (preview, run-policy, ad-hoc soft-delete, super_admin hard-purge, expired-token sweep) and `/admin/cleanup` Angular route. Retention policy: docs/ADMIN_CLEANUP.md. Migration: `AddCleanupAuditLog`. |
 
 ### P1 execution order (most important -> least important)
 

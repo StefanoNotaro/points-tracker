@@ -37,7 +37,44 @@
       "dashboard": "Tauler",
       "counters": "Marcadors",
       "tournaments": "Tornejos",
-      "settings": "Configuració"
+      "settings": "Configuració",
+      "adminCleanup": "Neteja"
+    }
+  },
+  "admin": {
+    "cleanup": {
+      "title": "Neteja",
+      "subtitle": "Elimina dades anònimes obsoletes i tokens caducats.",
+      "refresh": "Actualitza",
+      "candidates": "Candidats",
+      "staleCounters": "Marcadors obsolets",
+      "staleTournaments": "Tornejos obsolets",
+      "expiredTokens": "Tokens caducats",
+      "pastGrace": "Més enllà del període de gràcia",
+      "reason": "Motiu (opcional, requerit per purga definitiva)",
+      "reasonPlaceholder": "Per què s'executa aquesta neteja",
+      "policy": "Executa la política de retenció",
+      "policyHelp": "Fa soft-delete de files anònimes obsoletes, purga les que estan més enllà del període de gràcia i elimina els tokens caducats. Mateix camí que el treballador en segon pla.",
+      "runPolicy": "Executa la política ara",
+      "confirmPolicy": "Això aplica les finestres de retenció configurades a totes les files elegibles. Les purgues són irreversibles. Continuar?",
+      "lastRunSummary": "Darrera execució — marcadors: soft {{cs}} / hard {{ch}}, tornejos: soft {{ts}} / hard {{th}}, tokens: {{tok}}.",
+      "expiredTokensHelp": "Elimina els tokens l'expiració dels quals ja ha passat o que han estat revocats.",
+      "purgeExpiredTokens": "Purga tokens caducats",
+      "sampleCounters": "Mostra de marcadors obsolets",
+      "sampleTournaments": "Mostra de tornejos obsolets",
+      "sampleHelp": "Fins a 50 candidats més antics. Desmarca les files que vols conservar.",
+      "softDeleteSelected": "Soft-delete seleccionats ({{count}})",
+      "hardPurgeSelected": "Purga els seleccionats",
+      "confirmHardPurge": "Purgar {{count}} fila(es) definitivament? No es pot desfer.",
+      "auditLog": "Accions recents",
+      "auditEmpty": "Encara no hi ha accions de neteja registrades.",
+      "auditRow": "{{actor}} — {{count}} fila(es)",
+      "toasts": {
+        "policyRun": "Política de neteja executada.",
+        "softDeleted": "Soft-delete aplicat a {{count}} fila(es).",
+        "hardPurged": "{{count}} fila(es) purgada(es) definitivament.",
+        "tokensPurged": "{{count}} token(s) caducat(s) eliminat(s)."
+      }
     }
   },
   "dashboard": {

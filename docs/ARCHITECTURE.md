@@ -85,6 +85,16 @@ Logging is registered first so validation failures are logged with the
 originating request name. Add new cross-cutting behaviors by registering them
 between these two in the order they should execute (outermost first).
 
+### Admin cleanup
+
+`ICleanupService` (Application/Services, implemented in Infrastructure) owns the
+soft-delete / hard-purge / expired-token-sweep code path. Both the periodic
+`CounterCleanupService` background worker and the admin dashboard's MediatR
+commands call into it — there is one definition of "cleanup" in the codebase,
+not two. Every executed action writes to `cleanup_audit_log` via
+`ICleanupAuditLogRepository` (append-only, ids and counts only — no PII).
+Retention windows and authority rules are in [ADMIN_CLEANUP.md](ADMIN_CLEANUP.md).
+
 ---
 
 ## Frontend — Feature-Sliced Structure

@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { ShellComponent } from './layout/shell/shell.component';
 import { authGuard } from './core/guards/auth.guard';
+import { roleGuard } from './core/guards/role.guard';
 import { rootRedirectGuard } from './core/guards/root-redirect.guard';
 
 export const routes: Routes = [
@@ -77,6 +78,14 @@ export const routes: Routes = [
         canActivate: [authGuard],
         loadComponent: () =>
           import('./features/settings/settings.component').then((m) => m.SettingsComponent),
+      },
+      {
+        path: 'admin/cleanup',
+        canActivate: [roleGuard('admin')],
+        loadComponent: () =>
+          import(
+            './features/admin/components/admin-cleanup/admin-cleanup.component'
+          ).then((m) => m.AdminCleanupComponent),
       },
       {
         path: '403',
