@@ -5,7 +5,7 @@ export const environment = {
   oidc: {
     issuer: 'https://auth.snotaro.dev/application/o/points-tracker/',
     clientId: 'SDhkCEcb6JbCviinY1itp2Caxsk8lEqz7pbHFiAa',
-    scope: 'openid profile email offline_access',
+    scope: 'openid profile email offline_access pts_roles',
     redirectUri: window.location.origin,
     postLogoutRedirectUri: window.location.origin,
     responseType: 'code',
