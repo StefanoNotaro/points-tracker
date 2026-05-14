@@ -244,6 +244,10 @@
       "joiningTitle": "Uniéndose al marcador…",
       "invalidMessage": "Este enlace no es válido o ha caducado."
     },
+    "live": {
+      "accessDenied": "Las actualizaciones en vivo están bloqueadas para este marcador. Puedes seguir en la página, pero el resultado no se actualizará automáticamente.",
+      "unavailable": "Las actualizaciones en vivo no están disponibles temporalmente. Puedes seguir en la página, pero el resultado no se actualizará automáticamente."
+    },
     "status": {
       "active": "En curso",
       "finished": "Finalizado",

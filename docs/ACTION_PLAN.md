@@ -54,13 +54,28 @@ Source: Architecture/security review against `docs/ARCHITECTURE.md`, `docs/SECUR
 | BE-06 | Migrate exception responses to framework `ProblemDetails` (`AddProblemDetails`) |  | [ ] | Replace hand-rolled dictionary payload |
 | FE-05 | Replace hardcoded English errors in `frontend/src/app/features/counter/store/counter.store.ts` with i18n keys |  | [ ] | Required for localization consistency |
 | FE-07 | Improve 401 handling in `frontend/src/app/core/interceptors/error.interceptor.ts` (avoid forced login in anonymous flows) |  | [ ] | Distinguish anonymous vs authenticated failure paths |
-| BE-10 | Enforce read authorization on SignalR hub joins (`/hubs/counter`) |  | [ ] | Prevent unauthorized subscription to counter streams |
+| BE-10 | Enforce read authorization on SignalR hub joins (`/hubs/counter`) |  | [x] | Completed 2026-05-14: server-side join authorization added, with frontend denial handling |
 | RBAC-01 | Define and document final RBAC contract: global roles vs tournament roles vs match-scoped scorer permissions |  | [ ] | Update `docs/ROLES_PERMISSIONS.md` and API auth matrix |
 | RBAC-02 | Implement OIDC role-claim sync policy (`pts_roles`) in backend user sync with safe precedence rules |  | [ ] | Do not trust JWT alone for authorization; persist/validate in DB |
 | RBAC-03 | Implement Option B authority model: token claim + DB persisted effective global role (runtime checks read effective role from DB) |  | [ ] | Add precedence rules and fallback behavior for claim drift/outage |
 | RBAC-04 | Add emergency admin controls: immediate role revoke/downgrade path and "last active super_admin" guard |  | [ ] | Block unsafe demotion and record audit event |
 | RBAC-05 | Add role-change audit trail and source metadata (`idp_claim`, `manual_override`, actor, timestamp) |  | [ ] | Required for admin dashboard governance |
 | ADMIN-01 | Add admin dashboard MVP for cleanups (stale anonymous counters/tournaments, expired tokens, orphaned records) |  | [ ] | Include dry-run mode, confirmations, and audit log events |
+
+### P1 execution order (most important -> least important)
+
+1. `BE-10` - Enforce read authorization on SignalR hub joins (`/hubs/counter`).
+2. `RBAC-01` - Define and document final RBAC contract.
+3. `RBAC-03` - Implement Option B authority model (token + DB effective role).
+4. `RBAC-02` - Implement OIDC role-claim sync policy (`pts_roles`).
+5. `RBAC-04` - Add emergency admin controls (revoke/downgrade + last `super_admin` guard).
+6. `RBAC-05` - Add role-change audit trail metadata.
+7. `FE-07` - Improve 401 handling in `error.interceptor.ts`.
+8. `BE-05` - Add MediatR cross-cutting behaviors (logging + pipeline consistency).
+9. `ADMIN-01` - Add admin dashboard MVP for cleanups.
+10. `BE-06` - Migrate exception responses to framework `ProblemDetails`.
+11. `FE-02` - Refactor `share-dialog` to dumb/presentational pattern.
+12. `FE-05` - Replace hardcoded English errors in `counter.store.ts` with i18n keys.
 
 ---
 

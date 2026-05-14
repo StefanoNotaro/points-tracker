@@ -244,6 +244,10 @@
       "joiningTitle": "Unint-se al marcador…",
       "invalidMessage": "Aquest enllaç no és vàlid o ha caducat."
     },
+    "live": {
+      "accessDenied": "Les actualitzacions en directe estan bloquejades per a aquest marcador. Pots continuar a la pàgina, però el resultat no s'actualitzarà automàticament.",
+      "unavailable": "Les actualitzacions en directe no estan disponibles temporalment. Pots continuar a la pàgina, però el resultat no s'actualitzarà automàticament."
+    },
     "status": {
       "active": "En curs",
       "finished": "Finalitzat",

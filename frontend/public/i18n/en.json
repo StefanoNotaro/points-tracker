@@ -244,6 +244,10 @@
       "joiningTitle": "Joining counter…",
       "invalidMessage": "This share link is invalid or has expired."
     },
+    "live": {
+      "accessDenied": "Live updates are blocked for this counter. You can stay on the page, but the score will not refresh automatically.",
+      "unavailable": "Live updates are temporarily unavailable. You can stay on the page, but the score will not refresh automatically."
+    },
     "status": {
       "active": "In progress",
       "finished": "Finished",

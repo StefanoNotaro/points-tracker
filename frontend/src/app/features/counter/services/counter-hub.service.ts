@@ -9,6 +9,8 @@ import { Subject } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { Counter } from '../../../shared/models/counter.model';
 import { AuthService } from '../../../core/auth/auth.service';
+import { SessionTokenService } from '../../../core/auth/session-token.service';
+import { ShareTokenService } from '../../../core/auth/share-token.service';
 
 /** Group bookkeeping — group key, server method names, ref count. */
 type GroupKind = 'counter' | 'user';
@@ -28,12 +30,15 @@ interface GroupSubscription {
 @Injectable({ providedIn: 'root' })
 export class CounterHubService implements OnDestroy {
   private readonly auth = inject(AuthService);
+  private readonly sessionTokens = inject(SessionTokenService);
+  private readonly shareTokens = inject(ShareTokenService);
   private connection: HubConnection | null = null;
   private connecting: Promise<void> | null = null;
   private readonly groups = new Map<string, GroupSubscription>();
 
   readonly scoreUpdated$ = new Subject<Counter>();
   readonly counterDeleted$ = new Subject<string>();
+  readonly liveAccessDenied$ = new Subject<string>();
   readonly connectionStateChanged$ = new Subject<HubConnectionState>();
 
   // ── Counter group ────────────────────────────────────────────────────
@@ -66,6 +71,7 @@ export class CounterHubService implements OnDestroy {
     }
     this.scoreUpdated$.complete();
     this.counterDeleted$.complete();
+    this.liveAccessDenied$.complete();
     this.connectionStateChanged$.complete();
   }
 
@@ -83,8 +89,16 @@ export class CounterHubService implements OnDestroy {
       return;
     }
 
-    this.groups.set(key, { kind, id, refs: 1 });
-    await this.invokeJoin(kind, id);
+    try {
+      await this.invokeJoin(kind, id);
+      this.groups.set(key, { kind, id, refs: 1 });
+    } catch (error) {
+      if (kind === 'counter' && isLiveAccessDenied(error)) {
+        throw new CounterHubAccessDeniedError(id);
+      }
+
+      throw error;
+    }
   }
 
   private async leave(kind: GroupKind, id: string): Promise<void> {
@@ -103,7 +117,7 @@ export class CounterHubService implements OnDestroy {
 
   private invokeJoin(kind: GroupKind, id: string): Promise<void> {
     return kind === 'counter'
-      ? this.connection!.invoke('JoinCounter', id)
+      ? this.connection!.invoke('JoinCounter', id, this.sessionTokens.getToken(id), this.shareTokens.getToken(id))
       : this.connection!.invoke('JoinMyUpdates');
   }
 
@@ -140,8 +154,15 @@ export class CounterHubService implements OnDestroy {
       this.connection.onreconnected(async () => {
         // Rejoin every group from scratch — the server forgot us during the
         // disconnect.
-        for (const g of this.groups.values()) {
-          try { await this.invokeJoin(g.kind, g.id); } catch { /* ignore */ }
+        for (const g of [...this.groups.values()]) {
+          try {
+            await this.invokeJoin(g.kind, g.id);
+          } catch (error) {
+            if (g.kind === 'counter' && isLiveAccessDenied(error)) {
+              this.groups.delete(this.key(g.kind, g.id));
+              this.liveAccessDenied$.next(g.id);
+            }
+          }
         }
         this.connectionStateChanged$.next(HubConnectionState.Connected);
       });
@@ -157,3 +178,18 @@ export class CounterHubService implements OnDestroy {
     finally { this.connecting = null; }
   }
 }
+
+export class CounterHubAccessDeniedError extends Error {
+  constructor(readonly counterId: string) {
+    super('counter.liveAccessDenied');
+  }
+}
+
+function isLiveAccessDenied(error: unknown): boolean {
+  if (error instanceof Error) {
+    return error.message.includes('counter.liveAccessDenied');
+  }
+
+  return typeof error === 'string' && error.includes('counter.liveAccessDenied');
+}
+
