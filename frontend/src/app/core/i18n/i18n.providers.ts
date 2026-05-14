@@ -4,7 +4,7 @@ import { provideTranslateHttpLoader } from '@ngx-translate/http-loader';
 import { firstValueFrom } from 'rxjs';
 
 export const SUPPORTED_LOCALES = ['en', 'es', 'ca'] as const;
-export const DEFAULT_LOCALE = 'en';
+export const DEFAULT_LOCALE = 'it';
 export const LANG_STORAGE_KEY = 'pts_lang';
 
 function isSupported(tag: string): boolean {
@@ -46,12 +46,30 @@ export function provideI18n(): (EnvironmentProviders | Provider)[] {
       translate.setFallbackLang(DEFAULT_LOCALE);
       const detectedLocale = detectInitialLocale();
       console.debug(`[i18n] Initializing with locale: ${detectedLocale}`);
-      return firstValueFrom(translate.use(detectedLocale)).then(() => {
+
+      // If using a non-default locale, preload the default language as fallback
+      let loadPromise: Promise<any>;
+      if (detectedLocale !== DEFAULT_LOCALE) {
+        loadPromise = firstValueFrom(translate.get(DEFAULT_LOCALE)).then(() =>
+          firstValueFrom(translate.use(detectedLocale))
+        );
+      } else {
+        loadPromise = firstValueFrom(translate.use(detectedLocale));
+      }
+
+      return loadPromise.then(() => {
         console.debug(`[i18n] Locale ${detectedLocale} loaded successfully`);
+        console.debug(`[i18n] Available languages: ${translate.getLangs().join(', ')}`);
+        console.debug(`[i18n] Current language: ${translate.currentLang}`);
       }).catch((err: unknown) => {
         console.error(`[i18n] Failed to load locale ${detectedLocale}:`, err);
-        // Fallback to default locale
-        return firstValueFrom(translate.use(DEFAULT_LOCALE));
+        // Fallback to default locale if not already using it
+        if (detectedLocale !== DEFAULT_LOCALE) {
+          return firstValueFrom(translate.use(DEFAULT_LOCALE)).then(() => {
+            console.debug(`[i18n] Fallback to ${DEFAULT_LOCALE} successful`);
+          });
+        }
+        throw err;
       });
     }),
   ];
