@@ -91,6 +91,11 @@
   "toast": {
     "dismiss": "Dismiss"
   },
+  "apiErrors": {
+    "generic": "Something went wrong. Please try again.",
+    "rateLimited": "Too many requests. Please wait a moment and try again.",
+    "rateLimitedRetry": "Too many requests. Please retry in {{seconds}}s."
+  },
   "sport": {
     "volleyball": "Volleyball",
     "beach_volleyball": "Beach volleyball",

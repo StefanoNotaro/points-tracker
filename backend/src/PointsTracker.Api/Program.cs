@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
@@ -107,17 +108,87 @@ builder.Services.AddSwaggerGen();
 // Rate limiting
 builder.Services.AddRateLimiter(opts =>
 {
-    opts.AddFixedWindowLimiter("write", cfg =>
-    {
-        cfg.Window = TimeSpan.FromMinutes(1);
-        cfg.PermitLimit = 60;
-    });
-    opts.AddFixedWindowLimiter("create", cfg =>
-    {
-        cfg.Window = TimeSpan.FromMinutes(1);
-        cfg.PermitLimit = 10;
-    });
+    opts.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    opts.AddPolicy("read", context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: GetIpPartitionKey(context),
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 120,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0,
+                AutoReplenishment = true,
+            }));
+
+    opts.AddPolicy("write", context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: GetUserOrIpPartitionKey(context),
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 60,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0,
+                AutoReplenishment = true,
+            }));
+
+    opts.AddPolicy("counter-create", context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: GetIpPartitionKey(context),
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 10,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0,
+                AutoReplenishment = true,
+            }));
+
+    opts.AddPolicy("counter-share", context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: GetUserOrIpPartitionKey(context),
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 5,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0,
+                AutoReplenishment = true,
+            }));
+
+    opts.AddPolicy("counter-join", context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: GetIpPartitionKey(context),
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 20,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0,
+                AutoReplenishment = true,
+            }));
 });
+
+static string GetUserOrIpPartitionKey(HttpContext context)
+{
+    var userId = context.User.FindFirst("pts_id")?.Value
+                 ?? context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                 ?? context.User.FindFirst("sub")?.Value;
+
+    if (!string.IsNullOrWhiteSpace(userId))
+        return $"user:{userId}";
+
+    return $"ip:{GetIpPartitionKey(context)}";
+}
+
+static string GetIpPartitionKey(HttpContext context)
+{
+    var forwardedFor = context.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+    if (!string.IsNullOrWhiteSpace(forwardedFor))
+    {
+        var first = forwardedFor.Split(',')[0].Trim();
+        if (!string.IsNullOrWhiteSpace(first)) return first;
+    }
+
+    return context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+}
 
 var app = builder.Build();
 

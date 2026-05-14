@@ -14,22 +14,22 @@ public static class CounterEndpoints
     {
         var group = app.MapGroup("/api/counters").WithTags("Counters");
 
-        group.MapPost("/", CreateCounter).AllowAnonymous();
-        group.MapGet("/mine", ListMine).RequireAuthorization();
-        group.MapGet("/{id:guid}", GetCounter).AllowAnonymous();
-        group.MapGet("/join/{token}", JoinByToken).AllowAnonymous();
-        group.MapPost("/{id:guid}/score/increment", IncrementScore).AllowAnonymous();
-        group.MapPost("/{id:guid}/score/decrement", DecrementScore).AllowAnonymous();
-        group.MapPost("/{id:guid}/undo", Undo).AllowAnonymous();
-        group.MapPost("/{id:guid}/redo", Redo).AllowAnonymous();
-        group.MapPatch("/{id:guid}/teams", UpdateTeamName).AllowAnonymous();
-        group.MapPost("/{id:guid}/side-switch", ResolveSideSwitch).AllowAnonymous();
-        group.MapPost("/{id:guid}/switch-sides", SwitchSides).AllowAnonymous();
-        group.MapPost("/{id:guid}/timeout", CallTimeout).AllowAnonymous();
-        group.MapPost("/{id:guid}/timeout/cancel", CancelTimeout).AllowAnonymous();
-        group.MapPost("/{id:guid}/end", EndMatch).AllowAnonymous();
-        group.MapPost("/{id:guid}/share", CreateShareToken).AllowAnonymous();
-        group.MapDelete("/{id:guid}", DeleteCounter).AllowAnonymous();
+        group.MapPost("/", CreateCounter).AllowAnonymous().RequireRateLimiting("counter-create");
+        group.MapGet("/mine", ListMine).RequireAuthorization().RequireRateLimiting("read");
+        group.MapGet("/{id:guid}", GetCounter).AllowAnonymous().RequireRateLimiting("read");
+        group.MapGet("/join/{token}", JoinByToken).AllowAnonymous().RequireRateLimiting("counter-join");
+        group.MapPost("/{id:guid}/score/increment", IncrementScore).AllowAnonymous().RequireRateLimiting("write");
+        group.MapPost("/{id:guid}/score/decrement", DecrementScore).AllowAnonymous().RequireRateLimiting("write");
+        group.MapPost("/{id:guid}/undo", Undo).AllowAnonymous().RequireRateLimiting("write");
+        group.MapPost("/{id:guid}/redo", Redo).AllowAnonymous().RequireRateLimiting("write");
+        group.MapPatch("/{id:guid}/teams", UpdateTeamName).AllowAnonymous().RequireRateLimiting("write");
+        group.MapPost("/{id:guid}/side-switch", ResolveSideSwitch).AllowAnonymous().RequireRateLimiting("write");
+        group.MapPost("/{id:guid}/switch-sides", SwitchSides).AllowAnonymous().RequireRateLimiting("write");
+        group.MapPost("/{id:guid}/timeout", CallTimeout).AllowAnonymous().RequireRateLimiting("write");
+        group.MapPost("/{id:guid}/timeout/cancel", CancelTimeout).AllowAnonymous().RequireRateLimiting("write");
+        group.MapPost("/{id:guid}/end", EndMatch).AllowAnonymous().RequireRateLimiting("write");
+        group.MapPost("/{id:guid}/share", CreateShareToken).AllowAnonymous().RequireRateLimiting("counter-share");
+        group.MapDelete("/{id:guid}", DeleteCounter).AllowAnonymous().RequireRateLimiting("write");
     }
 
     private static async Task<IResult> ListMine(IMediator mediator, HttpContext ctx)

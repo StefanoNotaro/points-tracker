@@ -39,9 +39,9 @@ Source: Architecture/security review against `docs/ARCHITECTURE.md`, `docs/SECUR
 | BE-01 | Enable FluentValidation pipeline in MediatR (`ValidationBehavior`, `AddValidatorsFromAssembly`) |  | [x] | Completed 2026-05-14: global `IPipelineBehavior` validation wired |
 | BE-02 | Map `DbUpdateConcurrencyException` to `409 Conflict` in `backend/src/PointsTracker.Api/Middleware/ExceptionMiddleware.cs` |  | [x] | Completed 2026-05-14: middleware now returns 409 for concurrency conflicts |
 | BE-03 | Re-enable strict JWT audience validation in `backend/src/PointsTracker.Api/Program.cs` |  | [x] | Completed 2026-05-14: audience validation enabled (`ValidateAudience = true`) |
-| BE-04 | Apply rate limiting policies to endpoints and add missing policies (`share`, `join`, reads/writes) |  | [ ] | Policies are defined but not enforced per-route |
-| FE-03 | Align OIDC token storage with security policy (no JWT in `localStorage`) |  | [ ] | Must follow `docs/SECURITY.md` storage rules |
-| FE-04 | Fix role resolution path for OIDC role claims (`pts_roles`/`pts_role`) and token source mismatch |  | [ ] | Add deterministic mapping (`ID token`, `access token`, or `/api/users/me`) |
+| BE-04 | Apply rate limiting policies to endpoints and add missing policies (`share`, `join`, reads/writes) |  | [x] | Completed 2026-05-14: partitioned policies added and applied to counter/tournament endpoints |
+| FE-03 | Align OIDC token storage with security policy (no JWT in `localStorage`) |  | [x] | Completed 2026-05-14: OAuth storage moved to `sessionStorage` (no JWT persistence in localStorage) |
+| FE-04 | Fix role resolution path for OIDC role claims (`pts_roles`/`pts_role`) and token source mismatch |  | [x] | Completed 2026-05-14: deterministic role extraction from access-token + id-token claims |
 
 ---
 
