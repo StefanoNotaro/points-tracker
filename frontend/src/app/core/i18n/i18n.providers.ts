@@ -1,6 +1,7 @@
 import { EnvironmentProviders, Provider, inject, provideAppInitializer } from '@angular/core';
 import { TranslateService, provideTranslateService } from '@ngx-translate/core';
 import { provideTranslateHttpLoader } from '@ngx-translate/http-loader';
+import { firstValueFrom } from 'rxjs';
 
 export const SUPPORTED_LOCALES = ['en', 'es', 'ca'] as const;
 export const DEFAULT_LOCALE = 'en';
@@ -43,7 +44,15 @@ export function provideI18n(): (EnvironmentProviders | Provider)[] {
       const translate = inject(TranslateService);
       translate.addLangs([...SUPPORTED_LOCALES]);
       translate.setFallbackLang(DEFAULT_LOCALE);
-      return translate.use(detectInitialLocale());
+      const detectedLocale = detectInitialLocale();
+      console.debug(`[i18n] Initializing with locale: ${detectedLocale}`);
+      return firstValueFrom(translate.use(detectedLocale)).then(() => {
+        console.debug(`[i18n] Locale ${detectedLocale} loaded successfully`);
+      }).catch((err: unknown) => {
+        console.error(`[i18n] Failed to load locale ${detectedLocale}:`, err);
+        // Fallback to default locale
+        return firstValueFrom(translate.use(DEFAULT_LOCALE));
+      });
     }),
   ];
 }
