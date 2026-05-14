@@ -25,7 +25,12 @@
       "Bash(docker compose *)",
       "Bash(git -C C:/Users/stefa/RiderProjects/points-tracker status docker/)",
       "Bash(git -C C:/Users/stefa/RiderProjects/points-tracker check-ignore -v docker/dockge/.env.example docker/dockge/compose.yaml)",
-      "Bash(rm C:/Users/stefa/RiderProjects/points-tracker/frontend/src/app/features/counter/counter.routes.ts)"
+      "Bash(rm C:/Users/stefa/RiderProjects/points-tracker/frontend/src/app/features/counter/counter.routes.ts)",
+      "Bash(xargs grep -l \"my-tournaments\\\\|My Tournaments\")",
+      "Bash(grep -n \"isAuthenticated\\\\|isLoggedIn\\\\|user\\\\$\\\\|currentUser\\\\|authStatus\" frontend/src/app/core/auth/auth.service.ts)",
+      "Bash(npm install *)",
+      "Bash(npm --prefix \"C:/Users/stefa/RiderProjects/points-tracker/frontend\" install --no-audit --no-fund)",
+      "Bash(mkdir -p \"C:/Users/stefa/RiderProjects/points-tracker/frontend/public/i18n\" \"C:/Users/stefa/RiderProjects/points-tracker/frontend/src/app/core/i18n\" && ls \"C:/Users/stefa/RiderProjects/points-tracker/frontend/public\" 2>&1)"
     ]
   }
 }

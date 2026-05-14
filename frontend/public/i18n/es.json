@@ -1,0 +1,404 @@
+{
+  "appName": "Points Tracker",
+  "common": {
+    "create": "Crear",
+    "cancel": "Cancelar",
+    "close": "Cerrar",
+    "confirm": "Confirmar",
+    "delete": "Eliminar",
+    "save": "Guardar",
+    "remove": "Quitar",
+    "loading": "Cargando…",
+    "starting": "Iniciando…",
+    "generating": "Generando…",
+    "add": "Añadir",
+    "edit": "Editar",
+    "viewAll": "Ver todo",
+    "viewOnly": "Solo lectura",
+    "live": "En vivo",
+    "yes": "Sí",
+    "no": "No",
+    "dismiss": "Descartar",
+    "goHome": "Ir al inicio",
+    "of": "de"
+  },
+  "nav": {
+    "openMenu": "Abrir menú",
+    "closeMenu": "Cerrar menú",
+    "primaryNav": "Navegación principal",
+    "account": "Cuenta",
+    "switchToLight": "Cambiar a modo claro",
+    "switchToDark": "Cambiar a modo oscuro",
+    "signIn": "Iniciar sesión",
+    "signOut": "Cerrar sesión",
+    "items": {
+      "home": "Inicio",
+      "newCounter": "Nuevo marcador",
+      "dashboard": "Panel",
+      "counters": "Marcadores",
+      "tournaments": "Torneos",
+      "settings": "Ajustes"
+    }
+  },
+  "dashboard": {
+    "kicker": "Bienvenido de nuevo",
+    "actions": {
+      "newCounter": "Nuevo marcador",
+      "newCounterHelp": "Empieza a registrar un partido.",
+      "newTournament": "Nuevo torneo",
+      "newTournamentHelp": "Organiza tus equipos."
+    },
+    "stats": {
+      "total": "Total",
+      "active": "Activos",
+      "finished": "Finalizados"
+    },
+    "active": "Activos",
+    "noActive": "No hay partidos en curso.",
+    "startOne": "Empieza uno",
+    "noTournaments": "No hay torneos activos.",
+    "createOne": "Crea uno",
+    "recent": "Recientes",
+    "tournaments": "Torneos",
+    "vs": "vs",
+    "currentScore": "actual {{a}}–{{b}}",
+    "loadCountersError": "No se pudieron cargar tus marcadores."
+  },
+  "settings": {
+    "title": "Ajustes",
+    "subtitle": "Gestiona tu cuenta y preferencias.",
+    "account": "Cuenta",
+    "appearance": "Apariencia",
+    "theme": "Tema",
+    "themeActive": "Modo {{mode}} activo",
+    "themeDark": "oscuro",
+    "themeLight": "claro",
+    "toggleDarkAria": "Cambiar modo oscuro",
+    "language": "Idioma",
+    "languageHelp": "Elige el idioma de la aplicación.",
+    "languages": {
+      "en": "English",
+      "es": "Español",
+      "ca": "Català"
+    },
+    "session": "Sesión",
+    "signOut": "Cerrar sesión"
+  },
+  "accessDenied": {
+    "title": "Acceso denegado",
+    "message": "No tienes permiso para ver esta página."
+  },
+  "toast": {
+    "dismiss": "Descartar"
+  },
+  "sport": {
+    "volleyball": "Voleibol",
+    "beach_volleyball": "Vóley playa",
+    "custom": "Personalizado",
+    "selectAria": "Selecciona deporte",
+    "bestOfSets": "Al mejor de {{total}} sets · {{points}} pts para ganar"
+  },
+  "rules": {
+    "pointsPerSet": "Puntos por set",
+    "lastSetPoints": "Puntos del último set",
+    "setsToWin": "Sets para ganar",
+    "totalSets": "Total de sets",
+    "winByTwo": "Ganar por 2",
+    "winByTwoShort": "Ganar por dos",
+    "perTeamPerSet": "Por equipo, por set",
+    "durationSeconds": "Duración (segundos)",
+    "timeoutsPerSet": "Tiempos muertos por set",
+    "timeoutSeconds": "Segundos de tiempo muerto",
+    "indoorSwitchLabel": "Cambio de campo cada N sets (sala)",
+    "indoorSwitchDefault": "Predeterminado del deporte",
+    "indoorSwitchEvery1": "Cada set (1)",
+    "indoorSwitchEvery2": "Cada dos sets (2)",
+    "beachAutoSwitch": "Playa: cambio automático en hitos de puntos",
+    "timeoutsHelp": "FIVB: voleibol sala 2 × 30 s, vóley playa 1 × 30 s. Pon 0 para desactivar.",
+    "rulesSection": "Reglas",
+    "rulesDefault": "predeterminado",
+    "timeoutsSection": "Tiempos muertos",
+    "timeoutsSummary": "{{count}} × {{seconds}}s por set",
+    "proModeLabel": "Cambiar cada <b>2 sets</b> (modo pro)",
+    "proModeHelp": "Desactivado: cambia cada set (estándar).",
+    "beachAutoLabel": "Cambio automático",
+    "beachAutoHelp": "Activado: el servidor cambia automáticamente cada 7 puntos (5 en el set decisivo), con aviso de 5 s. Desactivado: confirmarás cada cambio."
+  },
+  "counter": {
+    "newTitle": "Nuevo marcador",
+    "newSubtitle": "Elige un deporte y nombra los equipos para empezar.",
+    "resumeTitle": "Reanudar marcador",
+    "resumeHelp": "Ya tienes un marcador en curso. Inicia sesión para tener más de uno.",
+    "myShortcutTitle": "Mis marcadores",
+    "myShortcutHelp": "Ver, reanudar o eliminar tus marcadores.",
+    "sportRequired": "Selecciona un deporte.",
+    "teamsLabel": "Equipos",
+    "teamA": "Equipo A",
+    "teamB": "Equipo B",
+    "submit": "Iniciar marcador",
+    "createError": "Error al crear el marcador. Inténtalo de nuevo.",
+    "list": {
+      "title": "Mis marcadores",
+      "newAria": "Nuevo marcador",
+      "new": "Nuevo",
+      "emptyTitle": "Aún no hay marcadores",
+      "emptySubtitle": "Crea tu primer marcador para registrar un partido.",
+      "emptyCta": "Empezar un marcador",
+      "deleteAria": "Eliminar marcador",
+      "deleteTitle": "¿Eliminar marcador?",
+      "deleteMessage": "Se eliminará \"{{a}} vs {{b}}\". No se puede deshacer.",
+      "deleteSuccess": "Marcador eliminado.",
+      "deleteError": "Error al eliminar el marcador.",
+      "loadError": "No se pudieron cargar tus marcadores."
+    },
+    "page": {
+      "notFoundTitle": "Marcador no encontrado",
+      "notFoundMessage": "Este marcador no existe o no tienes acceso.",
+      "tournamentMatch": "Partido del torneo",
+      "undoAria": "Deshacer última acción (mantén para repetir)",
+      "undoTitle": "Deshacer (mantén para deshacer más)",
+      "redoAria": "Rehacer (mantén para repetir)",
+      "redoTitle": "Rehacer (mantén para rehacer más)",
+      "moreAria": "Más opciones",
+      "moreTitle": "Más",
+      "share": "Compartir",
+      "renameTeams": "Renombrar equipos",
+      "hideTeamEditor": "Ocultar editor de equipos",
+      "matchInfo": "Información del partido",
+      "hideMatchInfo": "Ocultar información",
+      "switchSides": "Cambiar campo",
+      "endMatchMenu": "Terminar partido",
+      "deleteMenu": "Eliminar marcador",
+      "sidesSwitched": "Campos cambiados",
+      "matchFinished": "Partido finalizado",
+      "timeoutAria": "Pedir tiempo muerto para {{team}}",
+      "timeoutLabel": "Tiempo muerto",
+      "timeoutBanner": "Tiempo muerto de {{team}}",
+      "cancelTimeoutAria": "Cancelar tiempo muerto",
+      "cancelTimeoutTitle": "Cancelar tiempo muerto",
+      "teamNames": "Nombres de los equipos",
+      "closeTeamEditorAria": "Cerrar editor de equipos",
+      "rulesPointsPerSet": "Puntos por set",
+      "rulesLastSet": "Puntos del último set",
+      "rulesSetsToWin": "Sets para ganar",
+      "rulesSetsToWinValue": "{{won}} de {{total}}",
+      "rulesWinByTwo": "Ganar por 2",
+      "pointAria": "Punto para {{label}}",
+      "removePointAria": "Quitar punto a {{label}}",
+      "incrementForA": "Punto para el equipo A",
+      "incrementForB": "Punto para el equipo B",
+      "endMatchTitle": "¿Terminar el partido?",
+      "endMatchMessage": "El partido se marcará como finalizado. Ganará el equipo con más sets — o, en empate, con más puntos totales.",
+      "endMatchConfirm": "Terminar",
+      "deleteTitle": "¿Eliminar este marcador?",
+      "deleteMessage": "Se eliminará \"{{a}} vs {{b}}\" y su historial. No se puede deshacer.",
+      "deleteConfirm": "Eliminar",
+      "sideSwitchAuto": {
+        "title": "¿Cambiar de campo?",
+        "message": "El total de puntos llegó al límite de cambio. ¿Los equipos han cambiado de campo?",
+        "confirm": "Sí, cambiados",
+        "cancel": "Aún no"
+      },
+      "sideSwitchEndSet": {
+        "title": "Cambiar de campo",
+        "message": "Fin del set — los equipos deben cambiar antes del próximo set. Confirma cuando termines.",
+        "confirm": "Cambiados",
+        "cancel": "Omitir"
+      },
+      "sideSwitchInfo": {
+        "title": "Campos cambiados",
+        "message": "Los equipos acaban de cambiar de campo.",
+        "confirm": "Entendido"
+      }
+    },
+    "events": {
+      "history": "Historial",
+      "empty": "Aún sin acciones.",
+      "setLabel": "Set {{n}} · {{score}}",
+      "timeoutCanceled": "Tiempo muerto de {{team}} (cancelado)",
+      "timeoutLabel": "Tiempo muerto de {{team}}",
+      "scoreBaseline": "Marcador {{a}}–{{b}}",
+      "scorePlus": "{{team}} +1",
+      "scoreMinus": "{{team}} −1"
+    },
+    "share": {
+      "title": "Compartir marcador",
+      "scopeReadLabel": "Solo lectura",
+      "scopeReadDescription": "Puede ver el marcador en vivo",
+      "scopeEditLabel": "Puede anotar",
+      "scopeEditDescription": "Puede sumar o restar puntos",
+      "shareLink": "Enlace de compartir",
+      "copyLink": "Copiar enlace",
+      "regenerateTitle": "Regenerar enlace",
+      "generateLink": "Generar enlace",
+      "generateError": "No se pudo generar el enlace.",
+      "linkCopied": "¡Enlace copiado!"
+    },
+    "join": {
+      "invalidTitle": "Enlace inválido o caducado",
+      "joiningTitle": "Uniéndose al marcador…",
+      "invalidMessage": "Este enlace no es válido o ha caducado."
+    },
+    "status": {
+      "active": "En curso",
+      "finished": "Finalizado",
+      "abandoned": "Abandonado"
+    },
+    "team": {
+      "editAria": "Editar nombre del equipo",
+      "editAriaNamed": "Editar nombre del equipo: {{name}}"
+    },
+    "score": {
+      "setBadge": "Set {{n}}",
+      "ariaScore": "Marcador de {{team}}: {{value}}",
+      "setsAria": "Sets ganados por {{team}}: {{won}}"
+    }
+  },
+  "tournament": {
+    "list": {
+      "title": "Mis torneos",
+      "new": "Nuevo",
+      "newAria": "Nuevo torneo",
+      "empty": {
+        "title": "Aún no hay torneos",
+        "subtitle": "Crea tu primer torneo para organizar los equipos.",
+        "cta": "Crear torneo"
+      },
+      "updated": "Actualizado {{date}}",
+      "teamsCount": "{{count}} equipos",
+      "deleteAria": "Eliminar",
+      "deleteConfirm": {
+        "title": "¿Eliminar torneo?",
+        "message": "Se eliminará \"{{name}}\".",
+        "confirm": "Eliminar"
+      },
+      "loadError": "No se pudieron cargar tus torneos.",
+      "deleteSuccess": "Torneo eliminado.",
+      "deleteError": "Error al eliminar el torneo."
+    },
+    "create": {
+      "kicker": "Nuevo torneo",
+      "title": "Configúralo",
+      "name": {
+        "label": "Nombre del torneo",
+        "placeholder": "Open Verano 2026",
+        "help": "Elige un nombre corto y memorable — puedes cambiarlo después."
+      },
+      "sport": {
+        "label": "Deporte",
+        "help": "Define las reglas por defecto del partido. Puedes cambiarlas en los ajustes."
+      },
+      "format": {
+        "label": "Formato",
+        "help": "Elige cómo se organizan los partidos. Las eliminatorias deciden un campeón rápido; el todos contra todos da el mismo juego a todos."
+      },
+      "groups": {
+        "groupsLabel": "Grupos",
+        "groupsHelp": "Número de grupos antes de la eliminatoria.",
+        "advanceLabel": "Pasan por grupo",
+        "advanceHelp": "Cuántos equipos de cada grupo pasan al cuadro.",
+        "constraint": "(Grupos × pasan) debe ser una potencia de dos — p. ej. 2×2 = 4, 2×4 = 8, 4×2 = 8.",
+        "invalid": "Grupos × pasan debe ser potencia de dos y al menos 2."
+      },
+      "submit": "Crear",
+      "success": "Torneo creado.",
+      "failure": "No se pudo crear el torneo."
+    },
+    "detail": {
+      "teamsAndStatus": "{{count}} equipos · {{status}}",
+      "shareAria": "Compartir torneo",
+      "shareTitle": "Enlace para compartir",
+      "shareCopied": "Enlace del torneo copiado.",
+      "shareFailed": "No se pudo copiar — pega la URL manualmente.",
+      "start": "Generar cuadro y empezar",
+      "starting": "Iniciando…",
+      "startHelpMin": "Añade al menos {{min}} equipos para empezar.",
+      "loadError": "No se pudo cargar el torneo.",
+      "startError": "No se pudo iniciar el torneo.",
+      "openMatchError": "No se pudo abrir el partido.",
+      "tabs": {
+        "bracket": "Cuadro",
+        "participants": "Participantes",
+        "standings": "Clasificación",
+        "settings": "Ajustes"
+      },
+      "bracketEmpty": "El cuadro aparecerá al iniciar el torneo.",
+      "settingsLocked": "Solo el organizador puede cambiar los ajustes.",
+      "standingsEmpty": "La clasificación aparece cuando se completan partidos."
+    },
+    "participants": {
+      "namePlaceholder": "Nombre del equipo",
+      "addAria": "Añadir equipo",
+      "emptyMin": "Añade al menos {{min}} equipos para generar el cuadro.",
+      "seedLabel": "Cabeza de serie #{{seed}}",
+      "removeAria": "Quitar",
+      "advanced": {
+        "toggle": "Sorteo avanzado",
+        "help": "Por defecto, los equipos juegan en el orden de inscripción. Usa las opciones para más control.",
+        "seedLabel": "Cabeza de serie manual (opcional)",
+        "seedHelp": "Números más bajos enfrentan a los más altos en el cuadro. Déjalo en blanco para orden automático.",
+        "shuffleLabel": "Mezclar equipos sin cabeza al iniciar",
+        "shuffleHelp": "Orden aleatorio para los equipos sin cabeza de serie — justo cuando no quieres que el orden de inscripción influya."
+      },
+      "addError": "No se pudo añadir el participante.",
+      "removeError": "No se pudo quitar el participante."
+    },
+    "format": {
+      "singleelimination": {
+        "label": "Eliminación directa",
+        "description": "Cuadro a eliminación — quien pierde, queda fuera."
+      },
+      "doubleelimination": {
+        "label": "Doble eliminación",
+        "description": "Eliminación con dos derrotas y cuadro de perdedores."
+      },
+      "roundrobin": {
+        "label": "Todos contra todos",
+        "description": "Todos juegan contra todos — clasificación por victorias."
+      },
+      "groupstageelimination": {
+        "label": "Fase de grupos + eliminatoria",
+        "description": "Grupos todos contra todos y luego los mejores al cuadro."
+      }
+    },
+    "status": {
+      "draft": "Borrador",
+      "registration": "Inscripciones",
+      "active": "En curso",
+      "completed": "Finalizado",
+      "abandoned": "Abandonado"
+    },
+    "bracket": {
+      "tbd": "TBD",
+      "winnersPrefix": "Ganadores",
+      "losersPrefix": "Perdedores",
+      "grandFinal": "Gran final",
+      "round": "Ronda {{n}}",
+      "winShort": "G",
+      "status": {
+        "inprogress": "En vivo",
+        "completed": "Hecho",
+        "ready": "Listo",
+        "walkover": "Bye",
+        "pending": "—"
+      }
+    },
+    "settings": {
+      "identity": "Identidad",
+      "name": "Nombre",
+      "schedule": "Calendario",
+      "starts": "Empieza",
+      "ends": "Termina",
+      "defaultRules": "Reglas predeterminadas",
+      "overrideSport": "Sobrescribir reglas del deporte",
+      "singleSetHint": "¿Modo set único? Sets para ganar = 1 y total = 1.",
+      "final": "Final",
+      "customFinalRules": "Reglas personalizadas para la final",
+      "semifinals": "Semifinales (3º / 4º puesto)",
+      "customSemiRules": "Reglas personalizadas para semifinales",
+      "save": "Guardar cambios",
+      "saved": "Torneo guardado.",
+      "saveError": "No se pudieron guardar los cambios."
+    }
+  }
+}

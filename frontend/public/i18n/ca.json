@@ -1,0 +1,404 @@
+{
+  "appName": "Points Tracker",
+  "common": {
+    "create": "Crea",
+    "cancel": "Cancel·la",
+    "close": "Tanca",
+    "confirm": "Confirma",
+    "delete": "Elimina",
+    "save": "Desa",
+    "remove": "Treu",
+    "loading": "Carregant…",
+    "starting": "Iniciant…",
+    "generating": "Generant…",
+    "add": "Afegeix",
+    "edit": "Edita",
+    "viewAll": "Veure-ho tot",
+    "viewOnly": "Només lectura",
+    "live": "En directe",
+    "yes": "Sí",
+    "no": "No",
+    "dismiss": "Descarta",
+    "goHome": "Vés a l'inici",
+    "of": "de"
+  },
+  "nav": {
+    "openMenu": "Obre el menú",
+    "closeMenu": "Tanca el menú",
+    "primaryNav": "Navegació principal",
+    "account": "Compte",
+    "switchToLight": "Canvia a mode clar",
+    "switchToDark": "Canvia a mode fosc",
+    "signIn": "Inicia la sessió",
+    "signOut": "Tanca la sessió",
+    "items": {
+      "home": "Inici",
+      "newCounter": "Nou marcador",
+      "dashboard": "Tauler",
+      "counters": "Marcadors",
+      "tournaments": "Tornejos",
+      "settings": "Configuració"
+    }
+  },
+  "dashboard": {
+    "kicker": "Benvingut/da de nou",
+    "actions": {
+      "newCounter": "Nou marcador",
+      "newCounterHelp": "Comença a registrar un partit.",
+      "newTournament": "Nou torneig",
+      "newTournamentHelp": "Organitza els equips."
+    },
+    "stats": {
+      "total": "Total",
+      "active": "Actius",
+      "finished": "Finalitzats"
+    },
+    "active": "Actius",
+    "noActive": "No hi ha partits en curs.",
+    "startOne": "Comença'n un",
+    "noTournaments": "No hi ha tornejos actius.",
+    "createOne": "Crea'n un",
+    "recent": "Recents",
+    "tournaments": "Tornejos",
+    "vs": "vs",
+    "currentScore": "actual {{a}}–{{b}}",
+    "loadCountersError": "No s'han pogut carregar els marcadors."
+  },
+  "settings": {
+    "title": "Configuració",
+    "subtitle": "Gestiona el teu compte i preferències.",
+    "account": "Compte",
+    "appearance": "Aparença",
+    "theme": "Tema",
+    "themeActive": "Mode {{mode}} actiu",
+    "themeDark": "fosc",
+    "themeLight": "clar",
+    "toggleDarkAria": "Canvia el mode fosc",
+    "language": "Idioma",
+    "languageHelp": "Tria l'idioma de l'aplicació.",
+    "languages": {
+      "en": "English",
+      "es": "Español",
+      "ca": "Català"
+    },
+    "session": "Sessió",
+    "signOut": "Tanca la sessió"
+  },
+  "accessDenied": {
+    "title": "Accés denegat",
+    "message": "No tens permís per veure aquesta pàgina."
+  },
+  "toast": {
+    "dismiss": "Descarta"
+  },
+  "sport": {
+    "volleyball": "Voleibol",
+    "beach_volleyball": "Voleibol platja",
+    "custom": "Personalitzat",
+    "selectAria": "Selecciona esport",
+    "bestOfSets": "Al millor de {{total}} sets · {{points}} pts per guanyar"
+  },
+  "rules": {
+    "pointsPerSet": "Punts per set",
+    "lastSetPoints": "Punts de l'últim set",
+    "setsToWin": "Sets per guanyar",
+    "totalSets": "Total de sets",
+    "winByTwo": "Guanyar per 2",
+    "winByTwoShort": "Guanyar per dos",
+    "perTeamPerSet": "Per equip, per set",
+    "durationSeconds": "Durada (segons)",
+    "timeoutsPerSet": "Temps morts per set",
+    "timeoutSeconds": "Segons de temps mort",
+    "indoorSwitchLabel": "Canvi de camp cada N sets (pista)",
+    "indoorSwitchDefault": "Per defecte de l'esport",
+    "indoorSwitchEvery1": "Cada set (1)",
+    "indoorSwitchEvery2": "Cada dos sets (2)",
+    "beachAutoSwitch": "Platja: canvi automàtic en fites de punts",
+    "timeoutsHelp": "FIVB: voleibol pista 2 × 30 s, platja 1 × 30 s. Posa 0 per desactivar.",
+    "rulesSection": "Regles",
+    "rulesDefault": "per defecte",
+    "timeoutsSection": "Temps morts",
+    "timeoutsSummary": "{{count}} × {{seconds}}s per set",
+    "proModeLabel": "Canviar cada <b>2 sets</b> (mode pro)",
+    "proModeHelp": "Desactivat: canvia cada set (estàndard).",
+    "beachAutoLabel": "Canvi automàtic",
+    "beachAutoHelp": "Activat: el servidor canvia automàticament cada 7 punts (5 en el set decisiu), amb avís de 5 s. Desactivat: hauràs de confirmar cada canvi."
+  },
+  "counter": {
+    "newTitle": "Nou marcador",
+    "newSubtitle": "Tria un esport i posa nom als equips per començar.",
+    "resumeTitle": "Reprèn el marcador",
+    "resumeHelp": "Ja tens un marcador en curs. Inicia sessió per tenir-ne més d'un.",
+    "myShortcutTitle": "Els meus marcadors",
+    "myShortcutHelp": "Veure, reprendre o eliminar els teus marcadors.",
+    "sportRequired": "Selecciona un esport.",
+    "teamsLabel": "Equips",
+    "teamA": "Equip A",
+    "teamB": "Equip B",
+    "submit": "Inicia el marcador",
+    "createError": "Error en crear el marcador. Torna-ho a provar.",
+    "list": {
+      "title": "Els meus marcadors",
+      "newAria": "Nou marcador",
+      "new": "Nou",
+      "emptyTitle": "Encara no hi ha marcadors",
+      "emptySubtitle": "Crea el primer marcador per registrar un partit.",
+      "emptyCta": "Comença un marcador",
+      "deleteAria": "Elimina marcador",
+      "deleteTitle": "Eliminar el marcador?",
+      "deleteMessage": "S'eliminarà \"{{a}} vs {{b}}\". No es pot desfer.",
+      "deleteSuccess": "Marcador eliminat.",
+      "deleteError": "Error en eliminar el marcador.",
+      "loadError": "No s'han pogut carregar els marcadors."
+    },
+    "page": {
+      "notFoundTitle": "Marcador no trobat",
+      "notFoundMessage": "Aquest marcador no existeix o no hi tens accés.",
+      "tournamentMatch": "Partit del torneig",
+      "undoAria": "Desfés l'última acció (mantén per repetir)",
+      "undoTitle": "Desfés (mantén per desfer més)",
+      "redoAria": "Refés (mantén per repetir)",
+      "redoTitle": "Refés (mantén per refer més)",
+      "moreAria": "Més opcions",
+      "moreTitle": "Més",
+      "share": "Comparteix",
+      "renameTeams": "Reanomena equips",
+      "hideTeamEditor": "Oculta editor d'equips",
+      "matchInfo": "Informació del partit",
+      "hideMatchInfo": "Oculta la informació",
+      "switchSides": "Canviar camp",
+      "endMatchMenu": "Acabar el partit",
+      "deleteMenu": "Elimina marcador",
+      "sidesSwitched": "Camps canviats",
+      "matchFinished": "Partit acabat",
+      "timeoutAria": "Demana temps mort per a {{team}}",
+      "timeoutLabel": "Temps mort",
+      "timeoutBanner": "Temps mort de {{team}}",
+      "cancelTimeoutAria": "Cancel·la el temps mort",
+      "cancelTimeoutTitle": "Cancel·la el temps mort",
+      "teamNames": "Noms dels equips",
+      "closeTeamEditorAria": "Tanca editor d'equips",
+      "rulesPointsPerSet": "Punts per set",
+      "rulesLastSet": "Punts de l'últim set",
+      "rulesSetsToWin": "Sets per guanyar",
+      "rulesSetsToWinValue": "{{won}} de {{total}}",
+      "rulesWinByTwo": "Guanyar per 2",
+      "pointAria": "Punt per a {{label}}",
+      "removePointAria": "Treu un punt a {{label}}",
+      "incrementForA": "Punt per a l'equip A",
+      "incrementForB": "Punt per a l'equip B",
+      "endMatchTitle": "Acabar el partit?",
+      "endMatchMessage": "El partit es marcarà com a acabat. Guanya l'equip amb més sets — o, en empat, amb més punts totals.",
+      "endMatchConfirm": "Acaba",
+      "deleteTitle": "Eliminar aquest marcador?",
+      "deleteMessage": "S'eliminarà \"{{a}} vs {{b}}\" i el seu historial. No es pot desfer.",
+      "deleteConfirm": "Elimina",
+      "sideSwitchAuto": {
+        "title": "Canviar de camp?",
+        "message": "El total de punts ha arribat al límit de canvi. Els equips han canviat de camp?",
+        "confirm": "Sí, canviats",
+        "cancel": "Encara no"
+      },
+      "sideSwitchEndSet": {
+        "title": "Canviar de camp",
+        "message": "Final del set — els equips han de canviar abans del proper set. Confirma quan acabis.",
+        "confirm": "Canviats",
+        "cancel": "Omet"
+      },
+      "sideSwitchInfo": {
+        "title": "Camps canviats",
+        "message": "Els equips acaben de canviar de camp.",
+        "confirm": "Entesos"
+      }
+    },
+    "events": {
+      "history": "Historial",
+      "empty": "Encara sense accions.",
+      "setLabel": "Set {{n}} · {{score}}",
+      "timeoutCanceled": "Temps mort de {{team}} (cancel·lat)",
+      "timeoutLabel": "Temps mort de {{team}}",
+      "scoreBaseline": "Marcador {{a}}–{{b}}",
+      "scorePlus": "{{team}} +1",
+      "scoreMinus": "{{team}} −1"
+    },
+    "share": {
+      "title": "Comparteix marcador",
+      "scopeReadLabel": "Només lectura",
+      "scopeReadDescription": "Pot veure el marcador en directe",
+      "scopeEditLabel": "Pot anotar",
+      "scopeEditDescription": "Pot sumar o restar punts",
+      "shareLink": "Enllaç per compartir",
+      "copyLink": "Copia l'enllaç",
+      "regenerateTitle": "Regenera l'enllaç",
+      "generateLink": "Genera l'enllaç",
+      "generateError": "No s'ha pogut generar l'enllaç.",
+      "linkCopied": "Enllaç copiat!"
+    },
+    "join": {
+      "invalidTitle": "Enllaç invàlid o caducat",
+      "joiningTitle": "Unint-se al marcador…",
+      "invalidMessage": "Aquest enllaç no és vàlid o ha caducat."
+    },
+    "status": {
+      "active": "En curs",
+      "finished": "Finalitzat",
+      "abandoned": "Abandonat"
+    },
+    "team": {
+      "editAria": "Edita el nom de l'equip",
+      "editAriaNamed": "Edita el nom de l'equip: {{name}}"
+    },
+    "score": {
+      "setBadge": "Set {{n}}",
+      "ariaScore": "Marcador de {{team}}: {{value}}",
+      "setsAria": "Sets guanyats per {{team}}: {{won}}"
+    }
+  },
+  "tournament": {
+    "list": {
+      "title": "Els meus tornejos",
+      "new": "Nou",
+      "newAria": "Nou torneig",
+      "empty": {
+        "title": "Encara no hi ha tornejos",
+        "subtitle": "Crea el primer torneig per organitzar els equips.",
+        "cta": "Crea torneig"
+      },
+      "updated": "Actualitzat {{date}}",
+      "teamsCount": "{{count}} equips",
+      "deleteAria": "Elimina",
+      "deleteConfirm": {
+        "title": "Eliminar el torneig?",
+        "message": "S'eliminarà \"{{name}}\".",
+        "confirm": "Elimina"
+      },
+      "loadError": "No s'han pogut carregar els tornejos.",
+      "deleteSuccess": "Torneig eliminat.",
+      "deleteError": "Error en eliminar el torneig."
+    },
+    "create": {
+      "kicker": "Nou torneig",
+      "title": "Configura'l",
+      "name": {
+        "label": "Nom del torneig",
+        "placeholder": "Open Estiu 2026",
+        "help": "Tria un nom curt i memorable — pots canviar-lo després."
+      },
+      "sport": {
+        "label": "Esport",
+        "help": "Determina les regles per defecte. Les pots modificar a la configuració."
+      },
+      "format": {
+        "label": "Format",
+        "help": "Tria com s'organitzen els partits. Les eliminatòries decideixen un campió ràpid; el tots contra tots dona el mateix joc a tothom."
+      },
+      "groups": {
+        "groupsLabel": "Grups",
+        "groupsHelp": "Nombre de grups abans de l'eliminatòria.",
+        "advanceLabel": "Passen per grup",
+        "advanceHelp": "Quants equips de cada grup passen al quadre.",
+        "constraint": "(Grups × passen) ha de ser potència de dos — p. ex. 2×2 = 4, 2×4 = 8, 4×2 = 8.",
+        "invalid": "Grups × passen ha de ser potència de dos i com a mínim 2."
+      },
+      "submit": "Crea",
+      "success": "Torneig creat.",
+      "failure": "No s'ha pogut crear el torneig."
+    },
+    "detail": {
+      "teamsAndStatus": "{{count}} equips · {{status}}",
+      "shareAria": "Comparteix torneig",
+      "shareTitle": "Enllaç per compartir",
+      "shareCopied": "Enllaç del torneig copiat.",
+      "shareFailed": "No s'ha pogut copiar — enganxa l'URL manualment.",
+      "start": "Genera quadre i comença",
+      "starting": "Iniciant…",
+      "startHelpMin": "Afegeix com a mínim {{min}} equips per començar.",
+      "loadError": "No s'ha pogut carregar el torneig.",
+      "startError": "No s'ha pogut iniciar el torneig.",
+      "openMatchError": "No s'ha pogut obrir el partit.",
+      "tabs": {
+        "bracket": "Quadre",
+        "participants": "Participants",
+        "standings": "Classificació",
+        "settings": "Configuració"
+      },
+      "bracketEmpty": "El quadre apareixerà quan comenci el torneig.",
+      "settingsLocked": "Només l'organitzador pot canviar la configuració.",
+      "standingsEmpty": "La classificació apareix quan es completen partits."
+    },
+    "participants": {
+      "namePlaceholder": "Nom de l'equip",
+      "addAria": "Afegeix equip",
+      "emptyMin": "Afegeix com a mínim {{min}} equips per generar el quadre.",
+      "seedLabel": "Cap de sèrie #{{seed}}",
+      "removeAria": "Treu",
+      "advanced": {
+        "toggle": "Sorteig avançat",
+        "help": "Per defecte, els equips juguen en l'ordre d'inscripció. Usa les opcions per a més control.",
+        "seedLabel": "Cap de sèrie manual (opcional)",
+        "seedHelp": "Els nombres més baixos s'enfronten als més alts al quadre. Deixa-ho en blanc per a l'ordre automàtic.",
+        "shuffleLabel": "Barreja equips sense cap al començar",
+        "shuffleHelp": "Ordre aleatori per als equips sense cap de sèrie — just quan no vols que l'ordre d'inscripció influeixi."
+      },
+      "addError": "No s'ha pogut afegir el participant.",
+      "removeError": "No s'ha pogut treure el participant."
+    },
+    "format": {
+      "singleelimination": {
+        "label": "Eliminació directa",
+        "description": "Quadre a eliminació — qui perd, fora."
+      },
+      "doubleelimination": {
+        "label": "Doble eliminació",
+        "description": "Eliminació amb dues derrotes i quadre de perdedors."
+      },
+      "roundrobin": {
+        "label": "Tots contra tots",
+        "description": "Tots juguen contra tots — classificació per victòries."
+      },
+      "groupstageelimination": {
+        "label": "Fase de grups + eliminatòria",
+        "description": "Grups tots contra tots i després els millors al quadre."
+      }
+    },
+    "status": {
+      "draft": "Esborrany",
+      "registration": "Inscripcions",
+      "active": "En curs",
+      "completed": "Finalitzat",
+      "abandoned": "Abandonat"
+    },
+    "bracket": {
+      "tbd": "TBD",
+      "winnersPrefix": "Guanyadors",
+      "losersPrefix": "Perdedors",
+      "grandFinal": "Gran final",
+      "round": "Ronda {{n}}",
+      "winShort": "G",
+      "status": {
+        "inprogress": "En directe",
+        "completed": "Fet",
+        "ready": "Llest",
+        "walkover": "Bye",
+        "pending": "—"
+      }
+    },
+    "settings": {
+      "identity": "Identitat",
+      "name": "Nom",
+      "schedule": "Calendari",
+      "starts": "Comença",
+      "ends": "Acaba",
+      "defaultRules": "Regles per defecte",
+      "overrideSport": "Sobreescriu les regles de l'esport",
+      "singleSetHint": "Mode set únic? Sets per guanyar = 1 i total = 1.",
+      "final": "Final",
+      "customFinalRules": "Regles personalitzades per a la final",
+      "semifinals": "Semifinals (3r / 4t lloc)",
+      "customSemiRules": "Regles personalitzades per a semifinals",
+      "save": "Desa els canvis",
+      "saved": "Torneig desat.",
+      "saveError": "No s'han pogut desar els canvis."
+    }
+  }
+}

@@ -96,9 +96,10 @@ public sealed class SingleEliminationGenerator : IBracketGenerator
 
     private static IReadOnlyList<TournamentParticipant> SeedingOrder(IReadOnlyList<TournamentParticipant> ps)
     {
-        // Seeded participants first (in seed order), then unseeded in registration order.
+        // Seeded participants first (in seed order), then unseeded in input order
+        // — the caller is responsible for deciding registration vs. random ordering.
         var seeded = ps.Where(p => p.Seed.HasValue).OrderBy(p => p.Seed!.Value).ToList();
-        var rest   = ps.Where(p => !p.Seed.HasValue).OrderBy(p => p.RegisteredAt).ToList();
+        var rest   = ps.Where(p => !p.Seed.HasValue).ToList();
         return [..seeded, ..rest];
     }
 

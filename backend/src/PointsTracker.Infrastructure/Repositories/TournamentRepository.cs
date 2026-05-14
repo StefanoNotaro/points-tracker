@@ -34,6 +34,17 @@ public class TournamentRepository(AppDbContext db) : ITournamentRepository
             .OrderByDescending(t => t.UpdatedAt)
             .ToListAsync(ct);
 
+    public async Task<IReadOnlyList<Tournament>> ListBySessionTokenHashesAsync(
+        IReadOnlyCollection<string> hashes, CancellationToken ct = default)
+    {
+        if (hashes.Count == 0) return [];
+        return await db.Tournaments
+            .Include(t => t.Participants)
+            .Where(t => t.SessionTokenHash != null && hashes.Contains(t.SessionTokenHash))
+            .OrderByDescending(t => t.UpdatedAt)
+            .ToListAsync(ct);
+    }
+
     public Task<Tournament?> GetActiveAnonymousAsync(string sessionTokenHash, CancellationToken ct = default) =>
         db.Tournaments
             .Include(t => t.Participants)

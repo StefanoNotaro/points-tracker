@@ -25,7 +25,7 @@ public class CounterRepository(AppDbContext db) : ICounterRepository
     public async Task<IReadOnlyList<Counter>> ListByOwnerAsync(Guid ownerUserId, CancellationToken ct = default) =>
         await db.Counters
             .Include(c => c.Sets)
-            .Where(c => c.OwnerUserId == ownerUserId)
+            .Where(c => c.OwnerUserId == ownerUserId && c.LinkedTournamentId == null)
             .OrderByDescending(c => c.UpdatedAt)
             .ToListAsync(ct);
 

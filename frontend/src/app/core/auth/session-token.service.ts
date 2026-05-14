@@ -30,4 +30,12 @@ export class SessionTokenService {
       .filter((key) => key.startsWith(STORAGE_PREFIX))
       .map((key) => key.slice(STORAGE_PREFIX.length));
   }
+
+  getAllTournamentTokens(): string[] {
+    const prefix = `${STORAGE_PREFIX}tournament:`;
+    return Object.keys(localStorage)
+      .filter((key) => key.startsWith(prefix))
+      .map((key) => localStorage.getItem(key))
+      .filter((v): v is string => !!v);
+  }
 }

@@ -142,29 +142,65 @@ export interface CreateTournamentResponse {
   sessionToken: string | null;
 }
 
-export const TOURNAMENT_FORMATS: { value: TournamentFormat; label: string; description: string; icon: string }[] = [
+/**
+ * Minimum number of participants for a tournament to be startable.
+ * For group-stage, the minimum scales with the group count (each group needs ≥ 2 teams).
+ */
+export function minTeamsForFormat(
+  format: TournamentFormat,
+  groupCount: number | null | undefined = null,
+): number {
+  switch (format) {
+    case 'singleelimination': return 2;
+    case 'doubleelimination': return 4;
+    case 'roundrobin': return 3;
+    case 'groupstageelimination': return Math.max(4, (groupCount ?? 2) * 2);
+  }
+}
+
+/**
+ * (Groups × advance) must be a power of two and at least 2 — the resulting
+ * bracket needs to be a clean knockout.
+ */
+export function isValidGroupConfig(groupCount: number, advancePerGroup: number): boolean {
+  if (groupCount < 2 || advancePerGroup < 1) return false;
+  const slots = groupCount * advancePerGroup;
+  if (slots < 2) return false;
+  return (slots & (slots - 1)) === 0;
+}
+
+/**
+ * Tournament format metadata. `labelKey` / `descriptionKey` are
+ * ngx-translate keys, not display strings — pipe them through `| translate`.
+ */
+export const TOURNAMENT_FORMATS: {
+  value: TournamentFormat;
+  labelKey: string;
+  descriptionKey: string;
+  icon: string;
+}[] = [
   {
     value: 'singleelimination',
-    label: 'Single elimination',
-    description: 'Knockout bracket — lose once and you’re out.',
+    labelKey: 'tournament.format.singleelimination.label',
+    descriptionKey: 'tournament.format.singleelimination.description',
     icon: 'account_tree',
   },
   {
     value: 'doubleelimination',
-    label: 'Double elimination',
-    description: 'Two-loss elimination with a winners and losers bracket.',
+    labelKey: 'tournament.format.doubleelimination.label',
+    descriptionKey: 'tournament.format.doubleelimination.description',
     icon: 'fork_right',
   },
   {
     value: 'roundrobin',
-    label: 'Round robin',
-    description: 'Everyone plays everyone — ranked by wins.',
+    labelKey: 'tournament.format.roundrobin.label',
+    descriptionKey: 'tournament.format.roundrobin.description',
     icon: 'all_inclusive',
   },
   {
     value: 'groupstageelimination',
-    label: 'Group stage + knockout',
-    description: 'Round-robin in groups, then the top finishers fight in a bracket.',
+    labelKey: 'tournament.format.groupstageelimination.label',
+    descriptionKey: 'tournament.format.groupstageelimination.description',
     icon: 'workspaces',
   },
 ];

@@ -1,0 +1,404 @@
+{
+  "appName": "Points Tracker",
+  "common": {
+    "create": "Create",
+    "cancel": "Cancel",
+    "close": "Close",
+    "confirm": "Confirm",
+    "delete": "Delete",
+    "save": "Save",
+    "remove": "Remove",
+    "loading": "Loading…",
+    "starting": "Starting…",
+    "generating": "Generating…",
+    "add": "Add",
+    "edit": "Edit",
+    "viewAll": "View all",
+    "viewOnly": "View only",
+    "live": "Live",
+    "yes": "Yes",
+    "no": "No",
+    "dismiss": "Dismiss",
+    "goHome": "Go home",
+    "of": "of"
+  },
+  "nav": {
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "primaryNav": "Primary navigation",
+    "account": "Account",
+    "switchToLight": "Switch to light mode",
+    "switchToDark": "Switch to dark mode",
+    "signIn": "Sign in",
+    "signOut": "Sign out",
+    "items": {
+      "home": "Home",
+      "newCounter": "New counter",
+      "dashboard": "Dashboard",
+      "counters": "Counters",
+      "tournaments": "Tournaments",
+      "settings": "Settings"
+    }
+  },
+  "dashboard": {
+    "kicker": "Welcome back",
+    "actions": {
+      "newCounter": "New counter",
+      "newCounterHelp": "Start tracking a match.",
+      "newTournament": "New tournament",
+      "newTournamentHelp": "Bracket your teams."
+    },
+    "stats": {
+      "total": "Total",
+      "active": "Active",
+      "finished": "Finished"
+    },
+    "active": "Active",
+    "noActive": "No matches in progress.",
+    "startOne": "Start one",
+    "noTournaments": "No active tournaments.",
+    "createOne": "Create one",
+    "recent": "Recent",
+    "tournaments": "Tournaments",
+    "vs": "vs",
+    "currentScore": "current {{a}}–{{b}}",
+    "loadCountersError": "Could not load your counters."
+  },
+  "settings": {
+    "title": "Settings",
+    "subtitle": "Manage your account and preferences.",
+    "account": "Account",
+    "appearance": "Appearance",
+    "theme": "Theme",
+    "themeActive": "{{mode}} mode active",
+    "themeDark": "Dark",
+    "themeLight": "Light",
+    "toggleDarkAria": "Toggle dark mode",
+    "language": "Language",
+    "languageHelp": "Pick the language used across the app.",
+    "languages": {
+      "en": "English",
+      "es": "Español",
+      "ca": "Català"
+    },
+    "session": "Session",
+    "signOut": "Sign out"
+  },
+  "accessDenied": {
+    "title": "Access denied",
+    "message": "You don't have permission to view this page."
+  },
+  "toast": {
+    "dismiss": "Dismiss"
+  },
+  "sport": {
+    "volleyball": "Volleyball",
+    "beach_volleyball": "Beach volleyball",
+    "custom": "Custom",
+    "selectAria": "Select sport",
+    "bestOfSets": "Best of {{total}} sets · {{points}} pts to win"
+  },
+  "rules": {
+    "pointsPerSet": "Points per set",
+    "lastSetPoints": "Last-set points",
+    "setsToWin": "Sets to win",
+    "totalSets": "Total sets",
+    "winByTwo": "Must win by 2",
+    "winByTwoShort": "Win by two",
+    "perTeamPerSet": "Per team, per set",
+    "durationSeconds": "Duration (seconds)",
+    "timeoutsPerSet": "Timeouts per set",
+    "timeoutSeconds": "Timeout seconds",
+    "indoorSwitchLabel": "Indoor side-switch every N sets",
+    "indoorSwitchDefault": "Sport default",
+    "indoorSwitchEvery1": "Every set (1)",
+    "indoorSwitchEvery2": "Every two sets (2)",
+    "beachAutoSwitch": "Beach: auto-switch sides at point milestones",
+    "timeoutsHelp": "FIVB defaults: indoor volleyball 2 × 30 s, beach volleyball 1 × 30 s. Set count to 0 to disable timeouts.",
+    "rulesSection": "Rules",
+    "rulesDefault": "default",
+    "timeoutsSection": "Timeouts",
+    "timeoutsSummary": "{{count}} × {{seconds}}s per set",
+    "proModeLabel": "Switch sides every <b>2 sets</b> (pro mode)",
+    "proModeHelp": "Off: switch every set (standard).",
+    "beachAutoLabel": "Auto-switch sides",
+    "beachAutoHelp": "On: server switches automatically every 7 points (5 in the deciding set), with a 5-second notification. Off: you'll be asked to confirm each switch."
+  },
+  "counter": {
+    "newTitle": "New Counter",
+    "newSubtitle": "Choose a sport and name your teams to get started.",
+    "resumeTitle": "Resume your counter",
+    "resumeHelp": "You already have a counter running. Sign in to keep more than one at a time.",
+    "myShortcutTitle": "My Counters",
+    "myShortcutHelp": "View, resume or delete your existing counters.",
+    "sportRequired": "Please select a sport.",
+    "teamsLabel": "Teams",
+    "teamA": "Team A",
+    "teamB": "Team B",
+    "submit": "Start Counter",
+    "createError": "Failed to create counter. Please try again.",
+    "list": {
+      "title": "My Counters",
+      "newAria": "New counter",
+      "new": "New",
+      "emptyTitle": "No counters yet",
+      "emptySubtitle": "Create your first counter to track a match.",
+      "emptyCta": "Start a counter",
+      "deleteAria": "Delete counter",
+      "deleteTitle": "Delete counter?",
+      "deleteMessage": "\"{{a}} vs {{b}}\" will be removed. This can't be undone from here.",
+      "deleteSuccess": "Counter deleted.",
+      "deleteError": "Failed to delete counter.",
+      "loadError": "Could not load your counters."
+    },
+    "page": {
+      "notFoundTitle": "Counter not found",
+      "notFoundMessage": "This counter doesn't exist or you don't have access.",
+      "tournamentMatch": "Tournament match",
+      "undoAria": "Undo last action (hold to repeat)",
+      "undoTitle": "Undo (hold to undo more)",
+      "redoAria": "Redo (hold to repeat)",
+      "redoTitle": "Redo (hold to redo more)",
+      "moreAria": "More options",
+      "moreTitle": "More",
+      "share": "Share",
+      "renameTeams": "Rename teams",
+      "hideTeamEditor": "Hide team editor",
+      "matchInfo": "Match info",
+      "hideMatchInfo": "Hide match info",
+      "switchSides": "Switch sides",
+      "endMatchMenu": "End match now",
+      "deleteMenu": "Delete counter",
+      "sidesSwitched": "Sides switched",
+      "matchFinished": "Match finished",
+      "timeoutAria": "Call timeout for {{team}}",
+      "timeoutLabel": "Timeout",
+      "timeoutBanner": "{{team}} timeout",
+      "cancelTimeoutAria": "Cancel timeout",
+      "cancelTimeoutTitle": "Cancel timeout",
+      "teamNames": "Team names",
+      "closeTeamEditorAria": "Close team editor",
+      "rulesPointsPerSet": "Points per set",
+      "rulesLastSet": "Last-set points",
+      "rulesSetsToWin": "Sets to win",
+      "rulesSetsToWinValue": "{{won}} of {{total}}",
+      "rulesWinByTwo": "Must win by 2",
+      "pointAria": "Point for {{label}}",
+      "removePointAria": "Remove point from {{label}}",
+      "incrementForA": "Increment Team A",
+      "incrementForB": "Increment Team B",
+      "endMatchTitle": "End match now?",
+      "endMatchMessage": "The match will be marked finished. The winner will be the team with more sets — or, on a tie, more total points.",
+      "endMatchConfirm": "End match",
+      "deleteTitle": "Delete this counter?",
+      "deleteMessage": "\"{{a}} vs {{b}}\" and its history will be removed. This can't be undone.",
+      "deleteConfirm": "Delete",
+      "sideSwitchAuto": {
+        "title": "Switch sides?",
+        "message": "The points total just hit a switch boundary. Have the teams switched sides?",
+        "confirm": "Yes, switched",
+        "cancel": "Not yet"
+      },
+      "sideSwitchEndSet": {
+        "title": "Switch sides",
+        "message": "End of set — teams must switch sides before the next set begins. Confirm when done.",
+        "confirm": "Sides switched",
+        "cancel": "Skip"
+      },
+      "sideSwitchInfo": {
+        "title": "Sides switched",
+        "message": "Teams just switched sides — court change required.",
+        "confirm": "Got it"
+      }
+    },
+    "events": {
+      "history": "History",
+      "empty": "No actions yet.",
+      "setLabel": "Set {{n}} · {{score}}",
+      "timeoutCanceled": "{{team}} timeout (canceled)",
+      "timeoutLabel": "{{team}} timeout",
+      "scoreBaseline": "Score {{a}}–{{b}}",
+      "scorePlus": "{{team}} +1",
+      "scoreMinus": "{{team}} −1"
+    },
+    "share": {
+      "title": "Share Counter",
+      "scopeReadLabel": "View only",
+      "scopeReadDescription": "Can watch live score",
+      "scopeEditLabel": "Can score",
+      "scopeEditDescription": "Can add/remove points",
+      "shareLink": "Share link",
+      "copyLink": "Copy link",
+      "regenerateTitle": "Regenerate link",
+      "generateLink": "Generate link",
+      "generateError": "Failed to generate share link.",
+      "linkCopied": "Link copied to clipboard!"
+    },
+    "join": {
+      "invalidTitle": "Link invalid or expired",
+      "joiningTitle": "Joining counter…",
+      "invalidMessage": "This share link is invalid or has expired."
+    },
+    "status": {
+      "active": "In progress",
+      "finished": "Finished",
+      "abandoned": "Abandoned"
+    },
+    "team": {
+      "editAria": "Edit team name",
+      "editAriaNamed": "Edit team name: {{name}}"
+    },
+    "score": {
+      "setBadge": "Set {{n}}",
+      "ariaScore": "{{team}} score: {{value}}",
+      "setsAria": "{{team}} sets won: {{won}}"
+    }
+  },
+  "tournament": {
+    "list": {
+      "title": "My Tournaments",
+      "new": "New",
+      "newAria": "New tournament",
+      "empty": {
+        "title": "No tournaments yet",
+        "subtitle": "Create your first tournament to bracket your teams.",
+        "cta": "Create tournament"
+      },
+      "updated": "Updated {{date}}",
+      "teamsCount": "{{count}} teams",
+      "deleteAria": "Delete",
+      "deleteConfirm": {
+        "title": "Delete tournament?",
+        "message": "\"{{name}}\" will be removed.",
+        "confirm": "Delete"
+      },
+      "loadError": "Could not load your tournaments.",
+      "deleteSuccess": "Tournament deleted.",
+      "deleteError": "Failed to delete tournament."
+    },
+    "create": {
+      "kicker": "New tournament",
+      "title": "Set it up",
+      "name": {
+        "label": "Tournament name",
+        "placeholder": "Summer Open 2026",
+        "help": "Pick a short, memorable name — you can change it later."
+      },
+      "sport": {
+        "label": "Sport",
+        "help": "Determines the default match rules. You can override them in settings after creating."
+      },
+      "format": {
+        "label": "Format",
+        "help": "Choose how matches are organised. Knockouts decide a champion fast; round-robin gives everyone equal play time."
+      },
+      "groups": {
+        "groupsLabel": "Groups",
+        "groupsHelp": "Number of round-robin groups before the knockout.",
+        "advanceLabel": "Advance per group",
+        "advanceHelp": "How many teams from each group qualify for the bracket.",
+        "constraint": "(Groups × advance) must be a power of two — e.g. 2×2 = 4, 2×4 = 8, 4×2 = 8.",
+        "invalid": "Groups × advance must be a power of two and at least 2."
+      },
+      "submit": "Create",
+      "success": "Tournament created.",
+      "failure": "Could not create tournament."
+    },
+    "detail": {
+      "teamsAndStatus": "{{count}} teams · {{status}}",
+      "shareAria": "Share tournament",
+      "shareTitle": "Share link",
+      "shareCopied": "Tournament link copied to clipboard.",
+      "shareFailed": "Could not copy — paste the page URL manually.",
+      "start": "Generate bracket & start",
+      "starting": "Starting…",
+      "startHelpMin": "Add at least {{min}} teams to start.",
+      "loadError": "Could not load tournament.",
+      "startError": "Could not start tournament.",
+      "openMatchError": "Could not open match.",
+      "tabs": {
+        "bracket": "Bracket",
+        "participants": "Participants",
+        "standings": "Standings",
+        "settings": "Settings"
+      },
+      "bracketEmpty": "Bracket will appear once the tournament is started.",
+      "settingsLocked": "Only the organiser can change settings.",
+      "standingsEmpty": "Standings appear once matches start completing."
+    },
+    "participants": {
+      "namePlaceholder": "Team name",
+      "addAria": "Add team",
+      "emptyMin": "Add at least {{min}} teams to start the bracket.",
+      "seedLabel": "Seed #{{seed}}",
+      "removeAria": "Remove",
+      "advanced": {
+        "toggle": "Advanced seeding",
+        "help": "By default, teams play in the order they were added. Use the options below for finer control.",
+        "seedLabel": "Manual seed (optional)",
+        "seedHelp": "Lower numbers play higher numbers in the bracket. Leave blank to let the order be decided automatically.",
+        "shuffleLabel": "Shuffle unseeded teams when starting",
+        "shuffleHelp": "Random order for any team without a manual seed — fair when you don't want registration time to influence the bracket."
+      },
+      "addError": "Could not add participant.",
+      "removeError": "Could not remove participant."
+    },
+    "format": {
+      "singleelimination": {
+        "label": "Single elimination",
+        "description": "Knockout bracket — lose once and you're out."
+      },
+      "doubleelimination": {
+        "label": "Double elimination",
+        "description": "Two-loss elimination with a winners and losers bracket."
+      },
+      "roundrobin": {
+        "label": "Round robin",
+        "description": "Everyone plays everyone — ranked by wins."
+      },
+      "groupstageelimination": {
+        "label": "Group stage + knockout",
+        "description": "Round-robin in groups, then the top finishers fight in a bracket."
+      }
+    },
+    "status": {
+      "draft": "Draft",
+      "registration": "Registration",
+      "active": "Active",
+      "completed": "Completed",
+      "abandoned": "Abandoned"
+    },
+    "bracket": {
+      "tbd": "TBD",
+      "winnersPrefix": "Winners",
+      "losersPrefix": "Losers",
+      "grandFinal": "Grand final",
+      "round": "Round {{n}}",
+      "winShort": "W",
+      "status": {
+        "inprogress": "Live",
+        "completed": "Done",
+        "ready": "Ready",
+        "walkover": "Bye",
+        "pending": "—"
+      }
+    },
+    "settings": {
+      "identity": "Identity",
+      "name": "Name",
+      "schedule": "Schedule",
+      "starts": "Starts",
+      "ends": "Ends",
+      "defaultRules": "Default match rules",
+      "overrideSport": "Override sport defaults",
+      "singleSetHint": "Single-set indoor mode? Set sets to win = 1 and total sets = 1.",
+      "final": "Final",
+      "customFinalRules": "Custom rules for the final",
+      "semifinals": "Semifinals (3rd / 4th place)",
+      "customSemiRules": "Custom rules for semifinals",
+      "save": "Save changes",
+      "saved": "Tournament saved.",
+      "saveError": "Could not save changes."
+    }
+  }
+}

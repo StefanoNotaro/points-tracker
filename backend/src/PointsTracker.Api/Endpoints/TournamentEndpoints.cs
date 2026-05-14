@@ -16,6 +16,7 @@ public static class TournamentEndpoints
 
         group.MapPost("/",                CreateTournament).AllowAnonymous();
         group.MapGet("/mine",             ListMine).RequireAuthorization();
+        group.MapPost("/mine-anonymous",  ListMineAnonymous).AllowAnonymous();
         group.MapGet("/{id:guid}",        GetTournament).AllowAnonymous();
         group.MapPatch("/{id:guid}/rules", UpdateRules).AllowAnonymous();
         group.MapDelete("/{id:guid}",     DeleteTournament).AllowAnonymous();
@@ -57,6 +58,14 @@ public static class TournamentEndpoints
         var userId = ctx.User.GetUserId();
         if (userId is null) return Results.Unauthorized();
         var list = await mediator.Send(new ListMyTournamentsQuery(userId.Value));
+        return Results.Ok(list);
+    }
+
+    private static async Task<IResult> ListMineAnonymous(
+        ListAnonymousTournamentsRequest req, IMediator mediator)
+    {
+        var list = await mediator.Send(
+            new ListAnonymousTournamentsQuery(req.SessionTokens ?? []));
         return Results.Ok(list);
     }
 
@@ -137,10 +146,15 @@ public static class TournamentEndpoints
         return Results.Ok(dto);
     }
 
-    private static async Task<IResult> Start(Guid id, IMediator mediator, IHubContext<TournamentHub> hub, HttpContext ctx)
+    private static async Task<IResult> Start(
+        Guid id,
+        StartTournamentRequest? req,
+        IMediator mediator, IHubContext<TournamentHub> hub, HttpContext ctx)
     {
         var (userId, sessionToken) = GetContext(ctx);
-        var dto = await mediator.Send(new StartTournamentCommand(id, userId, sessionToken));
+        var dto = await mediator.Send(new StartTournamentCommand(
+            id, userId, sessionToken,
+            RandomizeUnseeded: req?.RandomizeUnseeded ?? false));
         await hub.BroadcastTournamentUpdate(id, dto);
         return Results.Ok(dto);
     }
@@ -208,3 +222,5 @@ public record UpdateTournamentRulesRequest(
 
 public record AddParticipantRequest(string TeamName, int? Seed, Guid? UserId);
 public record RecordMatchResultRequest(Guid WinnerParticipantId);
+public record ListAnonymousTournamentsRequest(List<string>? SessionTokens);
+public record StartTournamentRequest(bool? RandomizeUnseeded);

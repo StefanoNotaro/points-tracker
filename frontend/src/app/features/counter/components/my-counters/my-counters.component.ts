@@ -1,6 +1,7 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { CounterService } from '../../services/counter.service';
 import { NotificationService } from '../../../../core/services/notification.service';
 import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
@@ -13,15 +14,15 @@ import { SPORT_CONFIGS } from '../../../../shared/models/sport.model';
 
 @Component({
   selector: 'pts-my-counters',
-  imports: [RouterLink, LoadingSpinnerComponent],
+  imports: [RouterLink, LoadingSpinnerComponent, TranslatePipe],
   template: `
     <div class="flex flex-col gap-4 pb-8">
 
       <div class="flex items-center justify-between gap-2">
-        <h1 class="text-xl sm:text-2xl font-bold text-on-surface">My Counters</h1>
-        <a routerLink="/new-counter" class="pts-btn-primary" aria-label="New counter">
+        <h1 class="text-xl sm:text-2xl font-bold text-on-surface">{{ 'counter.list.title' | translate }}</h1>
+        <a routerLink="/new-counter" class="pts-btn-primary" [attr.aria-label]="'counter.list.newAria' | translate">
           <span class="material-symbols-rounded text-lg">add</span>
-          <span class="hidden sm:inline">New</span>
+          <span class="hidden sm:inline">{{ 'counter.list.new' | translate }}</span>
         </a>
       </div>
 
@@ -32,11 +33,11 @@ import { SPORT_CONFIGS } from '../../../../shared/models/sport.model';
       } @else if (counters().length === 0) {
         <div class="pts-card flex flex-col items-center text-center gap-3 py-10">
           <span class="material-symbols-rounded text-5xl text-on-surface-muted">scoreboard</span>
-          <p class="text-on-surface font-semibold">No counters yet</p>
-          <p class="text-sm text-on-surface-muted">Create your first counter to track a match.</p>
+          <p class="text-on-surface font-semibold">{{ 'counter.list.emptyTitle' | translate }}</p>
+          <p class="text-sm text-on-surface-muted">{{ 'counter.list.emptySubtitle' | translate }}</p>
           <a routerLink="/new-counter" class="pts-btn-primary mt-2">
             <span class="material-symbols-rounded">add</span>
-            <span>Start a counter</span>
+            <span>{{ 'counter.list.emptyCta' | translate }}</span>
           </a>
         </div>
       } @else {
@@ -51,7 +52,7 @@ import { SPORT_CONFIGS } from '../../../../shared/models/sport.model';
                 class="flex-1 min-w-0 active:opacity-70 transition-opacity"
               >
                 <p class="font-semibold text-on-surface truncate">
-                  {{ c.teamAName }} <span class="text-on-surface-muted font-normal">vs</span> {{ c.teamBName }}
+                  {{ c.teamAName }} <span class="text-on-surface-muted font-normal">{{ 'dashboard.vs' | translate }}</span> {{ c.teamBName }}
                 </p>
                 <p class="text-xs text-on-surface-muted truncate flex items-center gap-1.5 mt-0.5">
                   <span class="font-mono font-medium text-on-surface">
@@ -59,12 +60,12 @@ import { SPORT_CONFIGS } from '../../../../shared/models/sport.model';
                   </span>
                   @if (c.status === 'active') {
                     <span class="inline-flex items-center gap-1 text-success">
-                      <span class="w-1.5 h-1.5 rounded-full bg-success"></span>Live
+                      <span class="w-1.5 h-1.5 rounded-full bg-success"></span>{{ 'common.live' | translate }}
                     </span>
                   } @else {
                     <span class="inline-flex items-center gap-1">
                       <span class="material-symbols-rounded text-sm">flag</span>
-                      {{ statusLabel(c.status) }}
+                      {{ 'counter.status.' + c.status | translate }}
                     </span>
                   }
                 </p>
@@ -73,8 +74,7 @@ import { SPORT_CONFIGS } from '../../../../shared/models/sport.model';
                 type="button"
                 class="pts-btn-icon shrink-0"
                 (click)="confirmDelete(c)"
-                aria-label="Delete counter"
-                title="Delete"
+                [attr.aria-label]="'counter.list.deleteAria' | translate"
               >
                 <span class="material-symbols-rounded text-on-surface-muted hover:text-error">
                   delete_outline
@@ -91,6 +91,7 @@ export class MyCountersComponent implements OnInit {
   private readonly counterService = inject(CounterService);
   private readonly notifications  = inject(NotificationService);
   private readonly dialog         = inject(MatDialog);
+  private readonly i18n           = inject(TranslateService);
 
   readonly loading  = signal(true);
   readonly counters = signal<CounterSummary[]>([]);
@@ -104,7 +105,7 @@ export class MyCountersComponent implements OnInit {
     try {
       this.counters.set(await this.counterService.listMine());
     } catch {
-      this.notifications.error('Could not load your counters.');
+      this.notifications.error(this.i18n.instant('counter.list.loadError'));
     } finally {
       this.loading.set(false);
     }
@@ -114,23 +115,13 @@ export class MyCountersComponent implements OnInit {
     return SPORT_CONFIGS[sport as keyof typeof SPORT_CONFIGS]?.icon ?? 'sports_score';
   }
 
-  sportLabel(sport: string): string {
-    return SPORT_CONFIGS[sport as keyof typeof SPORT_CONFIGS]?.label ?? sport;
-  }
-
-  statusLabel(status: string): string {
-    return status === 'active' ? 'In progress'
-         : status === 'finished' ? 'Finished'
-         : 'Abandoned';
-  }
-
   async confirmDelete(c: CounterSummary): Promise<void> {
     const confirmed = await this.dialog
       .open<ConfirmDialogComponent, ConfirmDialogData, boolean>(ConfirmDialogComponent, {
         data: {
-          title: 'Delete counter?',
-          message: `"${c.teamAName} vs ${c.teamBName}" will be removed. This can't be undone from here.`,
-          confirmLabel: 'Delete',
+          title: this.i18n.instant('counter.list.deleteTitle'),
+          message: this.i18n.instant('counter.list.deleteMessage', { a: c.teamAName, b: c.teamBName }),
+          confirmLabel: this.i18n.instant('common.delete'),
         },
       })
       .afterClosed()
@@ -141,9 +132,9 @@ export class MyCountersComponent implements OnInit {
     try {
       await this.counterService.delete(c.id);
       this.counters.update((list) => list.filter((x) => x.id !== c.id));
-      this.notifications.success('Counter deleted.');
+      this.notifications.success(this.i18n.instant('counter.list.deleteSuccess'));
     } catch {
-      this.notifications.error('Failed to delete counter.');
+      this.notifications.error(this.i18n.instant('counter.list.deleteError'));
     }
   }
 }

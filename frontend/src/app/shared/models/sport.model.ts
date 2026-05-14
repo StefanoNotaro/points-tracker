@@ -2,7 +2,8 @@ export type SportType = 'volleyball' | 'beach_volleyball' | 'custom';
 
 export interface SportConfig {
   type: SportType;
-  label: string;
+  /** ngx-translate key for the user-visible sport name. */
+  labelKey: string;
   icon: string;
   pointsPerSet: number;
   lastSetPoints: number;
@@ -14,7 +15,7 @@ export interface SportConfig {
 export const SPORT_CONFIGS: Record<SportType, SportConfig> = {
   volleyball: {
     type: 'volleyball',
-    label: 'Volleyball',
+    labelKey: 'sport.volleyball',
     icon: 'sports_volleyball',
     pointsPerSet: 25,
     lastSetPoints: 15,
@@ -24,7 +25,7 @@ export const SPORT_CONFIGS: Record<SportType, SportConfig> = {
   },
   beach_volleyball: {
     type: 'beach_volleyball',
-    label: 'Beach Volleyball',
+    labelKey: 'sport.beach_volleyball',
     icon: 'beach_access',
     pointsPerSet: 21,
     lastSetPoints: 15,
@@ -34,7 +35,7 @@ export const SPORT_CONFIGS: Record<SportType, SportConfig> = {
   },
   custom: {
     type: 'custom',
-    label: 'Custom',
+    labelKey: 'sport.custom',
     icon: 'tune',
     pointsPerSet: 25,
     lastSetPoints: 15,

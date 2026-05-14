@@ -1,10 +1,11 @@
 import { Component, inject } from '@angular/core';
 import { NgClass } from '@angular/common';
+import { TranslatePipe } from '@ngx-translate/core';
 import { NotificationService, Toast } from '../../../core/services/notification.service';
 
 @Component({
   selector: 'pts-toast-container',
-  imports: [NgClass],
+  imports: [NgClass, TranslatePipe],
   template: `
     <div
       class="fixed top-[calc(env(safe-area-inset-top)+4rem)] right-3 left-3
@@ -27,7 +28,7 @@ import { NotificationService, Toast } from '../../../core/services/notification.
           <button
             class="opacity-70 hover:opacity-100 transition-opacity flex-shrink-0 ml-1"
             (click)="notifications.dismiss(toast.id)"
-            aria-label="Dismiss"
+            [attr.aria-label]="'toast.dismiss' | translate"
           >
             <span class="material-symbols-rounded text-base leading-none">close</span>
           </button>

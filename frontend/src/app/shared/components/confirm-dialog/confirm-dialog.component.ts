@@ -1,28 +1,29 @@
 import { Component, inject, OnInit, signal, OnDestroy } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
+import { TranslatePipe } from '@ngx-translate/core';
 
+/**
+ * Callers pass already-localized strings — this dialog is intentionally
+ * locale-agnostic so it can render any wording chosen by the screen that
+ * opened it. Only the default Confirm/Cancel button labels are localized
+ * here, used as fallback when the caller doesn't supply explicit ones.
+ */
 export interface ConfirmDialogData {
   title:         string;
   message:       string;
   confirmLabel?: string;
   cancelLabel?:  string;
   destructive?:  boolean;
-  /** When true, only the confirm button is rendered (use for info-style dialogs). */
   hideCancel?:   boolean;
-  /**
-   * When set, the dialog auto-dismisses after this many seconds and shows a
-   * countdown to the user. Used for transient info dialogs.
-   */
   autoDismissSeconds?: number;
 }
 
 @Component({
   selector: 'pts-confirm-dialog',
-  imports: [MatDialogModule],
+  imports: [MatDialogModule, TranslatePipe],
   template: `
     <div class="p-6 w-full max-w-xs">
 
-      <!-- Icon -->
       <div class="flex justify-center mb-4">
         <div
           class="w-12 h-12 rounded-2xl flex items-center justify-center"
@@ -35,18 +36,15 @@ export interface ConfirmDialogData {
         </div>
       </div>
 
-      <!-- Text -->
       <h2 class="text-base font-bold text-on-surface text-center mb-2">{{ data.title }}</h2>
       <p class="text-sm text-on-surface-muted text-center mb-4 leading-relaxed">{{ data.message }}</p>
 
-      <!-- Countdown -->
       @if (data.autoDismissSeconds && remainingSeconds() > 0) {
         <p class="text-xs text-on-surface-muted text-center mb-4">
           Closing in {{ remainingSeconds() }}s
         </p>
       }
 
-      <!-- Actions -->
       <div class="flex flex-col gap-2">
         <button
           class="w-full py-2.5 rounded-xl font-semibold text-sm transition-all active:scale-[0.97]"
@@ -55,7 +53,7 @@ export interface ConfirmDialogData {
             : 'pts-btn-primary'"
           (click)="confirm()"
         >
-          {{ data.confirmLabel ?? 'Confirm' }}
+          {{ data.confirmLabel ?? ('common.confirm' | translate) }}
         </button>
         @if (!data.hideCancel) {
           <button
@@ -63,7 +61,7 @@ export interface ConfirmDialogData {
                    hover:bg-surface-variant transition-colors"
             (click)="cancel()"
           >
-            {{ data.cancelLabel ?? 'Cancel' }}
+            {{ data.cancelLabel ?? ('common.cancel' | translate) }}
           </button>
         }
       </div>

@@ -1,12 +1,13 @@
 import { Component, output, input } from '@angular/core';
 import { NgClass } from '@angular/common';
+import { TranslatePipe } from '@ngx-translate/core';
 import { SportConfig, SportType } from '../../models/sport.model';
 
 @Component({
   selector: 'pts-sport-selector',
-  imports: [NgClass],
+  imports: [NgClass, TranslatePipe],
   template: `
-    <div class="grid grid-cols-1 gap-2" role="radiogroup" aria-label="Select sport">
+    <div class="grid grid-cols-1 gap-2" role="radiogroup" [attr.aria-label]="'sport.selectAria' | translate">
       @for (sport of sports(); track sport.type) {
         <button
           type="button"
@@ -18,7 +19,6 @@ import { SportConfig, SportType } from '../../models/sport.model';
             : 'border-border bg-surface-raised text-on-surface hover:border-primary/30 hover:bg-surface'"
           (click)="sportSelected.emit(sport.type)"
         >
-          <!-- Icon -->
           <div
             class="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors"
             [ngClass]="selected() === sport.type ? 'bg-primary/15' : 'bg-surface-variant'"
@@ -29,15 +29,13 @@ import { SportConfig, SportType } from '../../models/sport.model';
             >{{ sport.icon }}</span>
           </div>
 
-          <!-- Info -->
           <div class="flex-1 min-w-0">
-            <p class="font-semibold text-sm">{{ sport.label }}</p>
+            <p class="font-semibold text-sm">{{ sport.labelKey | translate }}</p>
             <p class="text-xs text-on-surface-muted mt-0.5">
-              Best of {{ sport.totalSets }} sets · {{ sport.pointsPerSet }} pts to win
+              {{ 'sport.bestOfSets' | translate: { total: sport.totalSets, points: sport.pointsPerSet } }}
             </p>
           </div>
 
-          <!-- Selected check -->
           @if (selected() === sport.type) {
             <span class="material-symbols-rounded text-primary text-xl flex-shrink-0">check_circle</span>
           }

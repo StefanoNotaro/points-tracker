@@ -7,6 +7,7 @@ public interface ITournamentRepository
     Task<Tournament?> GetByIdAsync(Guid id, CancellationToken ct = default);
     Task<Tournament> AddAsync(Tournament tournament, CancellationToken ct = default);
     Task<IReadOnlyList<Tournament>> ListByOwnerAsync(Guid ownerUserId, CancellationToken ct = default);
+    Task<IReadOnlyList<Tournament>> ListBySessionTokenHashesAsync(IReadOnlyCollection<string> hashes, CancellationToken ct = default);
     Task<Tournament?> GetActiveAnonymousAsync(string sessionTokenHash, CancellationToken ct = default);
     Task<Tournament?> GetByLinkedCounterAsync(Guid counterId, CancellationToken ct = default);
 

@@ -8,16 +8,17 @@ using PointsTracker.Infrastructure.Persistence;
 namespace PointsTracker.Infrastructure.Services;
 
 /// <summary>
-/// Periodically removes orphaned anonymous counters. Authenticated users'
-/// counters are out of scope — they manage their own data through the UI.
+/// Periodically removes orphaned anonymous counters and tournaments.
+/// Authenticated users' data is out of scope — they manage it through the UI.
 ///
-/// The cleanup runs in two phases:
-///   1. Soft-delete anonymous counters whose UpdatedAt is older than
+/// The cleanup runs in two phases for each entity type:
+///   1. Soft-delete anonymous rows whose UpdatedAt is older than
 ///      <see cref="CounterCleanupOptions.AnonymousInactiveDays"/>. Soft-deleted
 ///      rows disappear from the API thanks to the global query filter.
 ///   2. Hard-delete any soft-deleted row whose DeletedAt is older than
 ///      <see cref="CounterCleanupOptions.HardDeleteGraceDays"/>. EF cascades
-///      take care of the related sets, events and share tokens.
+///      drop child rows (counter sets/events/share tokens, tournament
+///      participants/matches) via the relational delete behavior.
 /// </summary>
 public class CounterCleanupService(
     IServiceScopeFactory scopeFactory,
@@ -33,8 +34,6 @@ public class CounterCleanupService(
             return;
         }
 
-        // Brief startup delay so we don't fight EF migrations on the very first
-        // tick after boot.
         try { await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken); }
         catch (OperationCanceledException) { return; }
 
@@ -50,8 +49,6 @@ public class CounterCleanupService(
             }
             catch (Exception ex)
             {
-                // Never let an exception kill the worker — we'll try again on
-                // the next tick.
                 logger.LogError(ex, "Counter cleanup pass failed.");
             }
 
@@ -70,33 +67,54 @@ public class CounterCleanupService(
         var softDeleteCutoff = now - TimeSpan.FromDays(opts.AnonymousInactiveDays);
         var hardDeleteCutoff = now - TimeSpan.FromDays(opts.HardDeleteGraceDays);
 
-        // Phase 1 — soft-delete stale anonymous counters. The global query
-        // filter hides already soft-deleted rows so this only touches live
-        // ones. We bypass the filter for safety using IgnoreQueryFilters
-        // and re-check DeletedAt == null in the WHERE clause.
-        var softDeleted = await db.Counters
+        // Phase 1 — soft-delete stale anonymous tournaments first so that
+        // their linked counters are caught by the counter sweep below.
+        var tournamentsSoftDeleted = await db.Tournaments
+            .IgnoreQueryFilters()
+            .Where(t => t.DeletedAt == null
+                        && t.OwnerUserId == null
+                        && t.UpdatedAt < softDeleteCutoff)
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(t => t.DeletedAt, _ => now)
+                .SetProperty(t => t.UpdatedAt, _ => now), ct);
+
+        // Phase 2 — soft-delete counters that are either stale-and-anonymous
+        // OR linked to an already-soft-deleted tournament. The second clause
+        // catches counters spawned by tournament matches (which carry the
+        // tournament's ownership, not their own session token) and ensures
+        // they don't outlive their parent tournament.
+        var countersSoftDeleted = await db.Counters
             .IgnoreQueryFilters()
             .Where(c => c.DeletedAt == null
-                        && c.OwnerUserId == null
-                        && c.UpdatedAt < softDeleteCutoff)
+                        && ((c.OwnerUserId == null && c.UpdatedAt < softDeleteCutoff)
+                            || (c.LinkedTournamentId != null
+                                && db.Tournaments
+                                    .IgnoreQueryFilters()
+                                    .Any(t => t.Id == c.LinkedTournamentId && t.DeletedAt != null))))
             .ExecuteUpdateAsync(s => s
                 .SetProperty(c => c.DeletedAt, _ => now)
                 .SetProperty(c => c.UpdatedAt, _ => now), ct);
 
-        // Phase 2 — hard-delete any counter (anonymous or otherwise) that has
-        // been sitting in the soft-deleted state past the grace window. EF
-        // cascades drop sets / events / share tokens via the relational
-        // delete behavior configured in CounterConfiguration.
-        var hardDeleted = await db.Counters
+        // Phase 3 — hard-delete tournaments and counters past the grace
+        // window. EF cascades drop participants/matches/sets/events/share
+        // tokens via the relational delete behaviour.
+        var tournamentsHardDeleted = await db.Tournaments
+            .IgnoreQueryFilters()
+            .Where(t => t.DeletedAt != null && t.DeletedAt < hardDeleteCutoff)
+            .ExecuteDeleteAsync(ct);
+
+        var countersHardDeleted = await db.Counters
             .IgnoreQueryFilters()
             .Where(c => c.DeletedAt != null && c.DeletedAt < hardDeleteCutoff)
             .ExecuteDeleteAsync(ct);
 
-        if (softDeleted > 0 || hardDeleted > 0)
+        if (countersSoftDeleted > 0 || countersHardDeleted > 0
+            || tournamentsSoftDeleted > 0 || tournamentsHardDeleted > 0)
         {
             logger.LogInformation(
-                "Counter cleanup: soft-deleted {SoftDeleted}, hard-deleted {HardDeleted}.",
-                softDeleted, hardDeleted);
+                "Cleanup: tournaments soft={TSoft}/hard={THard}, counters soft={CSoft}/hard={CHard}.",
+                tournamentsSoftDeleted, tournamentsHardDeleted,
+                countersSoftDeleted, countersHardDeleted);
         }
     }
 }

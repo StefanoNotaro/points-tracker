@@ -18,6 +18,7 @@ import { routes } from './app.routes';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
 import { errorInterceptor } from './core/interceptors/error.interceptor';
 import { AuthService } from './core/auth/auth.service';
+import { provideI18n } from './core/i18n/i18n.providers';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -26,6 +27,7 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(withFetch(), withInterceptors([authInterceptor, errorInterceptor])),
     provideAnimationsAsync(),
     importProvidersFrom(OAuthModule.forRoot({ resourceServer: { sendAccessToken: false } })),
+    ...provideI18n(),
     // Resolve the OIDC session BEFORE the router starts activating routes.
     // Without this, refreshing on a guarded route fired the auth guard while
     // AuthService was still loading — it saw isAuthenticated() === false,

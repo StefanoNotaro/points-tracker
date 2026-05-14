@@ -1,6 +1,7 @@
 import { Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { TournamentService } from '../../services/tournament.service';
 import { TournamentHubService } from '../../services/tournament-hub.service';
 import { NotificationService } from '../../../../core/services/notification.service';
@@ -8,14 +9,13 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
 import { BracketViewComponent } from '../bracket-view/bracket-view.component';
 import { ParticipantsManagerComponent } from '../participants-manager/participants-manager.component';
 import { TournamentSettingsComponent } from '../tournament-settings/tournament-settings.component';
-import { Tournament, TournamentMatch, TOURNAMENT_FORMATS } from '../../../../shared/models/tournament.model';
-import { SPORT_CONFIGS } from '../../../../shared/models/sport.model';
+import { Tournament, TournamentMatch, minTeamsForFormat } from '../../../../shared/models/tournament.model';
 
 type Tab = 'bracket' | 'participants' | 'standings' | 'settings';
 
 @Component({
   selector: 'pts-tournament-detail',
-  imports: [LoadingSpinnerComponent, BracketViewComponent, ParticipantsManagerComponent, TournamentSettingsComponent],
+  imports: [LoadingSpinnerComponent, BracketViewComponent, ParticipantsManagerComponent, TournamentSettingsComponent, TranslatePipe],
   template: `
     @if (loading()) {
       <div class="flex items-center justify-center py-20"><pts-loading-spinner size="lg" /></div>
@@ -25,28 +25,35 @@ type Tab = 'bracket' | 'participants' | 'standings' | 'settings';
         <header class="flex items-start justify-between gap-2">
           <div class="flex flex-col gap-1 min-w-0">
             <p class="text-xs uppercase tracking-wide text-on-surface-muted">
-              {{ sportLabel(t.sportType) }} · {{ formatLabel(t.format) }}
+              {{ 'sport.' + t.sportType | translate }} · {{ 'tournament.format.' + t.format + '.label' | translate }}
             </p>
             <h1 class="text-xl sm:text-2xl font-bold text-on-surface truncate">{{ t.name }}</h1>
             <p class="text-sm text-on-surface-muted">
-              {{ t.participants.length }} teams · {{ statusLabel(t.status) }}
+              {{ 'tournament.detail.teamsAndStatus' | translate: { count: t.participants.length, status: ('tournament.status.' + t.status | translate) } }}
             </p>
           </div>
           <button type="button" class="pts-btn-icon shrink-0"
-                  (click)="copyShareLink()" aria-label="Share tournament" title="Share link">
+                  (click)="copyShareLink()"
+                  [attr.aria-label]="'tournament.detail.shareAria' | translate"
+                  [attr.title]="'tournament.detail.shareTitle' | translate">
             <span class="material-symbols-rounded text-xl">share</span>
           </button>
         </header>
 
         <!-- Actions -->
         @if (t.canEdit && t.status === 'draft') {
-          <div class="grid grid-cols-1">
+          <div class="flex flex-col gap-1">
             <button type="button" class="pts-btn-primary"
-                    [disabled]="t.participants.length < 2 || starting()"
+                    [disabled]="t.participants.length < minTeams() || starting()"
                     (click)="start()">
               <span class="material-symbols-rounded text-lg">play_arrow</span>
-              <span>{{ starting() ? 'Starting…' : 'Generate bracket & start' }}</span>
+              <span>{{ (starting() ? 'tournament.detail.starting' : 'tournament.detail.start') | translate }}</span>
             </button>
+            @if (t.participants.length < minTeams()) {
+              <p class="text-xs text-on-surface-muted text-center">
+                {{ 'tournament.detail.startHelpMin' | translate: { min: minTeams() } }}
+              </p>
+            }
           </div>
         }
 
@@ -60,7 +67,7 @@ type Tab = 'bracket' | 'participants' | 'standings' | 'settings';
                     [class.border-transparent]="activeTab() !== tab.id"
                     [class.text-on-surface-muted]="activeTab() !== tab.id"
                     (click)="activeTab.set(tab.id)">
-              {{ tab.label }}
+              {{ 'tournament.detail.tabs.' + tab.id | translate }}
             </button>
           }
         </nav>
@@ -69,7 +76,7 @@ type Tab = 'bracket' | 'participants' | 'standings' | 'settings';
           @case ('bracket') {
             @if (t.matches.length === 0) {
               <div class="pts-card text-center py-8 text-sm text-on-surface-muted">
-                Bracket will appear once the tournament is started.
+                {{ 'tournament.detail.bracketEmpty' | translate }}
               </div>
             } @else {
               <pts-bracket-view [matches]="t.matches" [canEdit]="t.canEdit"
@@ -80,21 +87,24 @@ type Tab = 'bracket' | 'participants' | 'standings' | 'settings';
             <pts-participants-manager [tournamentId]="t.id"
                                       [participants]="t.participants"
                                       [canEdit]="t.canEdit && t.status === 'draft'"
-                                      (changed)="refresh()" />
+                                      [format]="t.format"
+                                      [groupCount]="t.rules.groupCount"
+                                      (changed)="refresh()"
+                                      (shuffleChanged)="shuffleUnseeded.set($event)" />
           }
           @case ('settings') {
             @if (t.canEdit) {
               <pts-tournament-settings [tournament]="t" (saved)="tournament.set($event)" />
             } @else {
               <div class="pts-card text-center py-8 text-sm text-on-surface-muted">
-                Only the organiser can change settings.
+                {{ 'tournament.detail.settingsLocked' | translate }}
               </div>
             }
           }
           @case ('standings') {
             @if (t.standings.length === 0) {
               <div class="pts-card text-center py-8 text-sm text-on-surface-muted">
-                Standings appear once matches start completing.
+                {{ 'tournament.detail.standingsEmpty' | translate }}
               </div>
             } @else {
               <ul class="flex flex-col gap-1">
@@ -122,17 +132,25 @@ export class TournamentDetailComponent implements OnInit, OnDestroy {
   private readonly service = inject(TournamentService);
   private readonly hub = inject(TournamentHubService);
   private readonly notifications = inject(NotificationService);
+  private readonly i18n = inject(TranslateService);
 
   readonly loading = signal(true);
   readonly tournament = signal<Tournament | null>(null);
   readonly starting = signal(false);
   readonly activeTab = signal<Tab>('bracket');
+  readonly shuffleUnseeded = signal(false);
 
-  readonly tabs: { id: Tab; label: string }[] = [
-    { id: 'bracket', label: 'Bracket' },
-    { id: 'participants', label: 'Participants' },
-    { id: 'standings', label: 'Standings' },
-    { id: 'settings', label: 'Settings' },
+  readonly minTeams = computed(() => {
+    const t = this.tournament();
+    if (!t) return 2;
+    return minTeamsForFormat(t.format, t.rules.groupCount);
+  });
+
+  readonly tabs: { id: Tab }[] = [
+    { id: 'bracket' },
+    { id: 'participants' },
+    { id: 'standings' },
+    { id: 'settings' },
   ];
 
   private id = '';
@@ -165,54 +183,42 @@ export class TournamentDetailComponent implements OnInit, OnDestroy {
   async refresh(): Promise<void> {
     this.loading.set(true);
     try { this.tournament.set(await this.service.getById(this.id)); }
-    catch { this.notifications.error('Could not load tournament.'); }
+    catch { this.notifications.error(this.i18n.instant('tournament.detail.loadError')); }
     finally { this.loading.set(false); }
   }
 
   async start(): Promise<void> {
     this.starting.set(true);
     try {
-      this.tournament.set(await this.service.start(this.id));
+      this.tournament.set(await this.service.start(this.id, { randomizeUnseeded: this.shuffleUnseeded() }));
       this.activeTab.set('bracket');
     } catch (err: any) {
-      this.notifications.error(err?.error?.detail ?? 'Could not start tournament.');
+      this.notifications.error(err?.error?.detail ?? this.i18n.instant('tournament.detail.startError'));
     } finally {
       this.starting.set(false);
     }
   }
 
   async openMatch(m: TournamentMatch): Promise<void> {
-    // If a counter is already linked, jump straight to it — works for both
-    // organisers (continue scoring) and viewers (read-only live view).
     if (m.counterId) {
       await this.router.navigate(['/counter', m.counterId]);
       return;
     }
-    // No linked counter — only organisers can spawn one.
     try {
       const counter = await this.service.openMatchCounter(this.id, m.id);
       await this.router.navigate(['/counter', counter.id]);
     } catch (err: any) {
-      this.notifications.error(err?.error?.detail ?? 'Could not open match.');
+      this.notifications.error(err?.error?.detail ?? this.i18n.instant('tournament.detail.openMatchError'));
     }
   }
 
   async copyShareLink(): Promise<void> {
     try {
       await navigator.clipboard.writeText(window.location.href);
-      this.notifications.success('Tournament link copied to clipboard.');
+      this.notifications.success(this.i18n.instant('tournament.detail.shareCopied'));
     } catch {
-      this.notifications.error('Could not copy — paste the page URL manually.');
+      this.notifications.error(this.i18n.instant('tournament.detail.shareFailed'));
     }
   }
 
-  sportLabel(s: string): string {
-    return SPORT_CONFIGS[s as keyof typeof SPORT_CONFIGS]?.label ?? s;
-  }
-  formatLabel(f: string): string {
-    return TOURNAMENT_FORMATS.find((x) => x.value === f)?.label ?? f;
-  }
-  statusLabel(s: string): string {
-    return s.charAt(0).toUpperCase() + s.slice(1);
-  }
 }

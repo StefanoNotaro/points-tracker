@@ -1,6 +1,7 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { SportSelectorComponent } from '../../../../shared/components/sport-selector/sport-selector.component';
 import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
 import { CounterService } from '../../services/counter.service';
@@ -11,20 +12,18 @@ import { SportType, SPORT_CONFIGS } from '../../../../shared/models/sport.model'
 
 @Component({
   selector: 'pts-create-counter',
-  imports: [ReactiveFormsModule, RouterLink, SportSelectorComponent, LoadingSpinnerComponent],
+  imports: [ReactiveFormsModule, RouterLink, SportSelectorComponent, LoadingSpinnerComponent, TranslatePipe],
   template: `
     <div class="flex flex-col gap-6 pb-8">
 
-      <!-- Hero -->
       <div class="text-center pt-4">
         <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/10 mb-4">
           <span class="material-symbols-rounded text-4xl text-primary">scoreboard</span>
         </div>
-        <h1 class="text-2xl font-bold text-on-surface">New Counter</h1>
-        <p class="text-on-surface-muted text-sm mt-1">Choose a sport and name your teams to get started.</p>
+        <h1 class="text-2xl font-bold text-on-surface">{{ 'counter.newTitle' | translate }}</h1>
+        <p class="text-on-surface-muted text-sm mt-1">{{ 'counter.newSubtitle' | translate }}</p>
       </div>
 
-      <!-- Anonymous: existing counter resume hint -->
       @if (resumeCounterId() && !auth.isAuthenticated()) {
         <a
           [routerLink]="['/counter', resumeCounterId()]"
@@ -32,16 +31,13 @@ import { SportType, SPORT_CONFIGS } from '../../../../shared/models/sport.model'
         >
           <span class="material-symbols-rounded text-primary text-3xl">play_circle</span>
           <div class="flex-1">
-            <p class="font-semibold text-on-surface text-sm">Resume your counter</p>
-            <p class="text-xs text-on-surface-muted">
-              You already have a counter running. Sign in to keep more than one at a time.
-            </p>
+            <p class="font-semibold text-on-surface text-sm">{{ 'counter.resumeTitle' | translate }}</p>
+            <p class="text-xs text-on-surface-muted">{{ 'counter.resumeHelp' | translate }}</p>
           </div>
           <span class="material-symbols-rounded text-on-surface-muted">chevron_right</span>
         </a>
       }
 
-      <!-- Logged-in: my counters shortcut -->
       @if (auth.isAuthenticated()) {
         <a
           routerLink="/my-counters"
@@ -49,8 +45,8 @@ import { SportType, SPORT_CONFIGS } from '../../../../shared/models/sport.model'
         >
           <span class="material-symbols-rounded text-primary text-3xl">list_alt</span>
           <div class="flex-1">
-            <p class="font-semibold text-on-surface text-sm">My Counters</p>
-            <p class="text-xs text-on-surface-muted">View, resume or delete your existing counters.</p>
+            <p class="font-semibold text-on-surface text-sm">{{ 'counter.myShortcutTitle' | translate }}</p>
+            <p class="text-xs text-on-surface-muted">{{ 'counter.myShortcutHelp' | translate }}</p>
           </div>
           <span class="material-symbols-rounded text-on-surface-muted">chevron_right</span>
         </a>
@@ -58,9 +54,8 @@ import { SportType, SPORT_CONFIGS } from '../../../../shared/models/sport.model'
 
       <form [formGroup]="form" (ngSubmit)="submit()" class="flex flex-col gap-5">
 
-        <!-- Sport selection -->
         <div class="pts-card flex flex-col gap-3">
-          <p class="pts-label">Sport</p>
+          <p class="pts-label">{{ 'tournament.create.sport.label' | translate }}</p>
           <pts-sport-selector
             [sports]="sports"
             [selected]="form.value.sportType ?? null"
@@ -69,16 +64,14 @@ import { SportType, SPORT_CONFIGS } from '../../../../shared/models/sport.model'
           @if (form.controls.sportType.invalid && form.controls.sportType.touched) {
             <p class="text-error text-xs flex items-center gap-1">
               <span class="material-symbols-rounded text-sm">error</span>
-              Please select a sport.
+              {{ 'counter.sportRequired' | translate }}
             </p>
           }
         </div>
 
-        <!-- Custom rules — collapsed by default for built-in sports, always open for Custom -->
         @if (form.value.sportType) {
           <div class="pts-card flex flex-col gap-3" [formGroup]="form.controls.rules">
 
-            <!-- Header / toggle -->
             <button
               type="button"
               class="flex items-center justify-between gap-2 -m-1 p-1 rounded-lg
@@ -88,10 +81,10 @@ import { SportType, SPORT_CONFIGS } from '../../../../shared/models/sport.model'
             >
               <span class="flex items-center gap-2">
                 <span class="material-symbols-rounded text-base text-on-surface-muted">tune</span>
-                <span class="pts-label">Rules</span>
+                <span class="pts-label">{{ 'rules.rulesSection' | translate }}</span>
                 @if (!customizeRules() && form.value.sportType !== 'custom') {
                   <span class="text-xs text-on-surface-muted font-normal normal-case tracking-normal">
-                    · default
+                    · {{ 'rules.rulesDefault' | translate }}
                   </span>
                 }
               </span>
@@ -106,28 +99,27 @@ import { SportType, SPORT_CONFIGS } from '../../../../shared/models/sport.model'
             @if (customizeRules() || form.value.sportType === 'custom') {
               <div class="grid grid-cols-2 gap-3">
                 <label class="flex flex-col gap-1">
-                  <span class="text-xs text-on-surface-muted">Points per set</span>
+                  <span class="text-xs text-on-surface-muted">{{ 'rules.pointsPerSet' | translate }}</span>
                   <input type="number" min="1" max="99" formControlName="pointsPerSet" class="pts-input" />
                 </label>
                 <label class="flex flex-col gap-1">
-                  <span class="text-xs text-on-surface-muted">Last-set points</span>
+                  <span class="text-xs text-on-surface-muted">{{ 'rules.lastSetPoints' | translate }}</span>
                   <input type="number" min="1" max="99" formControlName="lastSetPoints" class="pts-input" />
                 </label>
                 <label class="flex flex-col gap-1">
-                  <span class="text-xs text-on-surface-muted">Sets to win</span>
+                  <span class="text-xs text-on-surface-muted">{{ 'rules.setsToWin' | translate }}</span>
                   <input type="number" min="1" max="9" formControlName="setsToWin" class="pts-input" />
                 </label>
                 <label class="flex flex-col gap-1">
-                  <span class="text-xs text-on-surface-muted">Total sets</span>
+                  <span class="text-xs text-on-surface-muted">{{ 'rules.totalSets' | translate }}</span>
                   <input type="number" min="1" max="9" formControlName="totalSets" class="pts-input" />
                 </label>
               </div>
               <label class="flex items-center gap-2 text-sm text-on-surface">
                 <input type="checkbox" formControlName="winByTwo" class="accent-primary" />
-                Must win by 2
+                {{ 'rules.winByTwo' | translate }}
               </label>
 
-              <!-- Indoor volleyball: pro mode switches every 2 sets instead of every set. -->
               @if (form.value.sportType === 'volleyball') {
                 <label class="flex items-start gap-2 text-sm text-on-surface">
                   <input
@@ -137,16 +129,14 @@ import { SportType, SPORT_CONFIGS } from '../../../../shared/models/sport.model'
                     (change)="onProModeToggle($any($event.target).checked)"
                   />
                   <span>
-                    Switch sides every <strong>2 sets</strong> (pro mode)
+                    <span [innerHTML]="'rules.proModeLabel' | translate"></span>
                     <span class="block text-xs text-on-surface-muted font-normal mt-0.5">
-                      Off: switch every set (standard).
+                      {{ 'rules.proModeHelp' | translate }}
                     </span>
                   </span>
                 </label>
               }
 
-              <!-- Beach volleyball: optionally let the server auto-switch sides
-                   at the points boundary; otherwise the user uses the manual button. -->
               @if (form.value.sportType === 'beach_volleyball') {
                 <label class="flex items-start gap-2 text-sm text-on-surface">
                   <input
@@ -155,10 +145,9 @@ import { SportType, SPORT_CONFIGS } from '../../../../shared/models/sport.model'
                     [formControl]="form.controls.beachAutoSwitchSides"
                   />
                   <span>
-                    Auto-switch sides
+                    {{ 'rules.beachAutoLabel' | translate }}
                     <span class="block text-xs text-on-surface-muted font-normal mt-0.5">
-                      On: server switches automatically every 7 points (5 in the deciding set), with a 5-second notification.
-                      Off: you'll be asked to confirm each switch.
+                      {{ 'rules.beachAutoHelp' | translate }}
                     </span>
                   </span>
                 </label>
@@ -167,7 +156,6 @@ import { SportType, SPORT_CONFIGS } from '../../../../shared/models/sport.model'
           </div>
         }
 
-        <!-- Timeouts — collapsed by default, seeded from sport rules -->
         @if (form.value.sportType) {
           <div class="pts-card flex flex-col gap-3" [formGroup]="form.controls.timeouts">
             <button
@@ -178,11 +166,13 @@ import { SportType, SPORT_CONFIGS } from '../../../../shared/models/sport.model'
             >
               <span class="flex items-center gap-2">
                 <span class="material-symbols-rounded text-base text-on-surface-muted">pause_circle</span>
-                <span class="pts-label">Timeouts</span>
+                <span class="pts-label">{{ 'rules.timeoutsSection' | translate }}</span>
                 @if (!customizeTimeouts()) {
                   <span class="text-xs text-on-surface-muted font-normal normal-case tracking-normal">
-                    · {{ form.controls.timeouts.value.timeoutsPerSet }} ×
-                    {{ form.controls.timeouts.value.timeoutDurationSeconds }}s per set
+                    · {{ 'rules.timeoutsSummary' | translate: {
+                          count: form.controls.timeouts.value.timeoutsPerSet,
+                          seconds: form.controls.timeouts.value.timeoutDurationSeconds
+                        } }}
                   </span>
                 }
               </span>
@@ -195,55 +185,51 @@ import { SportType, SPORT_CONFIGS } from '../../../../shared/models/sport.model'
             @if (customizeTimeouts()) {
               <div class="grid grid-cols-2 gap-3">
                 <label class="flex flex-col gap-1">
-                  <span class="text-xs text-on-surface-muted">Per team, per set</span>
+                  <span class="text-xs text-on-surface-muted">{{ 'rules.perTeamPerSet' | translate }}</span>
                   <input type="number" min="0" max="9" formControlName="timeoutsPerSet" class="pts-input" />
                 </label>
                 <label class="flex flex-col gap-1">
-                  <span class="text-xs text-on-surface-muted">Duration (seconds)</span>
+                  <span class="text-xs text-on-surface-muted">{{ 'rules.durationSeconds' | translate }}</span>
                   <input type="number" min="5" max="600" formControlName="timeoutDurationSeconds" class="pts-input" />
                 </label>
               </div>
-              <p class="text-xs text-on-surface-muted">
-                FIVB defaults: indoor volleyball 2 × 30 s, beach volleyball 1 × 30 s. Set count to 0 to disable timeouts.
-              </p>
+              <p class="text-xs text-on-surface-muted">{{ 'rules.timeoutsHelp' | translate }}</p>
             }
           </div>
         }
 
-        <!-- Team names -->
         <div class="pts-card flex flex-col gap-4">
-          <p class="pts-label">Teams</p>
+          <p class="pts-label">{{ 'counter.teamsLabel' | translate }}</p>
 
           <div class="flex flex-col gap-1.5">
             <label class="text-sm font-medium text-on-surface" for="teamA">
-              <span class="inline-block w-2 h-2 rounded-full bg-team-a mr-2"></span>Team A
+              <span class="inline-block w-2 h-2 rounded-full bg-team-a mr-2"></span>{{ 'counter.teamA' | translate }}
             </label>
             <input
               id="teamA"
               type="text"
               formControlName="teamAName"
               maxlength="100"
-              placeholder="Team A"
+              [placeholder]="'counter.teamA' | translate"
               class="pts-input"
             />
           </div>
 
           <div class="flex flex-col gap-1.5">
             <label class="text-sm font-medium text-on-surface" for="teamB">
-              <span class="inline-block w-2 h-2 rounded-full bg-team-b mr-2"></span>Team B
+              <span class="inline-block w-2 h-2 rounded-full bg-team-b mr-2"></span>{{ 'counter.teamB' | translate }}
             </label>
             <input
               id="teamB"
               type="text"
               formControlName="teamBName"
               maxlength="100"
-              placeholder="Team B"
+              [placeholder]="'counter.teamB' | translate"
               class="pts-input"
             />
           </div>
         </div>
 
-        <!-- Submit -->
         <button
           type="submit"
           class="pts-btn-primary w-full py-4 text-base rounded-2xl"
@@ -251,10 +237,10 @@ import { SportType, SPORT_CONFIGS } from '../../../../shared/models/sport.model'
         >
           @if (submitting()) {
             <pts-loading-spinner size="sm" />
-            <span>Starting…</span>
+            <span>{{ 'common.starting' | translate }}</span>
           } @else {
             <span class="material-symbols-rounded">play_arrow</span>
-            <span>Start Counter</span>
+            <span>{{ 'counter.submit' | translate }}</span>
           }
         </button>
       </form>
@@ -268,6 +254,7 @@ export class CreateCounterComponent implements OnInit {
   private readonly sessionTokens  = inject(SessionTokenService);
   readonly auth                   = inject(AuthService);
   private readonly fb             = inject(FormBuilder);
+  private readonly i18n           = inject(TranslateService);
 
   readonly sports     = Object.values(SPORT_CONFIGS);
   readonly submitting = signal(false);
@@ -275,7 +262,6 @@ export class CreateCounterComponent implements OnInit {
   readonly customizeTimeouts = signal(false);
   readonly resumeCounterId = signal<string | null>(null);
 
-  // FIVB defaults per sport — used to seed the timeout form on sport pick.
   private readonly TIMEOUT_DEFAULTS: Record<SportType, { count: number; seconds: number }> = {
     volleyball:       { count: 2, seconds: 30 },
     beach_volleyball: { count: 1, seconds: 30 },
@@ -284,8 +270,8 @@ export class CreateCounterComponent implements OnInit {
 
   readonly form = this.fb.group({
     sportType:  this.fb.control<SportType | null>(null, Validators.required),
-    teamAName: ['Team A', [Validators.required, Validators.maxLength(100)]],
-    teamBName: ['Team B', [Validators.required, Validators.maxLength(100)]],
+    teamAName: [this.i18n.instant('counter.teamA'), [Validators.required, Validators.maxLength(100)]],
+    teamBName: [this.i18n.instant('counter.teamB'), [Validators.required, Validators.maxLength(100)]],
     rules: this.fb.group({
       pointsPerSet:  [25, [Validators.required, Validators.min(1), Validators.max(99)]],
       lastSetPoints: [15, [Validators.required, Validators.min(1), Validators.max(99)]],
@@ -293,13 +279,8 @@ export class CreateCounterComponent implements OnInit {
       totalSets:     [ 5, [Validators.required, Validators.min(1), Validators.max(9)]],
       winByTwo:      [true],
     }),
-    // Indoor volleyball only: 1 = switch every set, 2 = switch every two sets (pro).
     indoorSwitchEverySets: this.fb.control<number>(1),
-    // Beach volleyball only: when off, server stops auto-switching at the
-    // points boundary and the user is expected to use the manual switch button.
     beachAutoSwitchSides: this.fb.control<boolean>(true),
-    // Timeout overrides. Defaults seeded from the picked sport (FIVB rules):
-    //   indoor = 2 × 30 s, beach = 1 × 30 s.
     timeouts: this.fb.group({
       timeoutsPerSet:         [ 2, [Validators.required, Validators.min(0), Validators.max(9)]],
       timeoutDurationSeconds: [30, [Validators.required, Validators.min(5), Validators.max(600)]],
@@ -307,7 +288,6 @@ export class CreateCounterComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    // For anonymous users, surface the most-recent stored counter so they can resume it.
     const ids = this.sessionTokens.getAllCounterIds();
     if (ids.length > 0) this.resumeCounterId.set(ids[0]);
   }
@@ -315,7 +295,6 @@ export class CreateCounterComponent implements OnInit {
   onSportSelected(type: SportType): void {
     this.form.patchValue({ sportType: type });
     const cfg = SPORT_CONFIGS[type];
-    // Reset rules to the defaults for the picked sport. "custom" keeps current values.
     if (type !== 'custom') {
       this.form.controls.rules.patchValue({
         pointsPerSet:  cfg.pointsPerSet,
@@ -331,7 +310,6 @@ export class CreateCounterComponent implements OnInit {
       this.form.controls.rules.enable();
     }
 
-    // Seed timeouts with the sport defaults and collapse the section.
     const t = this.TIMEOUT_DEFAULTS[type];
     this.form.controls.timeouts.patchValue({
       timeoutsPerSet:         t.count,
@@ -393,7 +371,7 @@ export class CreateCounterComponent implements OnInit {
       });
       await this.router.navigate(['/counter', counter.id]);
     } catch {
-      this.notifications.error('Failed to create counter. Please try again.');
+      this.notifications.error(this.i18n.instant('counter.createError'));
     } finally {
       this.submitting.set(false);
     }

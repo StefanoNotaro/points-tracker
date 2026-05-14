@@ -1,10 +1,10 @@
-import { Component, input, output } from '@angular/core';
+import { Component, inject, input, output } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'pts-score-button',
   template: `
     <div class="flex flex-col items-center gap-2 w-full">
-      <!-- Main increment button — large, thumb-friendly on phone -->
       <button
         type="button"
         class="w-full h-24 sm:h-28 rounded-2xl flex flex-col items-center justify-center gap-1
@@ -14,7 +14,7 @@ import { Component, input, output } from '@angular/core';
         [class]="teamBtnClass()"
         [disabled]="disabled()"
         (click)="increment.emit()"
-        [attr.aria-label]="'Point for ' + label()"
+        [attr.aria-label]="pointLabel()"
       >
         <span class="material-symbols-rounded text-4xl leading-none">add</span>
         <span class="text-xs font-semibold opacity-90 truncate max-w-full px-3">
@@ -22,7 +22,6 @@ import { Component, input, output } from '@angular/core';
         </span>
       </button>
 
-      <!-- Decrement — icon only, smaller, ≥44px tap target -->
       <button
         type="button"
         class="w-11 h-11 rounded-full flex items-center justify-center
@@ -32,8 +31,8 @@ import { Component, input, output } from '@angular/core';
                disabled:opacity-40 disabled:cursor-not-allowed select-none"
         [disabled]="disabled()"
         (click)="decrement.emit()"
-        [attr.aria-label]="'Remove point from ' + label()"
-        [title]="'Remove point from ' + label()"
+        [attr.aria-label]="removePointLabel()"
+        [attr.title]="removePointLabel()"
       >
         <span class="material-symbols-rounded text-xl leading-none">remove</span>
       </button>
@@ -47,6 +46,15 @@ export class ScoreButtonComponent {
 
   increment = output<void>();
   decrement = output<void>();
+
+  private readonly i18n = inject(TranslateService);
+
+  pointLabel(): string {
+    return this.i18n.instant('counter.page.pointAria', { label: this.label() });
+  }
+  removePointLabel(): string {
+    return this.i18n.instant('counter.page.removePointAria', { label: this.label() });
+  }
 
   teamBtnClass(): string {
     const shadow = 'shadow-elevated';

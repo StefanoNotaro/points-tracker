@@ -1,32 +1,81 @@
-import { Component, inject, input, output, signal } from '@angular/core';
+import { Component, computed, inject, input, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { TournamentParticipant } from '../../../../shared/models/tournament.model';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import {
+  TournamentFormat,
+  TournamentParticipant,
+  minTeamsForFormat,
+} from '../../../../shared/models/tournament.model';
 import { TournamentService } from '../../services/tournament.service';
 import { NotificationService } from '../../../../core/services/notification.service';
 
 @Component({
   selector: 'pts-participants-manager',
-  imports: [FormsModule],
+  imports: [FormsModule, TranslatePipe],
   template: `
     <div class="flex flex-col gap-3">
       @if (canEdit()) {
-        <form class="flex gap-2" (submit)="$event.preventDefault(); add()">
-          <input type="text" class="pts-input" maxlength="100"
-                 placeholder="Team name" [(ngModel)]="newName" name="newName" />
-          <input type="number" class="pts-input !w-20" min="1" max="99"
-                 placeholder="Seed" [(ngModel)]="newSeed" name="newSeed" />
-          <button type="submit" class="pts-btn-primary"
-                  [disabled]="!newName.trim() || adding()">
-            <span class="material-symbols-rounded text-lg">add</span>
-          </button>
+        <form class="flex flex-col gap-2" (submit)="$event.preventDefault(); add()">
+          <div class="flex gap-2">
+            <input type="text" class="pts-input flex-1" maxlength="100" required
+                   [placeholder]="'tournament.participants.namePlaceholder' | translate"
+                   [(ngModel)]="newName" name="newName" />
+            <button type="submit" class="pts-btn-primary"
+                    [disabled]="!newName.trim() || adding()"
+                    [attr.aria-label]="'tournament.participants.addAria' | translate">
+              <span class="material-symbols-rounded text-lg">add</span>
+            </button>
+          </div>
+
+          <!-- Advanced section: hidden by default, holds seed + shuffle options -->
+          <details class="rounded-lg border border-border bg-surface-raised">
+            <summary class="flex items-center gap-2 px-3 py-2 cursor-pointer select-none text-sm font-medium text-on-surface">
+              <span class="material-symbols-rounded text-base text-on-surface-muted">tune</span>
+              <span class="flex-1">{{ 'tournament.participants.advanced.toggle' | translate }}</span>
+              <span class="material-symbols-rounded text-base text-on-surface-muted transition-transform">expand_more</span>
+            </summary>
+            <div class="flex flex-col gap-3 p-3 pt-0">
+              <p class="text-xs text-on-surface-muted">
+                {{ 'tournament.participants.advanced.help' | translate }}
+              </p>
+
+              <label class="flex flex-col gap-1">
+                <span class="text-xs text-on-surface-muted">
+                  {{ 'tournament.participants.advanced.seedLabel' | translate }}
+                </span>
+                <input type="number" class="pts-input !w-32" min="1" max="99"
+                       placeholder="—" [(ngModel)]="newSeed" name="newSeed" />
+                <span class="text-[11px] text-on-surface-muted">
+                  {{ 'tournament.participants.advanced.seedHelp' | translate }}
+                </span>
+              </label>
+
+              <label class="flex items-start gap-2 cursor-pointer">
+                <input type="checkbox" class="mt-0.5"
+                       [checked]="shuffleUnseeded()"
+                       (change)="onShuffleToggle($any($event.target).checked)"
+                       name="shuffleUnseeded" />
+                <span class="flex flex-col">
+                  <span class="text-sm font-medium text-on-surface">
+                    {{ 'tournament.participants.advanced.shuffleLabel' | translate }}
+                  </span>
+                  <span class="text-[11px] text-on-surface-muted">
+                    {{ 'tournament.participants.advanced.shuffleHelp' | translate }}
+                  </span>
+                </span>
+              </label>
+            </div>
+          </details>
         </form>
       }
 
-      @if (participants().length === 0) {
+      @if (participants().length === 0 || participants().length < minTeams()) {
         <p class="text-sm text-on-surface-muted text-center py-4">
-          Add at least two teams to start the bracket.
+          {{ 'tournament.participants.emptyMin' | translate: { min: minTeams() } }}
         </p>
-      } @else {
+      }
+
+      @if (participants().length > 0) {
         <ul class="flex flex-col gap-2">
           @for (p of participants(); track p.id) {
             <li class="pts-card !p-3 flex items-center gap-3">
@@ -34,11 +83,14 @@ import { NotificationService } from '../../../../core/services/notification.serv
               <span class="flex-1 min-w-0">
                 <span class="block font-medium text-sm text-on-surface truncate">{{ p.teamName }}</span>
                 @if (p.seed) {
-                  <span class="block text-xs text-on-surface-muted">Seed #{{ p.seed }}</span>
+                  <span class="block text-xs text-on-surface-muted">
+                    {{ 'tournament.participants.seedLabel' | translate: { seed: p.seed } }}
+                  </span>
                 }
               </span>
               @if (canEdit()) {
-                <button type="button" class="pts-btn-icon" (click)="remove(p)" aria-label="Remove">
+                <button type="button" class="pts-btn-icon" (click)="remove(p)"
+                        [attr.aria-label]="'tournament.participants.removeAria' | translate">
                   <span class="material-symbols-rounded text-on-surface-muted hover:text-error">
                     delete_outline
                   </span>
@@ -54,15 +106,30 @@ import { NotificationService } from '../../../../core/services/notification.serv
 export class ParticipantsManagerComponent {
   private readonly service = inject(TournamentService);
   private readonly notifications = inject(NotificationService);
+  private readonly i18n = inject(TranslateService);
 
   readonly tournamentId = input.required<string>();
   readonly participants = input.required<TournamentParticipant[]>();
   readonly canEdit = input<boolean>(false);
+  readonly format = input<TournamentFormat | null>(null);
+  readonly groupCount = input<number | null>(null);
   readonly changed = output<void>();
+  readonly shuffleChanged = output<boolean>();
 
   readonly adding = signal(false);
+  readonly shuffleUnseeded = signal(false);
+  readonly minTeams = computed(() => {
+    const f = this.format();
+    return f ? minTeamsForFormat(f, this.groupCount()) : 2;
+  });
+
   newName = '';
   newSeed: number | null = null;
+
+  onShuffleToggle(checked: boolean): void {
+    this.shuffleUnseeded.set(checked);
+    this.shuffleChanged.emit(checked);
+  }
 
   async add(): Promise<void> {
     const name = this.newName.trim();
@@ -74,7 +141,7 @@ export class ParticipantsManagerComponent {
       this.newSeed = null;
       this.changed.emit();
     } catch (err: any) {
-      this.notifications.error(err?.error?.detail ?? 'Could not add participant.');
+      this.notifications.error(err?.error?.detail ?? this.i18n.instant('tournament.participants.addError'));
     } finally {
       this.adding.set(false);
     }
@@ -85,7 +152,7 @@ export class ParticipantsManagerComponent {
       await this.service.removeParticipant(this.tournamentId(), p.id);
       this.changed.emit();
     } catch (err: any) {
-      this.notifications.error(err?.error?.detail ?? 'Could not remove participant.');
+      this.notifications.error(err?.error?.detail ?? this.i18n.instant('tournament.participants.removeError'));
     }
   }
 }

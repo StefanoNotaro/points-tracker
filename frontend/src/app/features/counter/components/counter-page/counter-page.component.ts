@@ -2,6 +2,7 @@ import { Component, inject, input, signal, computed, OnInit, OnDestroy, effect }
 import { Router, RouterLink } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { MatMenuModule } from '@angular/material/menu';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { AuthService } from '../../../../core/auth/auth.service';
 import { ScoreBoardComponent } from '../../../../shared/components/score-board/score-board.component';
 import { ScoreButtonComponent } from '../../../../shared/components/score-button/score-button.component';
@@ -28,48 +29,44 @@ import { CounterStore } from '../../store/counter.store';
     EventsLogComponent,
     MatMenuModule,
     RouterLink,
+    TranslatePipe,
   ],
   providers: [CounterStore],
   template: `
-    <!-- Loading -->
     @if (store.isLoading()) {
       <div class="flex items-center justify-center min-h-[60vh]">
         <pts-loading-spinner size="lg" />
       </div>
 
-    <!-- Error -->
     } @else if (store.loadState() === 'error') {
       <div class="flex flex-col items-center justify-center min-h-[60vh] gap-4 text-center px-4">
         <span class="material-symbols-rounded text-7xl text-error">error_outline</span>
-        <h2 class="text-xl font-bold text-on-surface">Counter not found</h2>
-        <p class="text-on-surface-muted text-sm">This counter doesn't exist or you don't have access.</p>
+        <h2 class="text-xl font-bold text-on-surface">{{ 'counter.page.notFoundTitle' | translate }}</h2>
+        <p class="text-on-surface-muted text-sm">{{ 'counter.page.notFoundMessage' | translate }}</p>
       </div>
 
-    <!-- Counter loaded -->
     } @else if (store.counter(); as counter) {
       <div class="flex flex-col gap-4 sm:gap-5">
 
-        <!-- Tournament link bar — only when this counter was spawned for a match -->
         @if (counter.linkedTournament; as link) {
           <a [routerLink]="['/tournaments', link.tournamentId]"
              class="pts-card !p-2.5 flex items-center gap-2 hover:border-primary transition-colors">
             <span class="material-symbols-rounded text-primary text-xl shrink-0">emoji_events</span>
             <span class="flex-1 min-w-0">
-              <span class="block text-xs uppercase tracking-wide text-on-surface-muted">Tournament match</span>
+              <span class="block text-xs uppercase tracking-wide text-on-surface-muted">{{ 'counter.page.tournamentMatch' | translate }}</span>
               <span class="block text-sm font-semibold text-on-surface truncate">{{ link.tournamentName }}</span>
             </span>
             <span class="material-symbols-rounded text-on-surface-muted">chevron_right</span>
           </a>
         }
 
-        <!-- Top bar: small sport chip + action menu -->
         <div class="flex items-center justify-between gap-2">
           <div class="inline-flex items-center gap-1.5 text-on-surface-muted">
             <span class="material-symbols-rounded text-base text-primary">
               {{ store.sportConfig()?.icon }}
             </span>
             <span class="text-xs font-medium uppercase tracking-wide">
-              {{ store.sportConfig()?.label }}
+              {{ store.sportConfig()?.labelKey ?? '' | translate }}
             </span>
           </div>
 
@@ -84,8 +81,8 @@ import { CounterStore } from '../../store/counter.store';
                 (pointerup)="stopHold()"
                 (pointerleave)="stopHold()"
                 (pointercancel)="stopHold()"
-                aria-label="Undo last action (hold to repeat)"
-                title="Undo (hold to undo more)"
+                [attr.aria-label]="'counter.page.undoAria' | translate"
+                [attr.title]="'counter.page.undoTitle' | translate"
               >
                 <span class="material-symbols-rounded text-xl">undo</span>
               </button>
@@ -99,8 +96,8 @@ import { CounterStore } from '../../store/counter.store';
                   (pointerup)="stopHold()"
                   (pointerleave)="stopHold()"
                   (pointercancel)="stopHold()"
-                  aria-label="Redo (hold to repeat)"
-                  title="Redo (hold to redo more)"
+                  [attr.aria-label]="'counter.page.redoAria' | translate"
+                  [attr.title]="'counter.page.redoTitle' | translate"
                 >
                   <span class="material-symbols-rounded text-xl">redo</span>
                 </button>
@@ -110,8 +107,8 @@ import { CounterStore } from '../../store/counter.store';
               type="button"
               class="pts-btn-icon"
               [matMenuTriggerFor]="moreMenu"
-              aria-label="More options"
-              title="More"
+              [attr.aria-label]="'counter.page.moreAria' | translate"
+              [attr.title]="'counter.page.moreTitle' | translate"
             >
               <span class="material-symbols-rounded text-xl">more_vert</span>
             </button>
@@ -120,40 +117,39 @@ import { CounterStore } from '../../store/counter.store';
               @if (canShare()) {
                 <button mat-menu-item (click)="openShare(counter.id)">
                   <span class="material-symbols-rounded mr-2 text-base align-middle">share</span>
-                  Share
+                  {{ 'counter.page.share' | translate }}
                 </button>
               }
               @if (counter.canEdit) {
                 <button mat-menu-item (click)="toggleEditTeams()">
                   <span class="material-symbols-rounded mr-2 text-base align-middle">edit</span>
-                  {{ editingTeams() ? 'Hide team editor' : 'Rename teams' }}
+                  {{ (editingTeams() ? 'counter.page.hideTeamEditor' : 'counter.page.renameTeams') | translate }}
                 </button>
               }
               <button mat-menu-item (click)="toggleMatchInfo()">
                 <span class="material-symbols-rounded mr-2 text-base align-middle">info</span>
-                {{ showMatchInfo() ? 'Hide match info' : 'Match info' }}
+                {{ (showMatchInfo() ? 'counter.page.hideMatchInfo' : 'counter.page.matchInfo') | translate }}
               </button>
               @if (counter.canEdit && counter.status === 'active') {
                 <button mat-menu-item (click)="switchSidesManually()">
                   <span class="material-symbols-rounded mr-2 text-base align-middle">swap_horiz</span>
-                  Switch sides
+                  {{ 'counter.page.switchSides' | translate }}
                 </button>
                 <button mat-menu-item (click)="confirmEndMatch()">
                   <span class="material-symbols-rounded mr-2 text-base align-middle">stop_circle</span>
-                  End match now
+                  {{ 'counter.page.endMatchMenu' | translate }}
                 </button>
               }
               @if (counter.isOwner) {
                 <button mat-menu-item (click)="confirmDelete()" class="!text-error">
                   <span class="material-symbols-rounded mr-2 text-base align-middle">delete</span>
-                  Delete counter
+                  {{ 'counter.page.deleteMenu' | translate }}
                 </button>
               }
             </mat-menu>
           </div>
         </div>
 
-        <!-- Score board card -->
         <div class="pts-card">
           <pts-score-board
             [teamAName]="counter.teamAName"
@@ -170,22 +166,20 @@ import { CounterStore } from '../../store/counter.store';
             <div class="mt-2 flex justify-center">
               <span class="pts-badge bg-surface-variant text-on-surface-muted text-[11px]">
                 <span class="material-symbols-rounded text-sm">swap_horiz</span>
-                Sides switched
+                {{ 'counter.page.sidesSwitched' | translate }}
               </span>
             </div>
           }
         </div>
 
-        <!-- Match finished banner -->
         @if (counter.status !== 'active') {
           <div class="flex items-center justify-center gap-2 rounded-2xl py-3
                       bg-success/10 border border-success/20 text-success text-sm font-semibold">
             <span class="material-symbols-rounded">emoji_events</span>
-            <span>Match finished</span>
+            <span>{{ 'counter.page.matchFinished' | translate }}</span>
           </div>
         }
 
-        <!-- Score buttons (active + editable) - big, thumb-reachable -->
         @if (counter.canEdit && counter.status === 'active') {
           <div class="flex gap-3 sm:gap-4" [class.flex-row-reverse]="swapSides()">
             <pts-score-button
@@ -207,7 +201,6 @@ import { CounterStore } from '../../store/counter.store';
           </div>
         }
 
-        <!-- Timeouts: per-team button with remaining indicator -->
         @if (counter.status === 'active' && counter.rules.timeoutsPerSet > 0) {
           <div class="flex gap-3 sm:gap-4" [class.flex-row-reverse]="swapSides()">
             <button
@@ -217,12 +210,12 @@ import { CounterStore } from '../../store/counter.store';
                      disabled:opacity-50 disabled:hover:bg-surface"
               [disabled]="!counter.canEdit || counter.timeoutsRemainingA === 0 || store.actionPending() || timeoutActive()"
               (click)="callTimeout('A')"
-              [attr.aria-label]="'Call timeout for ' + counter.teamAName"
+              [attr.aria-label]="'counter.page.timeoutAria' | translate: { team: counter.teamAName }"
             >
               <span class="flex items-center gap-2 min-w-0">
                 <span class="material-symbols-rounded text-base text-team-a">pause_circle</span>
                 <span class="text-xs uppercase tracking-wide text-on-surface-muted truncate">
-                  Timeout
+                  {{ 'counter.page.timeoutLabel' | translate }}
                 </span>
               </span>
               <span class="pts-badge bg-team-a/10 text-team-a text-[11px] font-mono">
@@ -236,12 +229,12 @@ import { CounterStore } from '../../store/counter.store';
                      disabled:opacity-50 disabled:hover:bg-surface"
               [disabled]="!counter.canEdit || counter.timeoutsRemainingB === 0 || store.actionPending() || timeoutActive()"
               (click)="callTimeout('B')"
-              [attr.aria-label]="'Call timeout for ' + counter.teamBName"
+              [attr.aria-label]="'counter.page.timeoutAria' | translate: { team: counter.teamBName }"
             >
               <span class="flex items-center gap-2 min-w-0">
                 <span class="material-symbols-rounded text-base text-team-b">pause_circle</span>
                 <span class="text-xs uppercase tracking-wide text-on-surface-muted truncate">
-                  Timeout
+                  {{ 'counter.page.timeoutLabel' | translate }}
                 </span>
               </span>
               <span class="pts-badge bg-team-b/10 text-team-b text-[11px] font-mono">
@@ -251,14 +244,13 @@ import { CounterStore } from '../../store/counter.store';
           </div>
         }
 
-        <!-- Active timeout countdown banner — visible to every connected client -->
         @if (timeoutActive(); as active) {
           <div class="flex items-center justify-between gap-3 rounded-2xl px-4 py-3
                       bg-warning/10 border border-warning/30 text-warning">
             <span class="flex items-center gap-2 text-sm font-semibold min-w-0">
               <span class="material-symbols-rounded shrink-0">pause_circle</span>
               <span class="truncate">
-                {{ active.team === 'A' ? counter.teamAName : counter.teamBName }} timeout
+                {{ 'counter.page.timeoutBanner' | translate: { team: (active.team === 'A' ? counter.teamAName : counter.teamBName) } }}
               </span>
             </span>
             <span class="flex items-center gap-2 shrink-0">
@@ -269,8 +261,8 @@ import { CounterStore } from '../../store/counter.store';
                   class="pts-btn-icon h-8 w-8"
                   [disabled]="store.actionPending()"
                   (click)="cancelTimeout()"
-                  aria-label="Cancel timeout"
-                  title="Cancel timeout"
+                  [attr.aria-label]="'counter.page.cancelTimeoutAria' | translate"
+                  [attr.title]="'counter.page.cancelTimeoutTitle' | translate"
                 >
                   <span class="material-symbols-rounded text-lg">close</span>
                 </button>
@@ -279,26 +271,24 @@ import { CounterStore } from '../../store/counter.store';
           </div>
         }
 
-        <!-- View-only chip (small, unobtrusive) -->
         @if (!counter.canEdit) {
           <div class="flex justify-center">
             <span class="pts-badge bg-surface-variant text-on-surface-muted">
               <span class="material-symbols-rounded text-sm">visibility</span>
-              View only
+              {{ 'common.viewOnly' | translate }}
             </span>
           </div>
         }
 
-        <!-- Team name editor — only when toggled from the menu -->
         @if (counter.canEdit && editingTeams()) {
           <div class="pts-card flex flex-col gap-3">
             <div class="flex items-center justify-between">
-              <p class="pts-label">Team names</p>
+              <p class="pts-label">{{ 'counter.page.teamNames' | translate }}</p>
               <button
                 type="button"
                 class="pts-btn-icon h-8 w-8"
                 (click)="editingTeams.set(false)"
-                aria-label="Close team editor"
+                [attr.aria-label]="'counter.page.closeTeamEditorAria' | translate"
               >
                 <span class="material-symbols-rounded text-lg">close</span>
               </button>
@@ -324,29 +314,29 @@ import { CounterStore } from '../../store/counter.store';
           </div>
         }
 
-        <!-- Match info — only when toggled -->
         @if (showMatchInfo()) {
           <div class="pts-card flex flex-col gap-2 text-xs text-on-surface-muted">
             <div class="flex justify-between">
-              <span>Points per set</span>
+              <span>{{ 'counter.page.rulesPointsPerSet' | translate }}</span>
               <span class="font-mono text-on-surface">{{ counter.rules.pointsPerSet }}</span>
             </div>
             <div class="flex justify-between">
-              <span>Last-set points</span>
+              <span>{{ 'counter.page.rulesLastSet' | translate }}</span>
               <span class="font-mono text-on-surface">{{ counter.rules.lastSetPoints }}</span>
             </div>
             <div class="flex justify-between">
-              <span>Sets to win</span>
-              <span class="font-mono text-on-surface">{{ counter.rules.setsToWin }} of {{ counter.rules.totalSets }}</span>
+              <span>{{ 'counter.page.rulesSetsToWin' | translate }}</span>
+              <span class="font-mono text-on-surface">
+                {{ 'counter.page.rulesSetsToWinValue' | translate: { won: counter.rules.setsToWin, total: counter.rules.totalSets } }}
+              </span>
             </div>
             <div class="flex justify-between">
-              <span>Must win by 2</span>
-              <span class="font-mono text-on-surface">{{ counter.rules.winByTwo ? 'Yes' : 'No' }}</span>
+              <span>{{ 'counter.page.rulesWinByTwo' | translate }}</span>
+              <span class="font-mono text-on-surface">{{ (counter.rules.winByTwo ? 'common.yes' : 'common.no') | translate }}</span>
             </div>
           </div>
         }
 
-        <!-- Events log — collapsed by default -->
         <pts-events-log
           [events]="counter.events"
           [teamAName]="counter.teamAName"
@@ -363,22 +353,13 @@ export class CounterPageComponent implements OnInit, OnDestroy {
   private readonly dialog = inject(MatDialog);
   private readonly router = inject(Router);
   private readonly auth = inject(AuthService);
+  private readonly i18n = inject(TranslateService);
 
-  // Sharing is owner-only: share-link visitors and read-only viewers should
-  // not be able to re-distribute access from this UI.
   readonly canShare = computed(() => this.store.counter()?.isOwner === true);
 
-  // Progressive disclosure — both off by default.
   readonly editingTeams = signal(false);
   readonly showMatchInfo = signal(false);
 
-  // Server-driven timeout countdown. The DTO carries activeTimeout = { team,
-  // startedAt, durationSeconds } whenever a timeout is currently running, so
-  // every subscribed client (this browser, other browsers, even read-only
-  // viewers) sees the same countdown from the same reference time.
-  //
-  // `now` ticks every second while a timeout is active so the template
-  // re-evaluates the remaining seconds.
   private readonly now = signal(Date.now());
   private nowInterval: ReturnType<typeof setInterval> | null = null;
   readonly timeoutActive = computed(() => {
@@ -391,41 +372,27 @@ export class CounterPageComponent implements OnInit, OnDestroy {
     return { team: t.team, remaining };
   });
 
-  // True when teams have switched sides an odd number of times — used to
-  // mirror the scoreboard and the score buttons so the team on the left of
-  // the screen matches the team on the left of the court.
   readonly swapSides = computed(() => {
     const c = this.store.counter();
     return !!c && c.sideSwitchCount % 2 === 1;
   });
 
-  // Guard so the indoor side-switch dialog only opens once per pending state transition.
   private sideSwitchDialogOpen = false;
-  // Track the count we last observed so we can detect beach auto-switches.
   private lastObservedSwitchCount: number | null = null;
 
-  // Press-and-hold state for undo/redo.
   private holdTimer: ReturnType<typeof setInterval> | null = null;
   private holdInitialTimer: ReturnType<typeof setTimeout> | null = null;
   private holdSuppressClick = false;
-  // First click fires immediately; if the user keeps holding, repeat after a
-  // short delay so a normal tap doesn't accidentally fire two undos.
   private readonly HOLD_DELAY_MS = 400;
   private readonly HOLD_INTERVAL_MS = 180;
 
   constructor() {
-    // Either a successful local delete, or a remote delete relayed by SignalR
-    // (e.g. owner deletes from the dashboard while a viewer is on this page),
-    // navigates away to a sensible landing page.
     effect(() => {
       if (this.store.counterDeleted()) {
         this.router.navigate([this.auth.isAuthenticated() ? '/dashboard' : '/new-counter']);
       }
     });
 
-    // Tick the `now` signal once per second only while a timeout is running,
-    // and stop when it ends — saves a permanent 1Hz interval on every counter
-    // page.
     effect(() => {
       const active = this.store.counter()?.activeTimeout;
       if (active) this.startNowTicker();
@@ -436,8 +403,6 @@ export class CounterPageComponent implements OnInit, OnDestroy {
       const counter = this.store.counter();
       if (!counter) return;
 
-      // 1. Pending confirmation — used by indoor (every set) and by beach when
-      //    auto-switch is OFF. The dialog wording is tweaked per sport.
       if (counter.canEdit && counter.pendingSideSwitchConfirmation) {
         if (!this.sideSwitchDialogOpen) {
           this.sideSwitchDialogOpen = true;
@@ -447,9 +412,6 @@ export class CounterPageComponent implements OnInit, OnDestroy {
         this.sideSwitchDialogOpen = false;
       }
 
-      // 2. Beach (auto): the server has just bumped sideSwitchCount. Show an
-      //    info dialog that auto-dismisses after 5 seconds. Skip on the very
-      //    first observation so loading an existing counter doesn't pop one.
       if (this.lastObservedSwitchCount !== null &&
           counter.sideSwitchCount > this.lastObservedSwitchCount &&
           counter.rules.sideSwitchMode === 'autoeverypoints' &&
@@ -486,9 +448,6 @@ export class CounterPageComponent implements OnInit, OnDestroy {
   }
 
   undoOnce(): void {
-    // pointerdown -> pointerup also synthesizes a click. After a hold burst
-    // we want to ignore that click; this flag is set when the hold-repeat
-    // path actually fired.
     if (this.holdSuppressClick) {
       this.holdSuppressClick = false;
       return;
@@ -505,7 +464,6 @@ export class CounterPageComponent implements OnInit, OnDestroy {
   }
 
   startHoldUndo(ev: PointerEvent): void {
-    // Only react to primary button / touch / pen.
     if (ev.pointerType === 'mouse' && ev.button !== 0) return;
     this.beginHold(() => this.store.undo(1));
   }
@@ -529,10 +487,9 @@ export class CounterPageComponent implements OnInit, OnDestroy {
     const confirmed = await this.dialog
       .open<ConfirmDialogComponent, ConfirmDialogData, boolean>(ConfirmDialogComponent, {
         data: {
-          title: 'End match now?',
-          message:
-            'The match will be marked finished. The winner will be the team with more sets — or, on a tie, more total points.',
-          confirmLabel: 'End match',
+          title: this.i18n.instant('counter.page.endMatchTitle'),
+          message: this.i18n.instant('counter.page.endMatchMessage'),
+          confirmLabel: this.i18n.instant('counter.page.endMatchConfirm'),
         },
       })
       .afterClosed()
@@ -546,9 +503,9 @@ export class CounterPageComponent implements OnInit, OnDestroy {
     const confirmed = await this.dialog
       .open<ConfirmDialogComponent, ConfirmDialogData, boolean>(ConfirmDialogComponent, {
         data: {
-          title: 'Delete this counter?',
-          message: `"${counter.teamAName} vs ${counter.teamBName}" and its history will be removed. This can't be undone.`,
-          confirmLabel: 'Delete',
+          title: this.i18n.instant('counter.page.deleteTitle'),
+          message: this.i18n.instant('counter.page.deleteMessage', { a: counter.teamAName, b: counter.teamBName }),
+          confirmLabel: this.i18n.instant('counter.page.deleteConfirm'),
         },
       })
       .afterClosed()
@@ -558,8 +515,6 @@ export class CounterPageComponent implements OnInit, OnDestroy {
 
   async callTimeout(team: 'A' | 'B'): Promise<void> {
     await this.store.callTimeout(team);
-    // The countdown is now driven from store.counter().activeTimeout, which
-    // every subscribed client receives via SignalR. No local timer to seed.
   }
 
   async cancelTimeout(): Promise<void> {
@@ -601,22 +556,14 @@ export class CounterPageComponent implements OnInit, OnDestroy {
   }
 
   private async openConfirmSwitchDialog(mode: string): Promise<void> {
-    // Beach (auto OFF): the rule says it's time to switch but the user opted out
-    // of automatic switches. Indoor: the set just ended; ask whether they switched.
     const isBeach = mode === 'autoeverypoints';
-    const data: ConfirmDialogData = isBeach
-      ? {
-          title: 'Switch sides?',
-          message: 'The points total just hit a switch boundary. Have the teams switched sides?',
-          confirmLabel: 'Yes, switched',
-          cancelLabel: 'Not yet',
-        }
-      : {
-          title: 'Switch sides',
-          message: 'End of set — teams must switch sides before the next set begins. Confirm when done.',
-          confirmLabel: 'Sides switched',
-          cancelLabel: 'Skip',
-        };
+    const prefix = isBeach ? 'counter.page.sideSwitchAuto' : 'counter.page.sideSwitchEndSet';
+    const data: ConfirmDialogData = {
+      title: this.i18n.instant(`${prefix}.title`),
+      message: this.i18n.instant(`${prefix}.message`),
+      confirmLabel: this.i18n.instant(`${prefix}.confirm`),
+      cancelLabel: this.i18n.instant(`${prefix}.cancel`),
+    };
 
     const result = await this.dialog
       .open<ConfirmDialogComponent, ConfirmDialogData, boolean>(ConfirmDialogComponent, {
@@ -634,9 +581,9 @@ export class CounterPageComponent implements OnInit, OnDestroy {
       ConfirmDialogComponent,
       {
         data: {
-          title: 'Sides switched',
-          message: 'Teams just switched sides — court change required.',
-          confirmLabel: 'Got it',
+          title: this.i18n.instant('counter.page.sideSwitchInfo.title'),
+          message: this.i18n.instant('counter.page.sideSwitchInfo.message'),
+          confirmLabel: this.i18n.instant('counter.page.sideSwitchInfo.confirm'),
           hideCancel: true,
           autoDismissSeconds: 5,
         },

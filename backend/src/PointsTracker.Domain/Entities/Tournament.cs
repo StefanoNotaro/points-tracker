@@ -217,12 +217,29 @@ public class Tournament
     /// Replace the current set of matches with a freshly-generated bracket
     /// and flip status to Active. Only valid while in Draft or Registration.
     /// </summary>
+    /// <summary>
+    /// Minimum participant count for this tournament to be startable.
+    /// Knock-outs need at least two teams; round-robin / double-elim are
+    /// pointless below three / four; group stage needs each group to have
+    /// at least two teams.
+    /// </summary>
+    public int MinTeamsToStart() => Format switch
+    {
+        TournamentFormat.SingleElimination     => 2,
+        TournamentFormat.DoubleElimination     => 4,
+        TournamentFormat.RoundRobin            => 3,
+        TournamentFormat.GroupStageElimination => Math.Max(4, (GroupCount ?? 2) * 2),
+        _ => 2,
+    };
+
     public void StartWithBracket(IEnumerable<TournamentMatch> generated)
     {
         if (Status is TournamentStatus.Active or TournamentStatus.Completed)
             throw new DomainException("Tournament is already started.");
-        if (_participants.Count < 2)
-            throw new DomainException("At least two participants are required.");
+        var min = MinTeamsToStart();
+        if (_participants.Count < min)
+            throw new DomainException(
+                $"{Format} requires at least {min} participants to start (currently {_participants.Count}).");
 
         _matches.Clear();
         _matches.AddRange(generated);

@@ -1,21 +1,24 @@
-import { Component, inject } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { AuthService } from '../../core/auth/auth.service';
 import { ThemeService } from '../../core/services/theme.service';
+import { SUPPORTED_LOCALES } from '../../core/i18n/i18n.providers';
+
+const LANG_STORAGE_KEY = 'pts_lang';
 
 @Component({
   selector: 'pts-settings',
+  imports: [TranslatePipe],
   template: `
     <div class="flex flex-col gap-5 pb-8">
 
-      <!-- Page header -->
       <div class="pt-2">
-        <h1 class="text-2xl font-bold text-on-surface">Settings</h1>
-        <p class="text-on-surface-muted text-sm mt-1">Manage your account and preferences.</p>
+        <h1 class="text-2xl font-bold text-on-surface">{{ 'settings.title' | translate }}</h1>
+        <p class="text-on-surface-muted text-sm mt-1">{{ 'settings.subtitle' | translate }}</p>
       </div>
 
-      <!-- Account card -->
       <div class="pts-card flex flex-col gap-4">
-        <p class="pts-label">Account</p>
+        <p class="pts-label">{{ 'settings.account' | translate }}</p>
         <div class="flex items-center gap-3">
           <div class="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center flex-shrink-0">
             <span class="material-symbols-rounded text-2xl text-primary">account_circle</span>
@@ -27,17 +30,18 @@ import { ThemeService } from '../../core/services/theme.service';
         </div>
       </div>
 
-      <!-- Appearance card -->
       <div class="pts-card flex flex-col gap-4">
-        <p class="pts-label">Appearance</p>
+        <p class="pts-label">{{ 'settings.appearance' | translate }}</p>
         <div class="flex items-center justify-between gap-4">
           <div class="flex items-center gap-3">
             <span class="material-symbols-rounded text-on-surface-muted">
               {{ theme.isDark() ? 'dark_mode' : 'light_mode' }}
             </span>
             <div>
-              <p class="text-sm font-medium text-on-surface">Theme</p>
-              <p class="text-xs text-on-surface-muted">{{ theme.isDark() ? 'Dark' : 'Light' }} mode active</p>
+              <p class="text-sm font-medium text-on-surface">{{ 'settings.theme' | translate }}</p>
+              <p class="text-xs text-on-surface-muted">
+                {{ 'settings.themeActive' | translate: { mode: ((theme.isDark() ? 'settings.themeDark' : 'settings.themeLight') | translate) } }}
+              </p>
             </div>
           </div>
           <button
@@ -47,7 +51,7 @@ import { ThemeService } from '../../core/services/theme.service';
             (click)="theme.toggle()"
             role="switch"
             [attr.aria-checked]="theme.isDark()"
-            aria-label="Toggle dark mode"
+            [attr.aria-label]="'settings.toggleDarkAria' | translate"
           >
             <span
               class="inline-block h-5 w-5 rounded-full bg-white shadow-elevated transition-transform duration-200"
@@ -57,16 +61,35 @@ import { ThemeService } from '../../core/services/theme.service';
         </div>
       </div>
 
-      <!-- Danger zone -->
+      <div class="pts-card flex flex-col gap-3">
+        <p class="pts-label">{{ 'settings.language' | translate }}</p>
+        <p class="text-xs text-on-surface-muted">{{ 'settings.languageHelp' | translate }}</p>
+        <div class="grid grid-cols-3 gap-2">
+          @for (l of locales; track l) {
+            <button type="button"
+                    class="px-3 py-2 rounded-xl border-2 text-sm font-medium transition-colors"
+                    [class.border-primary]="currentLang() === l"
+                    [class.bg-primary]="currentLang() === l"
+                    [class.text-on-primary]="currentLang() === l"
+                    [class.border-border]="currentLang() !== l"
+                    [class.bg-surface-raised]="currentLang() !== l"
+                    [class.text-on-surface]="currentLang() !== l"
+                    (click)="setLang(l)">
+              {{ 'settings.languages.' + l | translate }}
+            </button>
+          }
+        </div>
+      </div>
+
       <div class="pts-card flex flex-col gap-4">
-        <p class="pts-label">Session</p>
+        <p class="pts-label">{{ 'settings.session' | translate }}</p>
         <button
           class="flex items-center gap-3 text-error hover:bg-error/8 rounded-xl p-3 -mx-1
                  transition-colors text-sm font-medium w-full text-left"
           (click)="auth.logout()"
         >
           <span class="material-symbols-rounded text-xl">logout</span>
-          Sign out
+          {{ 'settings.signOut' | translate }}
         </button>
       </div>
 
@@ -76,4 +99,14 @@ import { ThemeService } from '../../core/services/theme.service';
 export class SettingsComponent {
   readonly auth  = inject(AuthService);
   readonly theme = inject(ThemeService);
+  private readonly i18n = inject(TranslateService);
+
+  readonly locales = [...SUPPORTED_LOCALES];
+  readonly currentLang = signal(this.i18n.currentLang ?? 'en');
+
+  setLang(lang: string): void {
+    this.i18n.use(lang);
+    this.currentLang.set(lang);
+    try { localStorage.setItem(LANG_STORAGE_KEY, lang); } catch { /* ignore */ }
+  }
 }

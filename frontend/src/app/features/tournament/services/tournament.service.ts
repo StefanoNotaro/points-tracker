@@ -34,6 +34,14 @@ export class TournamentService {
     return firstValueFrom(this.http.get<TournamentSummary[]>(`${this.base}/mine`));
   }
 
+  listMineAnonymous(): Promise<TournamentSummary[]> {
+    const sessionTokens = this.sessionTokens.getAllTournamentTokens();
+    if (sessionTokens.length === 0) return Promise.resolve([]);
+    return firstValueFrom(
+      this.http.post<TournamentSummary[]>(`${this.base}/mine-anonymous`, { sessionTokens }),
+    );
+  }
+
   addParticipant(id: string, teamName: string, seed: number | null): Promise<Tournament> {
     return firstValueFrom(
       this.http.post<Tournament>(`${this.base}/${id}/participants`, { teamName, seed, userId: null }),
@@ -46,8 +54,12 @@ export class TournamentService {
     );
   }
 
-  start(id: string): Promise<Tournament> {
-    return firstValueFrom(this.http.post<Tournament>(`${this.base}/${id}/start`, {}));
+  start(id: string, options?: { randomizeUnseeded?: boolean }): Promise<Tournament> {
+    return firstValueFrom(
+      this.http.post<Tournament>(`${this.base}/${id}/start`, {
+        randomizeUnseeded: !!options?.randomizeUnseeded,
+      }),
+    );
   }
 
   update(id: string, payload: UpdateTournamentRequest): Promise<Tournament> {

@@ -36,9 +36,13 @@ public sealed class GroupStageEliminationGenerator(int groupCount, int advancePe
 
         // 1. Group assignment — snake-seed style for fairness if seeds are set,
         //    otherwise registration order. Group i gets every (groupCount)-th team.
+        // Seeded first by seed value; the rest keep caller-provided order
+        // (the caller decides registration vs. random for unseeded teams).
         var ordered = participants
-            .OrderBy(p => p.Seed ?? int.MaxValue)
-            .ThenBy(p => p.RegisteredAt)
+            .Select((p, idx) => (p, idx))
+            .OrderBy(t => t.p.Seed ?? int.MaxValue)
+            .ThenBy(t => t.idx)
+            .Select(t => t.p)
             .ToList();
 
         var groups = new List<List<TournamentParticipant>>();

@@ -13,6 +13,7 @@ public record DeleteTournamentCommand(
 
 public class DeleteTournamentHandler(
     ITournamentRepository repo,
+    ICounterRepository counterRepo,
     ITournamentAuthorizationService auth
 ) : IRequestHandler<DeleteTournamentCommand, Guid?>
 {
@@ -24,6 +25,11 @@ public class DeleteTournamentHandler(
         if (!access.CanEdit) throw new ForbiddenException("You cannot delete this tournament.");
 
         var owner = t.OwnerUserId;
+
+        var linkedCounters = await counterRepo.ListByTournamentAsync(t.Id, ct);
+        foreach (var c in linkedCounters)
+            c.SoftDelete();
+
         t.SoftDelete();
         await repo.SaveChangesAsync(ct);
         return owner;

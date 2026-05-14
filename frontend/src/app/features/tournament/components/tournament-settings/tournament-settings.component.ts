@@ -1,6 +1,7 @@
 import { Component, effect, inject, input, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { NgClass, NgTemplateOutlet } from '@angular/common';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { TournamentService } from '../../services/tournament.service';
 import { NotificationService } from '../../../../core/services/notification.service';
 import {
@@ -22,90 +23,86 @@ interface StageForm {
 
 @Component({
   selector: 'pts-tournament-settings',
-  imports: [FormsModule, NgClass, NgTemplateOutlet],
+  imports: [FormsModule, NgClass, NgTemplateOutlet, TranslatePipe],
   template: `
     <form class="flex flex-col gap-5" (submit)="$event.preventDefault(); save()">
 
-      <!-- Identity -->
       <section class="flex flex-col gap-2">
-        <h2 class="pts-label">Identity</h2>
-        <label class="text-xs text-on-surface-muted" for="t-name">Name</label>
+        <h2 class="pts-label">{{ 'tournament.settings.identity' | translate }}</h2>
+        <label class="text-xs text-on-surface-muted" for="t-name">{{ 'tournament.settings.name' | translate }}</label>
         <input id="t-name" type="text" class="pts-input" maxlength="200"
                [(ngModel)]="form.name" name="name" (ngModelChange)="touch()" />
       </section>
 
-      <!-- Schedule -->
       <section class="flex flex-col gap-2">
-        <h2 class="pts-label">Schedule</h2>
+        <h2 class="pts-label">{{ 'tournament.settings.schedule' | translate }}</h2>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <label class="flex flex-col gap-1">
-            <span class="text-xs text-on-surface-muted">Starts</span>
+            <span class="text-xs text-on-surface-muted">{{ 'tournament.settings.starts' | translate }}</span>
             <input type="datetime-local" class="pts-input"
                    [(ngModel)]="form.startsAt" name="startsAt" (ngModelChange)="touch()" />
           </label>
           <label class="flex flex-col gap-1">
-            <span class="text-xs text-on-surface-muted">Ends</span>
+            <span class="text-xs text-on-surface-muted">{{ 'tournament.settings.ends' | translate }}</span>
             <input type="datetime-local" class="pts-input"
                    [(ngModel)]="form.endsAt" name="endsAt" (ngModelChange)="touch()" />
           </label>
         </div>
       </section>
 
-      <!-- Default match rules -->
       <section class="flex flex-col gap-3">
         <div class="flex items-center justify-between">
-          <h2 class="pts-label">Default match rules</h2>
+          <h2 class="pts-label">{{ 'tournament.settings.defaultRules' | translate }}</h2>
           <label class="flex items-center gap-2 text-xs text-on-surface-muted">
             <input type="checkbox" [(ngModel)]="form.overrideRules"
                    name="overrideRules" (ngModelChange)="touch()" />
-            Override sport defaults
+            {{ 'tournament.settings.overrideSport' | translate }}
           </label>
         </div>
         @if (form.overrideRules) {
           <ng-container *ngTemplateOutlet="rulesGrid; context: { stage: form.defaultRules, prefix: 'd' }"></ng-container>
           <p class="text-xs text-on-surface-muted">
-            Single-set indoor mode? Set sets to win = 1 and total sets = 1.
+            {{ 'tournament.settings.singleSetHint' | translate }}
           </p>
         }
 
         <div class="grid grid-cols-2 gap-3">
           <label class="flex flex-col gap-1">
-            <span class="text-xs text-on-surface-muted">Timeouts per set</span>
+            <span class="text-xs text-on-surface-muted">{{ 'rules.timeoutsPerSet' | translate }}</span>
             <input type="number" class="pts-input" min="0" max="9"
                    [(ngModel)]="form.timeoutsPerSet" name="tps"
                    (ngModelChange)="touch()" />
           </label>
           <label class="flex flex-col gap-1">
-            <span class="text-xs text-on-surface-muted">Timeout seconds</span>
+            <span class="text-xs text-on-surface-muted">{{ 'rules.timeoutSeconds' | translate }}</span>
             <input type="number" class="pts-input" min="5" max="600"
                    [(ngModel)]="form.timeoutDuration" name="td"
                    (ngModelChange)="touch()" />
           </label>
           <label class="flex flex-col gap-1 col-span-2">
-            <span class="text-xs text-on-surface-muted">Indoor side-switch every N sets</span>
+            <span class="text-xs text-on-surface-muted">{{ 'rules.indoorSwitchLabel' | translate }}</span>
             <select class="pts-input" [(ngModel)]="form.indoorSwitchEverySets"
                     name="indoorSwitch" (ngModelChange)="touch()">
-              <option [ngValue]="null">Sport default</option>
-              <option [ngValue]="1">Every set (1)</option>
-              <option [ngValue]="2">Every two sets (2)</option>
+              <option [ngValue]="null">{{ 'rules.indoorSwitchDefault' | translate }}</option>
+              <option [ngValue]="1">{{ 'rules.indoorSwitchEvery1' | translate }}</option>
+              <option [ngValue]="2">{{ 'rules.indoorSwitchEvery2' | translate }}</option>
             </select>
           </label>
           <label class="flex items-center gap-2 col-span-2 text-sm">
             <input type="checkbox" [(ngModel)]="form.beachAutoSwitch"
                    name="beachAutoSwitch" (ngModelChange)="touch()" />
-            <span>Beach: auto-switch sides at point milestones</span>
+            <span>{{ 'rules.beachAutoSwitch' | translate }}</span>
           </label>
         </div>
       </section>
 
-      <!-- Final-match rules -->
       <section class="flex flex-col gap-3">
         <div class="flex items-center justify-between">
-          <h2 class="pts-label">Final</h2>
+          <h2 class="pts-label">{{ 'tournament.settings.final' | translate }}</h2>
           <label class="flex items-center gap-2 text-xs text-on-surface-muted">
             <input type="checkbox" [(ngModel)]="form.finalRules.override"
                    name="finalOverride" (ngModelChange)="touch()" />
-            Custom rules for the final
+            {{ 'tournament.settings.customFinalRules' | translate }}
           </label>
         </div>
         @if (form.finalRules.override) {
@@ -114,14 +111,13 @@ interface StageForm {
         }
       </section>
 
-      <!-- Semifinal-match rules -->
       <section class="flex flex-col gap-3">
         <div class="flex items-center justify-between">
-          <h2 class="pts-label">Semifinals (3rd / 4th place)</h2>
+          <h2 class="pts-label">{{ 'tournament.settings.semifinals' | translate }}</h2>
           <label class="flex items-center gap-2 text-xs text-on-surface-muted">
             <input type="checkbox" [(ngModel)]="form.semifinalRules.override"
                    name="semiOverride" (ngModelChange)="touch()" />
-            Custom rules for semifinals
+            {{ 'tournament.settings.customSemiRules' | translate }}
           </label>
         </div>
         @if (form.semifinalRules.override) {
@@ -139,7 +135,7 @@ interface StageForm {
           } @else {
             <span class="material-symbols-rounded text-lg">save</span>
           }
-          <span>Save changes</span>
+          <span>{{ 'tournament.settings.save' | translate }}</span>
         </button>
       </div>
     </form>
@@ -147,28 +143,28 @@ interface StageForm {
     <ng-template #rulesGrid let-stage="stage" let-prefix="prefix">
       <div class="grid grid-cols-2 gap-3">
         <label class="flex flex-col gap-1">
-          <span class="text-xs text-on-surface-muted">Points per set</span>
+          <span class="text-xs text-on-surface-muted">{{ 'rules.pointsPerSet' | translate }}</span>
           <input type="number" class="pts-input" min="1" max="99"
                  [(ngModel)]="stage.pointsPerSet" [name]="prefix + 'pp'" (ngModelChange)="touch()" />
         </label>
         <label class="flex flex-col gap-1">
-          <span class="text-xs text-on-surface-muted">Last-set points</span>
+          <span class="text-xs text-on-surface-muted">{{ 'rules.lastSetPoints' | translate }}</span>
           <input type="number" class="pts-input" min="1" max="99"
                  [(ngModel)]="stage.lastSetPoints" [name]="prefix + 'lsp'" (ngModelChange)="touch()" />
         </label>
         <label class="flex flex-col gap-1">
-          <span class="text-xs text-on-surface-muted">Sets to win</span>
+          <span class="text-xs text-on-surface-muted">{{ 'rules.setsToWin' | translate }}</span>
           <input type="number" class="pts-input" min="1" max="9"
                  [(ngModel)]="stage.setsToWin" [name]="prefix + 'stw'" (ngModelChange)="touch()" />
         </label>
         <label class="flex flex-col gap-1">
-          <span class="text-xs text-on-surface-muted">Total sets</span>
+          <span class="text-xs text-on-surface-muted">{{ 'rules.totalSets' | translate }}</span>
           <input type="number" class="pts-input" min="1" max="9"
                  [(ngModel)]="stage.totalSets" [name]="prefix + 'ts'" (ngModelChange)="touch()" />
         </label>
         <label class="flex items-center gap-2 col-span-2">
           <input type="checkbox" [(ngModel)]="stage.winByTwo" [name]="prefix + 'wbt'" (ngModelChange)="touch()" />
-          <span class="text-sm">Win by two</span>
+          <span class="text-sm">{{ 'rules.winByTwoShort' | translate }}</span>
         </label>
       </div>
     </ng-template>
@@ -176,12 +172,12 @@ interface StageForm {
     <ng-template #timeoutsGrid let-stage="stage" let-prefix="prefix">
       <div class="grid grid-cols-2 gap-3">
         <label class="flex flex-col gap-1">
-          <span class="text-xs text-on-surface-muted">Timeouts per set</span>
+          <span class="text-xs text-on-surface-muted">{{ 'rules.timeoutsPerSet' | translate }}</span>
           <input type="number" class="pts-input" min="0" max="9"
                  [(ngModel)]="stage.timeoutsPerSet" [name]="prefix + 'tps'" (ngModelChange)="touch()" />
         </label>
         <label class="flex flex-col gap-1">
-          <span class="text-xs text-on-surface-muted">Timeout seconds</span>
+          <span class="text-xs text-on-surface-muted">{{ 'rules.timeoutSeconds' | translate }}</span>
           <input type="number" class="pts-input" min="5" max="600"
                  [(ngModel)]="stage.timeoutDuration" [name]="prefix + 'td'" (ngModelChange)="touch()" />
         </label>
@@ -192,6 +188,7 @@ interface StageForm {
 export class TournamentSettingsComponent {
   private readonly service = inject(TournamentService);
   private readonly notifications = inject(NotificationService);
+  private readonly i18n = inject(TranslateService);
 
   readonly tournament = input.required<Tournament>();
   readonly saved = output<Tournament>();
@@ -303,9 +300,9 @@ export class TournamentSettingsComponent {
 
       const updated = await this.service.update(this.tournament().id, payload);
       this.saved.emit(updated);
-      this.notifications.success('Tournament saved.');
+      this.notifications.success(this.i18n.instant('tournament.settings.saved'));
     } catch (err: any) {
-      this.notifications.error(err?.error?.detail ?? 'Could not save changes.');
+      this.notifications.error(err?.error?.detail ?? this.i18n.instant('tournament.settings.saveError'));
     } finally {
       this.saving.set(false);
     }

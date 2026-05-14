@@ -18,7 +18,8 @@ public sealed class RoundRobinGenerator : IBracketGenerator
         if (participants.Count < 2)
             throw new DomainException("Round robin requires at least 2 participants.");
 
-        var list = participants.OrderBy(p => p.RegisteredAt).ToList();
+        // Preserve caller-provided order; the caller decides registration vs. random.
+        var list = participants.ToList();
         var n = list.Count;
         var hasBye = n % 2 != 0;
         if (hasBye) list.Add(null!); // bye slot

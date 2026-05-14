@@ -44,6 +44,19 @@ public class CreateTournamentValidator : AbstractValidator<CreateTournamentComma
             .InclusiveBetween(0, 9).When(x => x.CustomTimeoutsPerSet is not null);
         RuleFor(x => x.CustomTimeoutDurationSeconds)
             .InclusiveBetween(5, 600).When(x => x.CustomTimeoutDurationSeconds is not null);
+
+        When(x => string.Equals(x.Format, nameof(TournamentFormat.GroupStageElimination), StringComparison.OrdinalIgnoreCase), () =>
+        {
+            RuleFor(x => x.GroupCount).InclusiveBetween(2, 8)
+                .WithMessage("Group count must be between 2 and 8.");
+            RuleFor(x => x.AdvancePerGroup).InclusiveBetween(1, 4)
+                .WithMessage("Advance-per-group must be between 1 and 4.");
+            RuleFor(x => x).Must(c =>
+            {
+                var slots = (c.GroupCount ?? 2) * (c.AdvancePerGroup ?? 2);
+                return slots >= 2 && (slots & (slots - 1)) == 0;
+            }).WithMessage("Groups × advance-per-group must be a power of two (e.g. 2×2, 2×4, 4×2).");
+        });
     }
 }
 
