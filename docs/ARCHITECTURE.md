@@ -48,6 +48,7 @@ PointsTracker.Domain          (no external dependencies)
 PointsTracker.Application     (depends on Domain only)
     └── CQRS Commands/Queries (MediatR)
     └── DTOs, Validators (FluentValidation)
+    └── Pipeline behaviors (Logging, Validation)
     └── Interfaces for infrastructure services
 
 PointsTracker.Infrastructure  (depends on Application + Domain)
@@ -64,6 +65,25 @@ PointsTracker.Api             (depends on Application + Infrastructure)
 ```
 
 **Rule:** Arrows flow inward — outer layers depend on inner layers, never the reverse.
+
+### MediatR pipeline behaviors
+
+Every command and query flows through a fixed pipeline registered in
+`PointsTracker.Application.Common.DependencyInjection`:
+
+1. `LoggingBehavior<TRequest, TResponse>` — emits an `Information` log on entry,
+   an `Information` log on success with elapsed milliseconds, a `Warning` on
+   `ValidationException`, and an `Error` on any other unhandled exception
+   (then rethrows). Logs the request **type name only**; the request object
+   itself is never logged because commands carry IDs, tokens, emails, and
+   other potentially sensitive fields.
+2. `ValidationBehavior<TRequest, TResponse>` — runs every registered
+   `IValidator<TRequest>` in parallel and throws `ValidationException` on
+   failures. Mapped to `400` by the exception middleware.
+
+Logging is registered first so validation failures are logged with the
+originating request name. Add new cross-cutting behaviors by registering them
+between these two in the order they should execute (outermost first).
 
 ---
 

@@ -94,7 +94,8 @@
   "apiErrors": {
     "generic": "Something went wrong. Please try again.",
     "rateLimited": "Too many requests. Please wait a moment and try again.",
-    "rateLimitedRetry": "Too many requests. Please retry in {{seconds}}s."
+    "rateLimitedRetry": "Too many requests. Please retry in {{seconds}}s.",
+    "sessionExpired": "Your session has expired. Signing you in again…"
   },
   "sport": {
     "volleyball": "Volleyball",

@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using PointsTracker.Domain.Enums;
 
 namespace PointsTracker.Api.Extensions;
 
@@ -11,10 +12,17 @@ public static class ClaimsPrincipalExtensions
         return Guid.TryParse(value, out var id) ? id : null;
     }
 
-    public static bool HasRole(this ClaimsPrincipal? principal, string role)
+    /// <summary>
+    /// Returns the effective global role attached to the principal. The
+    /// <c>pts_role</c> claim is a per-request snapshot of the DB-persisted
+    /// effective role (see docs/ROLES_PERMISSIONS.md — Authority model).
+    /// </summary>
+    public static GlobalRole GetGlobalRole(this ClaimsPrincipal? principal)
     {
-        var hierarchy = new[] { "user", "admin", "super_admin" };
-        var userRole = principal?.FindFirstValue("pts_role") ?? "user";
-        return Array.IndexOf(hierarchy, userRole) >= Array.IndexOf(hierarchy, role);
+        var raw = principal?.FindFirstValue("pts_role");
+        return GlobalRoleExtensions.TryParseGlobalRole(raw, out var role) ? role : GlobalRole.User;
     }
+
+    public static bool HasRole(this ClaimsPrincipal? principal, GlobalRole required) =>
+        principal.GetGlobalRole().IsAtLeast(required);
 }

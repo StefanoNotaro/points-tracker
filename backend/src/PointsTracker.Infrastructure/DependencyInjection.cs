@@ -23,6 +23,7 @@ public static class DependencyInjection
         services.AddScoped<ICounterRepository, CounterRepository>();
         services.AddScoped<IShareTokenRepository, ShareTokenRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IRoleAuditLogRepository, RoleAuditLogRepository>();
         services.AddScoped<ITournamentRepository, TournamentRepository>();
 
         services.AddSingleton<IShareTokenService, ShareTokenService>();

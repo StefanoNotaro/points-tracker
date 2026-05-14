@@ -94,7 +94,8 @@
   "apiErrors": {
     "generic": "Alguna cosa ha fallat. Torna-ho a provar.",
     "rateLimited": "Massa sol·licituds. Espera un moment i torna-ho a provar.",
-    "rateLimitedRetry": "Massa sol·licituds. Torna-ho a provar d'aquí a {{seconds}} s."
+    "rateLimitedRetry": "Massa sol·licituds. Torna-ho a provar d'aquí a {{seconds}} s.",
+    "sessionExpired": "La teva sessió ha expirat. Tornant a iniciar sessió…"
   },
   "sport": {
     "volleyball": "Voleibol",

@@ -94,7 +94,8 @@
   "apiErrors": {
     "generic": "Algo salió mal. Inténtalo de nuevo.",
     "rateLimited": "Demasiadas solicitudes. Espera un momento y vuelve a intentarlo.",
-    "rateLimitedRetry": "Demasiadas solicitudes. Vuelve a intentarlo en {{seconds}} s."
+    "rateLimitedRetry": "Demasiadas solicitudes. Vuelve a intentarlo en {{seconds}} s.",
+    "sessionExpired": "Tu sesión ha expirado. Iniciando sesión de nuevo…"
   },
   "sport": {
     "volleyball": "Voleibol",

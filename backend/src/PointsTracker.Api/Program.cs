@@ -7,6 +7,7 @@ using Serilog;
 using PointsTracker.Api.Endpoints;
 using PointsTracker.Api.Middleware;
 using PointsTracker.Application.Common;
+using PointsTracker.Domain.Enums;
 using PointsTracker.Infrastructure;
 using PointsTracker.Infrastructure.Auth;
 using PointsTracker.Infrastructure.Hubs;
@@ -67,8 +68,14 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                     var identity = context.Principal.Identity as ClaimsIdentity;
                     if (identity is not null && !identity.HasClaim(c => c.Type == "pts_id"))
                     {
+                        // Strip any IdP-issued pts_role / pts_roles claims so the
+                        // single pts_role claim seen by authorization is the
+                        // effective DB role, not the raw token value.
+                        foreach (var stale in identity.FindAll("pts_role").Concat(identity.FindAll("pts_roles")).ToList())
+                            identity.RemoveClaim(stale);
+
                         identity.AddClaim(new Claim("pts_id", user.Id.ToString()));
-                        identity.AddClaim(new Claim("pts_role", user.Role));
+                        identity.AddClaim(new Claim("pts_role", user.Role.ToWireString()));
                     }
                 }
                 catch (Exception ex)
@@ -217,6 +224,7 @@ if (app.Environment.IsDevelopment())
 app.MapHealthEndpoints();
 app.MapCounterEndpoints();
 app.MapTournamentEndpoints();
+app.MapAdminEndpoints();
 app.MapHub<CounterHub>("/hubs/counter");
 app.MapHub<TournamentHub>("/hubs/tournament");
 

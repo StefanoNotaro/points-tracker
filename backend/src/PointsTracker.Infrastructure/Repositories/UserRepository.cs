@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using PointsTracker.Domain.Entities;
+using PointsTracker.Domain.Enums;
 using PointsTracker.Domain.Interfaces;
 using PointsTracker.Infrastructure.Persistence;
 
@@ -18,6 +19,9 @@ public class UserRepository(AppDbContext db) : IUserRepository
         db.Users.Add(user);
         return user;
     }
+
+    public Task<int> CountActiveSuperAdminsAsync(CancellationToken ct = default) =>
+        db.Users.CountAsync(u => u.Role == GlobalRole.SuperAdmin, ct);
 
     public Task SaveChangesAsync(CancellationToken ct = default) =>
         db.SaveChangesAsync(ct);

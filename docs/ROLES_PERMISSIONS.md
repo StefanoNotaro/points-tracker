@@ -2,12 +2,22 @@
 
 ## Overview
 
-The system has two role layers:
+The system has **three orthogonal authorization scopes**. They are evaluated
+independently — holding a role in one scope grants nothing in another.
 
 1. **Global roles** — assigned to a user account, govern platform-level access.
-2. **Tournament roles** — assigned per tournament, govern what a user can do within that tournament.
+   Stored in `users.role`. Sourced from the OIDC `pts_roles` claim, with
+   server-side precedence rules (see [Authority model](#authority-model-option-b)).
+2. **Tournament roles** — assigned per tournament (`organiser`, `scorer`,
+   `viewer`), govern actions inside that tournament.
+3. **Match-scoped scorer access** — granted via a revocable, match-bound invite
+   token. Anonymous-capable. Does **not** grant a role and does **not** survive
+   the match. See `docs/FEATURES.md` (tournament officiating) and the
+   `TOUR-REF-*` action plan stream.
 
-Anonymous users are a special case — they get no role but can perform a limited set of actions.
+Anonymous users are a special case — they hold no role in any scope but can
+perform a limited set of actions (counters via session token, match scoring
+via a scorer invite link).
 
 ---
 
@@ -22,10 +32,90 @@ Anonymous users are a special case — they get no role but can perform a limite
 
 ### Assignment
 
-- Global roles are stored in `users.role`.
+- Global roles are stored in `users.role` (enum: `user` | `admin` | `super_admin`).
 - Default on first login: `user`.
-- Promotion to `admin` or `super_admin` is done by a `super_admin` via the admin panel.
-- Roles are included in the Authentik user profile and reflected in the JWT `role` claim — but the backend **always re-validates from the database**, not the JWT claim. The JWT claim is informational only.
+- Promotion to `admin` or `super_admin` is done either:
+  - automatically, by syncing the `pts_roles` claim from Authentik (`RoleSource = idp_claim`), or
+  - manually, by a `super_admin` via the admin panel (`RoleSource = manual_override`).
+- The runtime authority is always the database. The JWT `pts_roles` claim is
+  one of two **inputs** to the effective role; see
+  [Authority model](#authority-model-option-b) below.
+
+---
+
+## Authority model (Option B)
+
+The platform uses a **token + DB persisted effective role** model. The OIDC
+token carries identity and a suggested role; the database carries the
+authoritative effective role plus the metadata required to audit it and to
+override the IdP when needed.
+
+### Persisted role metadata
+
+The `users` table carries four role-related columns:
+
+| Column            | Purpose                                                                 |
+|-------------------|-------------------------------------------------------------------------|
+| `role`            | Effective global role enum (`user` \| `admin` \| `super_admin`).        |
+| `role_source`     | Why this role is set: `default` \| `idp_claim` \| `manual_override`.    |
+| `role_updated_at` | When the role last changed.                                             |
+| `role_updated_by` | Actor identifier — `idp:<external_id>`, `admin:<user_id>`, or `system`. |
+
+### Precedence rules
+
+When the OIDC sync runs (on every token validation), the effective role is
+computed as:
+
+1. **`manual_override`** wins. If the current `role_source` is
+   `manual_override`, the IdP claim is **ignored** for role purposes. If the
+   incoming claim disagrees with the persisted role, a *claim drift* audit
+   event is recorded (informational, no demotion).
+2. Otherwise, **`idp_claim`** wins. If `pts_roles` is present and maps to a
+   known role, the DB is updated (if different) with `role_source = idp_claim`
+   and an audit event is written.
+3. Otherwise, the **persisted role is kept**. This includes the
+   provider-outage / claim-missing case — *the system never silently demotes a
+   user when the claim is absent*.
+
+The `pts_role` claim attached to the principal at token validation is a
+**per-request cache** of the effective role. All authorization checks read it,
+but it is always derived from the DB during the same request, never from the
+raw IdP token.
+
+### Claim mapping
+
+Authentik issues `pts_roles` as a JSON array of strings. Mapping into the
+internal enum:
+
+| Claim value          | Effective role |
+|----------------------|----------------|
+| `super_admin`        | `super_admin`  |
+| `admin`              | `admin`        |
+| any other / missing  | `user`         |
+
+When multiple values are present, the **highest** maps. Unknown values are
+ignored.
+
+---
+
+## Role-change audit trail
+
+Every effective-role transition writes an immutable row to `role_audit_log`:
+
+| Field         | Notes                                                           |
+|---------------|-----------------------------------------------------------------|
+| `id`          | UUID.                                                           |
+| `user_id`     | The user whose role changed.                                    |
+| `from_role`   | Previous effective role (nullable for the very first record).   |
+| `to_role`     | New effective role.                                             |
+| `source`      | `idp_claim` \| `manual_override` \| `default` \| `drift_detected`. |
+| `actor`       | `idp:<external_id>`, `admin:<user_id>`, or `system`.            |
+| `occurred_at` | UTC timestamp.                                                  |
+| `reason`      | Optional free-text supplied by manual-override callers.         |
+
+The audit log is append-only (no soft-delete, no edit endpoints). It powers
+the admin dashboard governance view and is the canonical answer to "who
+promoted user X and when".
 
 ---
 
@@ -134,7 +224,33 @@ Route definitions:
 
 ## Role Escalation Policy
 
-- `super_admin` cannot be self-assigned — initial assignment is done via direct DB seed or TrueNAS admin.
-- Role changes are logged in the audit log.
-- Downgrading a `super_admin` requires another `super_admin` to perform the action.
-- There must always be at least one active `super_admin` account — the system blocks the last one from being downgraded.
+- `super_admin` cannot be self-assigned — initial assignment is done via direct
+  DB seed or TrueNAS admin (`role_source = manual_override`,
+  `role_updated_by = system`).
+- All role changes — both IdP-driven and manual — are recorded in
+  `role_audit_log` (see [Role-change audit trail](#role-change-audit-trail)).
+- Manual role changes are performed by a `super_admin` via `PATCH
+  /api/admin/users/{id}/role` and always set `role_source = manual_override`,
+  pinning the role against future IdP claim drift until another admin clears
+  the override.
+- A user with `role_source = manual_override` is never auto-demoted by an
+  IdP claim. A mismatch is recorded as a `drift_detected` audit event for
+  visibility but does not change the effective role.
+- There must always be at least one active `super_admin` account. The domain
+  refuses any operation (manual demotion, soft-delete, or IdP-driven
+  downgrade) that would leave zero active super_admins. The IdP-sync path
+  treats this as a drift event rather than enforcing the demotion.
+
+## API authorization matrix
+
+| Surface                              | Required scope                       | Source of truth                          |
+|--------------------------------------|--------------------------------------|------------------------------------------|
+| `GET /api/counters/{id}` (own)       | counter ownership OR share token     | `counters.owner_user_id` / share token   |
+| `POST /api/counters/{id}/score`      | counter edit (owner / edit token / session token) | as above                          |
+| Hub `/hubs/counter` join             | read access to the counter           | server-side authorization check          |
+| `POST /api/tournaments`              | global `user` and above              | `users.role` (effective)                 |
+| Tournament organiser actions         | tournament `organiser` membership    | tournament role table                    |
+| Match score entry                    | tournament `scorer` OR match scorer link | tournament role / scorer invite token |
+| `GET /api/admin/**`                  | global `admin` and above             | `users.role` (effective)                 |
+| `PATCH /api/admin/users/{id}/role`   | global `super_admin`                 | `users.role` (effective)                 |
+| `GET /api/admin/audit/roles`         | global `super_admin`                 | `users.role` (effective)                 |

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using PointsTracker.Application.Counters.DTOs;
 using PointsTracker.Application.Services;
+using PointsTracker.Domain.Enums;
 using PointsTracker.Domain.Interfaces;
 using System.Security.Claims;
 
@@ -24,7 +25,7 @@ public class CounterHub(
             throw new HubException("counter.liveAccessDenied");
 
         var userId = GetUserId();
-        var isSuperAdmin = HasRole("super_admin");
+        var isSuperAdmin = HasRole(GlobalRole.SuperAdmin);
         var access = authorizationService.GetLiveAccess(counter, userId, sessionToken, shareToken, isSuperAdmin);
         if (!access.CanRead)
         {
@@ -72,11 +73,11 @@ public class CounterHub(
         return Guid.TryParse(value, out var id) ? id : null;
     }
 
-    private bool HasRole(string role)
+    private bool HasRole(GlobalRole required)
     {
-        var hierarchy = new[] { "user", "admin", "super_admin" };
-        var userRole = Context.User?.FindFirstValue("pts_role") ?? "user";
-        return Array.IndexOf(hierarchy, userRole) >= Array.IndexOf(hierarchy, role);
+        var raw = Context.User?.FindFirstValue("pts_role");
+        var role = GlobalRoleExtensions.TryParseGlobalRole(raw, out var parsed) ? parsed : GlobalRole.User;
+        return role.IsAtLeast(required);
     }
 }
 

@@ -30,7 +30,13 @@
       "Bash(grep -n \"isAuthenticated\\\\|isLoggedIn\\\\|user\\\\$\\\\|currentUser\\\\|authStatus\" frontend/src/app/core/auth/auth.service.ts)",
       "Bash(npm install *)",
       "Bash(npm --prefix \"C:/Users/stefa/RiderProjects/points-tracker/frontend\" install --no-audit --no-fund)",
-      "Bash(mkdir -p \"C:/Users/stefa/RiderProjects/points-tracker/frontend/public/i18n\" \"C:/Users/stefa/RiderProjects/points-tracker/frontend/src/app/core/i18n\" && ls \"C:/Users/stefa/RiderProjects/points-tracker/frontend/public\" 2>&1)"
+      "Bash(mkdir -p \"C:/Users/stefa/RiderProjects/points-tracker/frontend/public/i18n\" \"C:/Users/stefa/RiderProjects/points-tracker/frontend/src/app/core/i18n\" && ls \"C:/Users/stefa/RiderProjects/points-tracker/frontend/public\" 2>&1)",
+      "Bash(git -C /c/Users/stefa/RiderProjects/points-tracker/.claude/worktrees/thirsty-gagarin-15335a status)",
+      "Bash(git -C /c/Users/stefa/RiderProjects/points-tracker/.claude/worktrees/thirsty-gagarin-15335a branch --show-current)",
+      "Bash(dotnet --version)",
+      "Bash(dotnet tool *)",
+      "Bash(dotnet test *)",
+      "Bash(dotnet add *)"
     ]
   }
 }

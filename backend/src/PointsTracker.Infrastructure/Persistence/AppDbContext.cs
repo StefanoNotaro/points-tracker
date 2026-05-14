@@ -11,6 +11,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<CounterEvent> CounterEvents => Set<CounterEvent>();
     public DbSet<ShareToken> ShareTokens => Set<ShareToken>();
     public DbSet<User> Users => Set<User>();
+    public DbSet<RoleAuditLog> RoleAuditLog => Set<RoleAuditLog>();
     public DbSet<Tournament> Tournaments => Set<Tournament>();
     public DbSet<TournamentParticipant> TournamentParticipants => Set<TournamentParticipant>();
     public DbSet<TournamentMatch> TournamentMatches => Set<TournamentMatch>();

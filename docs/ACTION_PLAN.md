@@ -50,16 +50,16 @@ Source: Architecture/security review against `docs/ARCHITECTURE.md`, `docs/SECUR
 | ID | Task | Owner | Status | Notes |
 |---|---|---|---|---|
 | FE-02 | Refactor `frontend/src/app/shared/components/share-dialog/share-dialog.component.ts` into dumb/presentational pattern |  | [ ] | Remove service injection from shared component |
-| BE-05 | Add MediatR cross-cutting behaviors (`LoggingBehavior`, validation behavior) |  | [ ] | Standardize command/query pipeline |
+| BE-05 | Add MediatR cross-cutting behaviors (`LoggingBehavior`, validation behavior) |  | [x] | Completed 2026-05-14: `LoggingBehavior` added (request name + elapsed ms, no payload), registered before `ValidationBehavior` |
 | BE-06 | Migrate exception responses to framework `ProblemDetails` (`AddProblemDetails`) |  | [ ] | Replace hand-rolled dictionary payload |
 | FE-05 | Replace hardcoded English errors in `frontend/src/app/features/counter/store/counter.store.ts` with i18n keys |  | [ ] | Required for localization consistency |
-| FE-07 | Improve 401 handling in `frontend/src/app/core/interceptors/error.interceptor.ts` (avoid forced login in anonymous flows) |  | [ ] | Distinguish anonymous vs authenticated failure paths |
+| FE-07 | Improve 401 handling in `frontend/src/app/core/interceptors/error.interceptor.ts` (avoid forced login in anonymous flows) |  | [x] | Completed 2026-05-14: re-auth only when previously authenticated; anonymous 401s re-thrown for caller; concurrent-redirect guard + `apiErrors.sessionExpired` toast |
 | BE-10 | Enforce read authorization on SignalR hub joins (`/hubs/counter`) |  | [x] | Completed 2026-05-14: server-side join authorization added, with frontend denial handling |
-| RBAC-01 | Define and document final RBAC contract: global roles vs tournament roles vs match-scoped scorer permissions |  | [ ] | Update `docs/ROLES_PERMISSIONS.md` and API auth matrix |
-| RBAC-02 | Implement OIDC role-claim sync policy (`pts_roles`) in backend user sync with safe precedence rules |  | [ ] | Do not trust JWT alone for authorization; persist/validate in DB |
-| RBAC-03 | Implement Option B authority model: token claim + DB persisted effective global role (runtime checks read effective role from DB) |  | [ ] | Add precedence rules and fallback behavior for claim drift/outage |
-| RBAC-04 | Add emergency admin controls: immediate role revoke/downgrade path and "last active super_admin" guard |  | [ ] | Block unsafe demotion and record audit event |
-| RBAC-05 | Add role-change audit trail and source metadata (`idp_claim`, `manual_override`, actor, timestamp) |  | [ ] | Required for admin dashboard governance |
+| RBAC-01 | Define and document final RBAC contract: global roles vs tournament roles vs match-scoped scorer permissions |  | [x] | Completed 2026-05-14: three-scope model, Option B authority, audit trail, and API auth matrix added to `docs/ROLES_PERMISSIONS.md` |
+| RBAC-02 | Implement OIDC role-claim sync policy (`pts_roles`) in backend user sync with safe precedence rules |  | [x] | Completed 2026-05-14: `UserSyncService.ReconcileRoleAsync` applies Option B precedence; drift events logged on manual_override mismatch and refused last-super_admin demotions |
+| RBAC-03 | Implement Option B authority model: token claim + DB persisted effective global role (runtime checks read effective role from DB) |  | [x] | Completed 2026-05-14: `GlobalRole`/`RoleSource` enums, persisted `role_source`/`role_updated_at`/`role_updated_by` columns, migration `AddRoleSourceMetadata` |
+| RBAC-04 | Add emergency admin controls: immediate role revoke/downgrade path and "last active super_admin" guard |  | [x] | Completed 2026-05-14: `PATCH /api/admin/users/{id}/role` (super_admin only) with `Confirm` flag; `LastSuperAdminException` enforced in IdP-sync and manual paths |
+| RBAC-05 | Add role-change audit trail and source metadata (`idp_claim`, `manual_override`, actor, timestamp) |  | [x] | Completed 2026-05-14: `RoleAuditLog` entity + `IRoleAuditLogRepository` + migration `AddRoleAuditLog`; written from both IdP-sync and manual override paths, incl. `drift_detected` |
 | ADMIN-01 | Add admin dashboard MVP for cleanups (stale anonymous counters/tournaments, expired tokens, orphaned records) |  | [ ] | Include dry-run mode, confirmations, and audit log events |
 
 ### P1 execution order (most important -> least important)
