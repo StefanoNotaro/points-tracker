@@ -286,6 +286,23 @@
       "accessDenied": "Las actualizaciones en vivo están bloqueadas para este marcador. Puedes seguir en la página, pero el resultado no se actualizará automáticamente.",
       "unavailable": "Las actualizaciones en vivo no están disponibles temporalmente. Puedes seguir en la página, pero el resultado no se actualizará automáticamente."
     },
+    "store": {
+      "errors": {
+        "scoreUpdate": "No se pudo actualizar la puntuación.",
+        "sideSwitch": "No se pudo registrar el cambio de lado.",
+        "callTimeout": "No se pudo registrar el tiempo muerto.",
+        "cancelTimeout": "No se pudo cancelar el tiempo muerto.",
+        "endMatch": "No se pudo finalizar el partido.",
+        "switchSides": "No se pudo cambiar de lado.",
+        "undo": "No se pudo deshacer.",
+        "redo": "No se pudo rehacer.",
+        "teamName": "No se pudo actualizar el nombre del equipo.",
+        "delete": "No se pudo eliminar el marcador."
+      },
+      "success": {
+        "matchEnded": "Partido finalizado."
+      }
+    },
     "status": {
       "active": "En curso",
       "finished": "Finalizado",

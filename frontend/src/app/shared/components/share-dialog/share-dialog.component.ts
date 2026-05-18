@@ -1,13 +1,12 @@
 ﻿import { Component, inject, signal } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 import { NgClass } from '@angular/common';
-import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { TranslatePipe } from '@ngx-translate/core';
 import { ShareScope } from '../../models/counter.model';
-import { CounterService } from '../../../features/counter/services/counter.service';
-import { NotificationService } from '../../../core/services/notification.service';
 
 export interface ShareDialogData {
   counterId: string;
+  generate: (scope: ShareScope) => Promise<{ shareUrl: string }>;
 }
 
 @Component({
@@ -16,11 +15,8 @@ export interface ShareDialogData {
   templateUrl: './share-dialog.component.html',
 })
 export class ShareDialogComponent {
-  readonly data     = inject<ShareDialogData>(MAT_DIALOG_DATA);
+  readonly data      = inject<ShareDialogData>(MAT_DIALOG_DATA);
   readonly dialogRef = inject(MatDialogRef<ShareDialogComponent>);
-  private readonly counterService  = inject(CounterService);
-  private readonly notifications   = inject(NotificationService);
-  private readonly i18n            = inject(TranslateService);
 
   readonly scopes: { value: ShareScope; labelKey: string; descriptionKey: string; icon: string }[] = [
     { value: 'read', labelKey: 'counter.share.scopeReadLabel', descriptionKey: 'counter.share.scopeReadDescription', icon: 'visibility' },
@@ -30,22 +26,23 @@ export class ShareDialogComponent {
   selectedScope = signal<ShareScope>('read');
   shareUrl      = signal<string | null>(null);
   loading       = signal(false);
+  error         = signal<string | null>(null);
+  copied        = signal(false);
 
   onScopeChange(scope: ShareScope): void {
     this.selectedScope.set(scope);
     this.shareUrl.set(null);
+    this.error.set(null);
   }
 
   async generate(): Promise<void> {
     this.loading.set(true);
+    this.error.set(null);
     try {
-      const response = await this.counterService.createShareToken(
-        this.data.counterId,
-        this.selectedScope(),
-      );
+      const response = await this.data.generate(this.selectedScope());
       this.shareUrl.set(response.shareUrl);
     } catch {
-      this.notifications.error(this.i18n.instant('counter.share.generateError'));
+      this.error.set('counter.share.generateError');
     } finally {
       this.loading.set(false);
     }
@@ -54,7 +51,9 @@ export class ShareDialogComponent {
   copyLink(): void {
     const url = this.shareUrl();
     if (!url) return;
-    navigator.clipboard.writeText(url);
-    this.notifications.success(this.i18n.instant('counter.share.linkCopied'));
+    void navigator.clipboard.writeText(url).then(() => {
+      this.copied.set(true);
+      setTimeout(() => this.copied.set(false), 2000);
+    });
   }
 }

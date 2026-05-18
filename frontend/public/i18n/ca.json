@@ -286,6 +286,23 @@
       "accessDenied": "Les actualitzacions en directe estan bloquejades per a aquest marcador. Pots continuar a la pàgina, però el resultat no s'actualitzarà automàticament.",
       "unavailable": "Les actualitzacions en directe no estan disponibles temporalment. Pots continuar a la pàgina, però el resultat no s'actualitzarà automàticament."
     },
+    "store": {
+      "errors": {
+        "scoreUpdate": "No s'ha pogut actualitzar la puntuació.",
+        "sideSwitch": "No s'ha pogut registrar el canvi de costat.",
+        "callTimeout": "No s'ha pogut registrar el temps mort.",
+        "cancelTimeout": "No s'ha pogut cancel·lar el temps mort.",
+        "endMatch": "No s'ha pogut finalitzar el partit.",
+        "switchSides": "No s'ha pogut canviar de costat.",
+        "undo": "No s'ha pogut desfer.",
+        "redo": "No s'ha pogut refer.",
+        "teamName": "No s'ha pogut actualitzar el nom de l'equip.",
+        "delete": "No s'ha pogut eliminar el marcador."
+      },
+      "success": {
+        "matchEnded": "Partit finalitzat."
+      }
+    },
     "status": {
       "active": "En curs",
       "finished": "Finalitzat",

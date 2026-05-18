@@ -286,6 +286,23 @@
       "accessDenied": "Live updates are blocked for this counter. You can stay on the page, but the score will not refresh automatically.",
       "unavailable": "Live updates are temporarily unavailable. You can stay on the page, but the score will not refresh automatically."
     },
+    "store": {
+      "errors": {
+        "scoreUpdate": "Failed to update score.",
+        "sideSwitch": "Failed to record side switch.",
+        "callTimeout": "Failed to record timeout.",
+        "cancelTimeout": "Failed to cancel timeout.",
+        "endMatch": "Failed to end match.",
+        "switchSides": "Failed to switch sides.",
+        "undo": "Failed to undo.",
+        "redo": "Failed to redo.",
+        "teamName": "Failed to update team name.",
+        "delete": "Failed to delete counter."
+      },
+      "success": {
+        "matchEnded": "Match ended."
+      }
+    },
     "status": {
       "active": "In progress",
       "finished": "Finished",

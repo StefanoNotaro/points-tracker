@@ -68,7 +68,7 @@ export class CounterStore implements OnDestroy {
       const updated = await this.counterService.incrementScore(counter.id, team);
       this.applyUpdate(updated);
     } catch {
-      this.notifications.error('Failed to update score.');
+      this.notifications.error(this.i18n.instant('counter.store.errors.scoreUpdate'));
     } finally {
       this._actionPending.set(false);
     }
@@ -81,7 +81,7 @@ export class CounterStore implements OnDestroy {
       const updated = await this.counterService.resolveSideSwitch(counter.id, confirm);
       this.applyUpdate(updated);
     } catch {
-      this.notifications.error('Failed to record side switch.');
+      this.notifications.error(this.i18n.instant('counter.store.errors.sideSwitch'));
     }
   }
 
@@ -94,7 +94,7 @@ export class CounterStore implements OnDestroy {
       const updated = await this.counterService.callTimeout(counter.id, team);
       this.applyUpdate(updated);
     } catch {
-      this.notifications.error('Failed to record timeout.');
+      this.notifications.error(this.i18n.instant('counter.store.errors.callTimeout'));
     } finally {
       this._actionPending.set(false);
     }
@@ -109,7 +109,7 @@ export class CounterStore implements OnDestroy {
       const updated = await this.counterService.cancelTimeout(counter.id);
       this.applyUpdate(updated);
     } catch {
-      this.notifications.error('Failed to cancel timeout.');
+      this.notifications.error(this.i18n.instant('counter.store.errors.cancelTimeout'));
     } finally {
       this._actionPending.set(false);
     }
@@ -122,9 +122,9 @@ export class CounterStore implements OnDestroy {
     try {
       const updated = await this.counterService.endMatch(counter.id);
       this.applyUpdate(updated);
-      this.notifications.success('Match ended.');
+      this.notifications.success(this.i18n.instant('counter.store.success.matchEnded'));
     } catch {
-      this.notifications.error('Failed to end match.');
+      this.notifications.error(this.i18n.instant('counter.store.errors.endMatch'));
     } finally {
       this._actionPending.set(false);
     }
@@ -137,7 +137,7 @@ export class CounterStore implements OnDestroy {
       const updated = await this.counterService.switchSidesManually(counter.id);
       this.applyUpdate(updated);
     } catch {
-      this.notifications.error('Failed to switch sides.');
+      this.notifications.error(this.i18n.instant('counter.store.errors.switchSides'));
     }
   }
 
@@ -150,7 +150,7 @@ export class CounterStore implements OnDestroy {
       const updated = await this.counterService.decrementScore(counter.id, team);
       this.applyUpdate(updated);
     } catch {
-      this.notifications.error('Failed to update score.');
+      this.notifications.error(this.i18n.instant('counter.store.errors.scoreUpdate'));
     } finally {
       this._actionPending.set(false);
     }
@@ -165,7 +165,7 @@ export class CounterStore implements OnDestroy {
       const updated = await this.counterService.undo(counter.id, count);
       this.applyUpdate(updated);
     } catch {
-      this.notifications.error('Failed to undo.');
+      this.notifications.error(this.i18n.instant('counter.store.errors.undo'));
     } finally {
       this._actionPending.set(false);
     }
@@ -180,7 +180,7 @@ export class CounterStore implements OnDestroy {
       const updated = await this.counterService.redo(counter.id, count);
       this.applyUpdate(updated);
     } catch {
-      this.notifications.error('Failed to redo.');
+      this.notifications.error(this.i18n.instant('counter.store.errors.redo'));
     } finally {
       this._actionPending.set(false);
     }
@@ -193,7 +193,7 @@ export class CounterStore implements OnDestroy {
       const updated = await this.counterService.updateTeamName(counter.id, team, name);
       this.applyUpdate(updated);
     } catch {
-      this.notifications.error('Failed to update team name.');
+      this.notifications.error(this.i18n.instant('counter.store.errors.teamName'));
     }
   }
 
@@ -215,7 +215,7 @@ export class CounterStore implements OnDestroy {
       await this.counterService.delete(counter.id);
       this.counterDeleted.set(true);
     } catch {
-      this.notifications.error('Failed to delete counter.');
+      this.notifications.error(this.i18n.instant('counter.store.errors.delete'));
     } finally {
       this._actionPending.set(false);
     }

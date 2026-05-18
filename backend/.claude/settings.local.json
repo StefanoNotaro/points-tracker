@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir C:\\\\Users\\\\stefa\\\\RiderProjects\\\\points-tracker\\\\frontend\\\\src\\\\assets *)",
+      "PowerShell(Head-Object *)",
+      "Bash(dotnet build *)",
+      "Bash(npx tsc *)",
+      "PowerShell(Set-Location *)"
+    ]
+  }
+}

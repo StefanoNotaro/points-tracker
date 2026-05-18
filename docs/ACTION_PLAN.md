@@ -49,10 +49,10 @@ Source: Architecture/security review against `docs/ARCHITECTURE.md`, `docs/SECUR
 
 | ID | Task | Owner | Status | Notes |
 |---|---|---|---|---|
-| FE-02 | Refactor `frontend/src/app/shared/components/share-dialog/share-dialog.component.ts` into dumb/presentational pattern |  | [ ] | Remove service injection from shared component |
+| FE-02 | Refactor `frontend/src/app/shared/components/share-dialog/share-dialog.component.ts` into dumb/presentational pattern |  | [x] | Completed 2026-05-18: `CounterService`/`NotificationService`/`TranslateService` removed; `generate` callback injected via `ShareDialogData`; inline error + copy-confirmation signals replace toasts |
 | BE-05 | Add MediatR cross-cutting behaviors (`LoggingBehavior`, validation behavior) |  | [x] | Completed 2026-05-14: `LoggingBehavior` added (request name + elapsed ms, no payload), registered before `ValidationBehavior` |
-| BE-06 | Migrate exception responses to framework `ProblemDetails` (`AddProblemDetails`) |  | [ ] | Replace hand-rolled dictionary payload |
-| FE-05 | Replace hardcoded English errors in `frontend/src/app/features/counter/store/counter.store.ts` with i18n keys |  | [ ] | Required for localization consistency |
+| BE-06 | Migrate exception responses to framework `ProblemDetails` (`AddProblemDetails`) |  | [x] | Completed 2026-05-18: `AddProblemDetails()` registered; `ExceptionMiddleware` rewrites to `IProblemDetailsService` + typed `HttpValidationProblemDetails` for validation errors |
+| FE-05 | Replace hardcoded English errors in `frontend/src/app/features/counter/store/counter.store.ts` with i18n keys |  | [x] | Completed 2026-05-18: all 11 hardcoded strings replaced with `counter.store.errors.*` / `counter.store.success.*` keys; keys added to en/es/ca locale files |
 | FE-07 | Improve 401 handling in `frontend/src/app/core/interceptors/error.interceptor.ts` (avoid forced login in anonymous flows) |  | [x] | Completed 2026-05-14: re-auth only when previously authenticated; anonymous 401s re-thrown for caller; concurrent-redirect guard + `apiErrors.sessionExpired` toast |
 | BE-10 | Enforce read authorization on SignalR hub joins (`/hubs/counter`) |  | [x] | Completed 2026-05-14: server-side join authorization added, with frontend denial handling |
 | RBAC-01 | Define and document final RBAC contract: global roles vs tournament roles vs match-scoped scorer permissions |  | [x] | Completed 2026-05-14: three-scope model, Option B authority, audit trail, and API auth matrix added to `docs/ROLES_PERMISSIONS.md` |

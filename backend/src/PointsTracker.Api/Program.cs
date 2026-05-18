@@ -109,6 +109,7 @@ builder.Services.AddSignalR()
 // groups (user-{OwnerUserId}) line up with what the client joins.
 builder.Services.AddSingleton<Microsoft.AspNetCore.SignalR.IUserIdProvider, PointsTracker.Infrastructure.Hubs.PtsIdUserIdProvider>();
 
+builder.Services.AddProblemDetails();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 

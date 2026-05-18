@@ -1,15 +1,16 @@
 using System.Net;
-using System.Text.Json;
 using FluentValidation;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PointsTracker.Domain.Exceptions;
 
 namespace PointsTracker.Api.Middleware;
 
-public class ExceptionMiddleware(RequestDelegate next, ILogger<ExceptionMiddleware> logger)
+public class ExceptionMiddleware(
+    RequestDelegate next,
+    ILogger<ExceptionMiddleware> logger,
+    IProblemDetailsService problemDetailsService)
 {
-    private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
-
     public async Task InvokeAsync(HttpContext ctx)
     {
         try
@@ -24,17 +25,6 @@ public class ExceptionMiddleware(RequestDelegate next, ILogger<ExceptionMiddlewa
 
     private async Task HandleAsync(HttpContext ctx, Exception ex)
     {
-        var (status, title, errors) = ex switch
-        {
-            ValidationException ve => (HttpStatusCode.BadRequest, "Validation failed",
-                ve.Errors.GroupBy(e => e.PropertyName).ToDictionary(g => g.Key, g => g.Select(e => e.ErrorMessage).ToArray())),
-            DbUpdateConcurrencyException => (HttpStatusCode.Conflict, "Resource was modified by another operation. Please refresh and retry.", (Dictionary<string, string[]>?)null),
-            NotFoundException => (HttpStatusCode.NotFound, ex.Message, (Dictionary<string, string[]>?)null),
-            ForbiddenException => (HttpStatusCode.Forbidden, ex.Message, null),
-            DomainException => (HttpStatusCode.UnprocessableEntity, ex.Message, null),
-            _ => (HttpStatusCode.InternalServerError, "An unexpected error occurred.", null)
-        };
-
         if (ex is DbUpdateConcurrencyException dbEx)
         {
             foreach (var entry in dbEx.Entries)
@@ -47,21 +37,47 @@ public class ExceptionMiddleware(RequestDelegate next, ILogger<ExceptionMiddlewa
             }
         }
 
-        if (status == HttpStatusCode.InternalServerError)
+        if (ex is not (ValidationException or DbUpdateConcurrencyException or NotFoundException
+                       or ForbiddenException or DomainException))
             logger.LogError(ex, "Unhandled exception");
 
-        ctx.Response.StatusCode = (int)status;
-        ctx.Response.ContentType = "application/problem+json";
-
-        var problem = new Dictionary<string, object?>
+        if (ex is ValidationException ve)
         {
-            ["type"] = $"https://httpstatuses.com/{(int)status}",
-            ["title"] = title,
-            ["status"] = (int)status,
+            var errors = ve.Errors
+                .GroupBy(e => e.PropertyName)
+                .ToDictionary(g => g.Key, g => g.Select(e => e.ErrorMessage).ToArray());
+
+            var validationProblem = new HttpValidationProblemDetails(errors)
+            {
+                Status = StatusCodes.Status400BadRequest,
+                Title  = "Validation failed",
+                Type   = "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+            };
+
+            ctx.Response.StatusCode = StatusCodes.Status400BadRequest;
+            await problemDetailsService.WriteAsync(new ProblemDetailsContext
+            {
+                HttpContext    = ctx,
+                ProblemDetails = validationProblem,
+            });
+            return;
+        }
+
+        var (statusCode, title) = ex switch
+        {
+            DbUpdateConcurrencyException => (StatusCodes.Status409Conflict,
+                "Resource was modified by another operation. Please refresh and retry."),
+            NotFoundException   => (StatusCodes.Status404NotFound, ex.Message),
+            ForbiddenException  => (StatusCodes.Status403Forbidden, ex.Message),
+            DomainException     => (StatusCodes.Status422UnprocessableEntity, ex.Message),
+            _                   => (StatusCodes.Status500InternalServerError, "An unexpected error occurred."),
         };
 
-        if (errors is not null) problem["errors"] = errors;
-
-        await ctx.Response.WriteAsync(JsonSerializer.Serialize(problem, JsonOptions));
+        ctx.Response.StatusCode = statusCode;
+        await problemDetailsService.WriteAsync(new ProblemDetailsContext
+        {
+            HttpContext    = ctx,
+            ProblemDetails = new ProblemDetails { Status = statusCode, Title = title },
+        });
     }
 }

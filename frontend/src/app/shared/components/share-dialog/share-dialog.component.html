@@ -40,8 +40,13 @@
 
     <div class="flex gap-2 mb-3">
       <button class="pts-btn-primary flex-1" (click)="copyLink()">
-        <span class="material-symbols-rounded text-base">content_copy</span>
-        {{ 'counter.share.copyLink' | translate }}
+        @if (copied()) {
+          <span class="material-symbols-rounded text-base">check</span>
+          {{ 'counter.share.linkCopied' | translate }}
+        } @else {
+          <span class="material-symbols-rounded text-base">content_copy</span>
+          {{ 'counter.share.copyLink' | translate }}
+        }
       </button>
       <button
         class="pts-btn-secondary px-3"
@@ -66,6 +71,10 @@
         {{ 'counter.share.generateLink' | translate }}
       }
     </button>
+  }
+
+  @if (error()) {
+    <p class="text-sm text-error mb-3">{{ error() | translate }}</p>
   }
 
   <button

@@ -4,6 +4,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatMenuModule } from '@angular/material/menu';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { AuthService } from '../../../../core/auth/auth.service';
+import { CounterService } from '../../services/counter.service';
 import { ScoreBoardComponent } from '../../../../shared/components/score-board/score-board.component';
 import { ScoreButtonComponent } from '../../../../shared/components/score-button/score-button.component';
 import { TeamNameEditorComponent } from '../../../../shared/components/team-name-editor/team-name-editor.component';
@@ -40,6 +41,7 @@ export class CounterPageComponent implements OnInit, OnDestroy {
   private readonly dialog = inject(MatDialog);
   private readonly router = inject(Router);
   private readonly auth = inject(AuthService);
+  private readonly counterService = inject(CounterService);
   private readonly i18n = inject(TranslateService);
 
   readonly canShare = computed(() => this.store.counter()?.isOwner === true);
@@ -129,7 +131,10 @@ export class CounterPageComponent implements OnInit, OnDestroy {
 
   openShare(counterId: string): void {
     this.dialog.open<ShareDialogComponent, ShareDialogData>(ShareDialogComponent, {
-      data: { counterId },
+      data: {
+        counterId,
+        generate: (scope) => this.counterService.createShareToken(counterId, scope),
+      },
       panelClass: 'pts-dialog',
     });
   }
