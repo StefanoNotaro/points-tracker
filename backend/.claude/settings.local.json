@@ -16,7 +16,8 @@
       "Bash(Get-Command dotnet-ef *)",
       "Bash(dotnet tool *)",
       "Bash(Select-String \"ef\")",
-      "Bash(npx ng *)"
+      "Bash(npx ng *)",
+      "Bash(python *)"
     ]
   }
 }

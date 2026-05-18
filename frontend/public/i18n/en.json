@@ -446,7 +446,15 @@
         "ready": "Ready",
         "walkover": "Bye",
         "pending": "—"
-      }
+      },
+      "final": "Final",
+      "semifinals": "Semifinals",
+      "quarterfinals": "Quarterfinals",
+      "group": "Group {{n}}",
+      "groupStage": "Group Stage",
+      "knockoutPhase": "Knockout Phase",
+      "winnersLabel": "Winners Bracket",
+      "losersLabel": "Losers Bracket"
     },
     "settings": {
       "identity": "Identity",

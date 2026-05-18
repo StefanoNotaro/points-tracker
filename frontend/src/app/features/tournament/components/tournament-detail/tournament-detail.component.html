@@ -60,7 +60,7 @@
             {{ 'tournament.detail.bracketEmpty' | translate }}
           </div>
         } @else {
-          <pts-bracket-view [matches]="t.matches" [canEdit]="t.canEdit"
+          <pts-bracket-view [matches]="t.matches" [format]="t.format" [canEdit]="t.canEdit"
                             (matchClicked)="openMatch($event)"
                             (scorerLinkClicked)="openScorerPanel($event)" />
           @if (scorerPanelMatch(); as m) {

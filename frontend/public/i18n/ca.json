@@ -446,7 +446,15 @@
         "ready": "Llest",
         "walkover": "Bye",
         "pending": "—"
-      }
+      },
+      "final": "Final",
+      "semifinals": "Semifinals",
+      "quarterfinals": "Quarts de final",
+      "group": "Grup {{n}}",
+      "groupStage": "Fase de grups",
+      "knockoutPhase": "Fase eliminatoria",
+      "winnersLabel": "Bracket guanyadors",
+      "losersLabel": "Bracket perdedors"
     },
     "settings": {
       "identity": "Identitat",

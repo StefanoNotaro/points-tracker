@@ -1,49 +1,249 @@
-﻿<div class="flex flex-col gap-6">
-  @for (group of grouped(); track group.side + ':' + group.roundNumber) {
-    <section class="flex flex-col gap-2">
-      <h3 class="pts-label flex items-center gap-2">
-        <span>{{ labelFor(group.side, group.roundNumber) }}</span>
-      </h3>
-      <ul class="flex flex-col gap-2">
-        @for (m of group.matches; track m.id) {
-          <li class="flex items-stretch gap-1">
-            <button type="button"
-                    class="flex-1 min-w-0 pts-card !p-3 text-left flex items-center gap-3 transition-colors"
-                    [class.hover:border-primary]="canOpen(m)"
-                    [class.opacity-60]="!canOpen(m) && !m.winnerParticipantId"
-                    (click)="openMatch(m)">
-              <span class="flex-1 min-w-0 flex flex-col gap-1">
-                <span class="flex items-center justify-between gap-2">
-                  <span class="text-sm truncate"
-                        [ngClass]="winnerIs(m, 'A') ? 'font-bold text-on-surface' : 'text-on-surface'">
-                    {{ m.participantAName ?? ('tournament.bracket.tbd' | translate) }}
-                  </span>
-                  <span class="text-xs text-on-surface-muted">{{ winnerIs(m, 'A') ? ('tournament.bracket.winShort' | translate) : '' }}</span>
-                </span>
-                <span class="flex items-center justify-between gap-2">
-                  <span class="text-sm truncate"
-                        [ngClass]="winnerIs(m, 'B') ? 'font-bold text-on-surface' : 'text-on-surface'">
-                    {{ m.participantBName ?? ('tournament.bracket.tbd' | translate) }}
-                  </span>
-                  <span class="text-xs text-on-surface-muted">{{ winnerIs(m, 'B') ? ('tournament.bracket.winShort' | translate) : '' }}</span>
-                </span>
-              </span>
-              <span class="pts-badge shrink-0"
-                    [ngClass]="badgeClass(m.status)">{{ 'tournament.bracket.status.' + m.status | translate }}</span>
-            </button>
-            @if (canManageScorerLinks(m)) {
-              <button type="button"
-                      class="pts-card !p-2 flex items-center justify-center shrink-0 hover:border-primary transition-colors"
-                      (click)="openScorerLinks(m, $event)"
-                      [attr.title]="'tournament.scorerLink.manageTitle' | translate"
-                      [attr.aria-label]="'tournament.scorerLink.manageTitle' | translate">
-                <span class="material-symbols-rounded text-lg text-on-surface-muted">sports</span>
-              </button>
-            }
-          </li>
-        }
-      </ul>
-    </section>
-  }
-</div>
+@switch (format()) {
 
+  <!-- ── Single elimination ─────────────────────────────────────────────── -->
+  @case ('singleelimination') {
+    @if (knockoutMain(); as s) {
+      <ng-container *ngTemplateOutlet="bracketTpl; context: { s: s }" />
+    }
+  }
+
+  <!-- ── Double elimination ────────────────────────────────────────────── -->
+  @case ('doubleelimination') {
+    <div class="flex flex-col gap-8">
+      @if (knockoutMain(); as s) {
+        <section class="flex flex-col gap-2">
+          <p class="pts-label">{{ 'tournament.bracket.winnersLabel' | translate }}</p>
+          <ng-container *ngTemplateOutlet="bracketTpl; context: { s: s }" />
+        </section>
+      }
+      @if (knockoutLosers(); as s) {
+        <section class="flex flex-col gap-2">
+          <p class="pts-label">{{ 'tournament.bracket.losersLabel' | translate }}</p>
+          <ng-container *ngTemplateOutlet="bracketTpl; context: { s: s }" />
+        </section>
+      }
+      @if (grandFinal(); as m) {
+        <section class="flex flex-col gap-2">
+          <p class="pts-label">{{ 'tournament.bracket.grandFinal' | translate }}</p>
+          <div [style.width.px]="CARD_W">
+            <ng-container *ngTemplateOutlet="matchCardTpl; context: { m: m, muted: false }" />
+          </div>
+        </section>
+      }
+    </div>
+  }
+
+  <!-- ── Round robin ───────────────────────────────────────────────────── -->
+  @case ('roundrobin') {
+    <div class="flex flex-col gap-5">
+      @for (round of roundRobinRounds(); track round.label) {
+        <section class="flex flex-col gap-2">
+          <h3 class="pts-label flex items-center gap-2">
+            <span>{{ round.label }}</span>
+            @if (round.isActive) {
+              <span class="pts-badge bg-primary/15 text-primary !text-[10px] !py-0 !px-2">
+                {{ 'tournament.bracket.status.inprogress' | translate }}
+              </span>
+            } @else if (round.isComplete) {
+              <span class="pts-badge bg-surface-variant text-on-surface-muted !text-[10px] !py-0 !px-2">
+                {{ 'tournament.bracket.status.completed' | translate }}
+              </span>
+            }
+          </h3>
+          <ul class="flex flex-col gap-2">
+            @for (m of round.matches; track m.id) {
+              <li>
+                <ng-container *ngTemplateOutlet="matchCardTpl; context: { m: m, muted: false }" />
+              </li>
+            }
+          </ul>
+        </section>
+      }
+    </div>
+  }
+
+  <!-- ── Group stage + elimination ─────────────────────────────────────── -->
+  @case ('groupstageelimination') {
+    <div class="flex flex-col gap-6">
+
+      <!-- Group stage -->
+      @if (groups().length) {
+        <section class="flex flex-col gap-3">
+          <p class="pts-label">{{ 'tournament.bracket.groupStage' | translate }}</p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            @for (g of groups(); track g.groupNumber) {
+              <div class="pts-card !p-3 flex flex-col gap-2">
+                <h3 class="pts-label flex items-center gap-2">
+                  <span>{{ g.label }}</span>
+                  @if (g.isActive) {
+                    <span class="pts-badge bg-primary/15 text-primary !text-[10px] !py-0 !px-2">
+                      {{ 'tournament.bracket.status.inprogress' | translate }}
+                    </span>
+                  } @else if (g.isComplete) {
+                    <span class="pts-badge bg-surface-variant text-on-surface-muted !text-[10px] !py-0 !px-2">
+                      {{ 'tournament.bracket.status.completed' | translate }}
+                    </span>
+                  }
+                </h3>
+                <ul class="flex flex-col gap-1.5">
+                  @for (m of g.matches; track m.id) {
+                    <li>
+                      <ng-container *ngTemplateOutlet="matchCardTpl; context: { m: m, muted: false }" />
+                    </li>
+                  }
+                </ul>
+              </div>
+            }
+          </div>
+        </section>
+      }
+
+      <!-- Knockout phase -->
+      @if (knockoutMain(); as s) {
+        <section class="flex flex-col gap-3">
+          <p class="pts-label">{{ 'tournament.bracket.knockoutPhase' | translate }}</p>
+          <ng-container *ngTemplateOutlet="bracketTpl; context: { s: s }" />
+        </section>
+      }
+    </div>
+  }
+
+}
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     Template: horizontal bracket tree with SVG connector lines
+     ═══════════════════════════════════════════════════════════════════════ -->
+<ng-template #bracketTpl let-s="s">
+  <div class="overflow-x-auto -mx-1 px-1 pb-2">
+    <div class="flex items-start" style="min-width: max-content">
+
+      @for (col of s.columns; track col.round; let last = $last) {
+
+        <!-- Round column: header + absolute match cards -->
+        <div class="flex flex-col" [style.width.px]="CARD_W">
+
+          <!-- Round header -->
+          <div class="flex items-center justify-center gap-1.5 px-1"
+               [style.height.px]="HEADER_H">
+            <span class="text-[11px] font-bold uppercase tracking-wider truncate text-center"
+                  [class.text-primary]="col.isActive"
+                  [class.text-on-surface-muted]="!col.isActive"
+                  [class.opacity-40]="col.isFuture">
+              {{ col.label }}
+            </span>
+            @if (col.isActive) {
+              <span class="inline-block size-1.5 rounded-full bg-primary animate-pulse shrink-0"
+                    aria-hidden="true"></span>
+            }
+          </div>
+
+          <!-- Match slot area: absolute-positioned cards -->
+          <div class="relative" [style.height.px]="s.heightPx">
+            @for (m of col.matches; track m.id) {
+              <div class="absolute px-0.5" style="left:0;right:0" [style.top.px]="m.topPx">
+                <ng-container *ngTemplateOutlet="matchCardTpl; context: { m: m, muted: col.isFuture }" />
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Connector SVG — sits between this column and the next.
+             margin-top aligns it with the match area (skips the header). -->
+        @if (!last) {
+          <svg class="shrink-0"
+               [style.marginTop.px]="HEADER_H"
+               [attr.width]="CONN_W"
+               [attr.height]="s.heightPx"
+               [attr.viewBox]="viewBox(s)"
+               fill="none"
+               overflow="visible"
+               aria-hidden="true">
+            @for (d of col.connectorPaths; track $index) {
+              <path [attr.d]="d"
+                    stroke="var(--color-border)"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    fill="none" />
+            }
+          </svg>
+        }
+
+      }
+    </div>
+  </div>
+</ng-template>
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     Template: match card (used in bracket tree AND in list views)
+     ═══════════════════════════════════════════════════════════════════════ -->
+<ng-template #matchCardTpl let-m="m" let-muted="muted">
+  <div class="flex items-stretch gap-0.5">
+
+    <!-- Main card button -->
+    <button type="button"
+            class="flex-1 min-w-0 text-left flex items-center gap-2 rounded-xl border border-border bg-surface px-2.5 py-2 transition-colors"
+            [class.hover:border-primary]="canOpen(m)"
+            [class.cursor-default]="!canOpen(m)"
+            [class.opacity-40]="muted"
+            (click)="openMatch(m)">
+
+      <!-- Participant names -->
+      <span class="flex-1 min-w-0 flex flex-col gap-0.5">
+
+        <!-- Team A -->
+        <span class="flex items-center gap-1 min-w-0">
+          <span class="text-xs truncate flex-1 leading-5"
+                [class.font-semibold]="winnerIs(m, 'A')"
+                [class.text-on-surface]="winnerIs(m, 'A') || !m.winnerParticipantId"
+                [class.text-on-surface-muted]="!winnerIs(m, 'A') && !!m.winnerParticipantId">
+            {{ m.participantAName ?? ('tournament.bracket.tbd' | translate) }}
+          </span>
+          @if (winnerIs(m, 'A')) {
+            <span class="material-symbols-rounded text-success shrink-0"
+                  style="font-size:13px;font-variation-settings:'FILL' 1"
+                  aria-hidden="true">check_circle</span>
+          }
+        </span>
+
+        <!-- Divider -->
+        <span class="border-t border-border/50 -mx-0.5"></span>
+
+        <!-- Team B -->
+        <span class="flex items-center gap-1 min-w-0">
+          <span class="text-xs truncate flex-1 leading-5"
+                [class.font-semibold]="winnerIs(m, 'B')"
+                [class.text-on-surface]="winnerIs(m, 'B') || !m.winnerParticipantId"
+                [class.text-on-surface-muted]="!winnerIs(m, 'B') && !!m.winnerParticipantId">
+            {{ m.participantBName ?? ('tournament.bracket.tbd' | translate) }}
+          </span>
+          @if (winnerIs(m, 'B')) {
+            <span class="material-symbols-rounded text-success shrink-0"
+                  style="font-size:13px;font-variation-settings:'FILL' 1"
+                  aria-hidden="true">check_circle</span>
+          }
+        </span>
+
+      </span>
+
+      <!-- Status badge -->
+      <span class="pts-badge shrink-0 !text-[10px] !px-1.5 !py-0"
+            [ngClass]="badgeClass(m.status)">
+        {{ 'tournament.bracket.status.' + m.status | translate }}
+      </span>
+
+    </button>
+
+    <!-- Scorer-link button (edit mode only, when match is actionable) -->
+    @if (canManageScorerLinks(m)) {
+      <button type="button"
+              class="flex items-center justify-center shrink-0 w-7 rounded-lg border border-border bg-surface hover:border-primary transition-colors"
+              (click)="openScorerLinks(m, $event)"
+              [attr.title]="'tournament.scorerLink.manageTitle' | translate"
+              [attr.aria-label]="'tournament.scorerLink.manageTitle' | translate">
+        <span class="material-symbols-rounded text-on-surface-muted" style="font-size:15px">sports</span>
+      </button>
+    }
+
+  </div>
+</ng-template>
