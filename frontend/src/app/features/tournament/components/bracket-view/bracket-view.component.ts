@@ -141,7 +141,6 @@ export class BracketViewComponent {
   readonly scorerLinkClicked  = output<TournamentMatch>();
 
   // Expose layout constants for inline-style bindings in the template
-  readonly CARD_W   = 192;
   readonly CONN_W   = CONN_W;
   readonly HEADER_H = HEADER_H;
 

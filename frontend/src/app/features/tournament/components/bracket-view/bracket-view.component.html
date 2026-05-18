@@ -25,7 +25,7 @@
       @if (grandFinal(); as m) {
         <section class="flex flex-col gap-2">
           <p class="pts-label">{{ 'tournament.bracket.grandFinal' | translate }}</p>
-          <div [style.width.px]="CARD_W">
+          <div class="max-w-[16rem]">
             <ng-container *ngTemplateOutlet="matchCardTpl; context: { m: m, muted: false }" />
           </div>
         </section>
@@ -50,7 +50,7 @@
               </span>
             }
           </h3>
-          <ul class="flex flex-col gap-2">
+          <ul class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2">
             @for (m of round.matches; track m.id) {
               <li>
                 <ng-container *ngTemplateOutlet="matchCardTpl; context: { m: m, muted: false }" />
@@ -70,7 +70,7 @@
       @if (groups().length) {
         <section class="flex flex-col gap-3">
           <p class="pts-label">{{ 'tournament.bracket.groupStage' | translate }}</p>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
             @for (g of groups(); track g.groupNumber) {
               <div class="pts-card !p-3 flex flex-col gap-2">
                 <h3 class="pts-label flex items-center gap-2">
@@ -115,17 +115,20 @@
      ═══════════════════════════════════════════════════════════════════════ -->
 <ng-template #bracketTpl let-s="s">
   <div class="overflow-x-auto -mx-1 px-1 pb-2">
-    <div class="flex items-start" style="min-width: max-content">
+    <div class="flex items-start">
 
       @for (col of s.columns; track col.round; let last = $last) {
 
-        <!-- Round column: header + absolute match cards -->
-        <div class="flex flex-col" [style.width.px]="CARD_W">
+        <!-- Round column: header + absolute match cards.
+             grow + shrink-0 + min/max-w: columns fill available space up to the cap
+             (flex-grow fills wide screens); shrink-0 prevents squashing below min-w,
+             which overflows the parent overflow-x-auto and triggers scroll on mobile. -->
+        <div class="flex flex-col grow shrink-0 min-w-[12rem] max-w-[16rem]">
 
           <!-- Round header -->
           <div class="flex items-center justify-center gap-1.5 px-1"
                [style.height.px]="HEADER_H">
-            <span class="text-[11px] font-bold uppercase tracking-wider truncate text-center"
+            <span class="text-[11px] sm:text-xs font-bold uppercase tracking-wider truncate text-center"
                   [class.text-primary]="col.isActive"
                   [class.text-on-surface-muted]="!col.isActive"
                   [class.opacity-40]="col.isFuture">
