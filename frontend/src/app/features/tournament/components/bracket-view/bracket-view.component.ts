@@ -166,6 +166,31 @@ export class BracketViewComponent {
     );
   });
 
+  // ── Cross-bracket drop indicators (double-elim only) ─────────────────
+  // Maps WB match id → the LB round number its loser drops into.
+  readonly wbToLbRound = computed<Map<string, number>>(() => {
+    if (this.format() !== 'doubleelimination') return new Map();
+    const all = this.matches();
+    const lbById = new Map(all.filter(m => m.bracketSide === 'losers').map(m => [m.id, m]));
+    const map = new Map<string, number>();
+    for (const m of all) {
+      if (!m.nextLoserMatchId) continue;
+      const lb = lbById.get(m.nextLoserMatchId);
+      if (lb) map.set(m.id, lb.roundNumber);
+    }
+    return map;
+  });
+
+  // Maps LB match id → the WB round number whose loser drops into it.
+  readonly lbFromWbRound = computed<Map<string, number>>(() => {
+    if (this.format() !== 'doubleelimination') return new Map();
+    const map = new Map<string, number>();
+    for (const m of this.matches()) {
+      if (m.nextLoserMatchId) map.set(m.nextLoserMatchId, m.roundNumber);
+    }
+    return map;
+  });
+
   readonly grandFinal = computed<TournamentMatch | null>(() => {
     if (this.format() !== 'doubleelimination') return null;
     return this.matches().find(m => m.bracketSide === 'grandfinal') ?? null;

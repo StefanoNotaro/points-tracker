@@ -124,7 +124,12 @@ public sealed class DoubleEliminationGenerator : IBracketGenerator
         matches.Add(grand);
 
         var winnersFinal = winnerRounds[^1].Single();
-        winnersFinal.LinkAdvancement(grand.Id, winnerToSideA: true);
+        // Preserve the NextLoserMatchId wired in step 3 (winners-final loser drops into LB final).
+        // Calling LinkAdvancement without it would default to null and erase that link.
+        winnersFinal.LinkAdvancement(
+            grand.Id, winnerToSideA: true,
+            nextLoserMatchId: winnersFinal.NextLoserMatchId,
+            loserToSideA: winnersFinal.LoserToSideA);
 
         var losersFinal = losersByRound[^1].Single();
         losersFinal.LinkAdvancement(grand.Id, winnerToSideA: false);

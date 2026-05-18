@@ -229,11 +229,19 @@
 
       </span>
 
-      <!-- Status badge -->
-      <span class="pts-badge shrink-0 !text-[10px] !px-1.5 !py-0"
-            [ngClass]="badgeClass(m.status)">
-        {{ 'tournament.bracket.status.' + m.status | translate }}
-      </span>
+      <!-- Status badge + cross-bracket drop indicator -->
+      <div class="flex flex-col items-end gap-0.5 shrink-0">
+        <span class="pts-badge !text-[10px] !px-1.5 !py-0"
+              [ngClass]="badgeClass(m.status)">
+          {{ 'tournament.bracket.status.' + m.status | translate }}
+        </span>
+        @if (m.status !== 'walkover' && wbToLbRound().get(m.id); as lbR) {
+          <span class="text-[8px] font-semibold leading-none text-warning/80" aria-hidden="true">↓ L·R{{ lbR }}</span>
+        }
+        @if (lbFromWbRound().get(m.id); as wbR) {
+          <span class="text-[8px] font-semibold leading-none text-warning/80" aria-hidden="true">↑ W·R{{ wbR }}</span>
+        }
+      </div>
 
     </button>
 
