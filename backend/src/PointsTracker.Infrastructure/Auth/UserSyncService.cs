@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using Microsoft.Extensions.Logging;
+using PointsTracker.Application.Services;
 using PointsTracker.Domain.Entities;
 using PointsTracker.Domain.Enums;
 using PointsTracker.Domain.Interfaces;
@@ -15,7 +16,7 @@ namespace PointsTracker.Infrastructure.Auth;
 public class UserSyncService(
     IUserRepository userRepo,
     IRoleAuditLogRepository roleAuditRepo,
-    ILogger<UserSyncService> logger)
+    ILogger<UserSyncService> logger) : IUserSyncService
 {
     public async Task<User> SyncAsync(ClaimsPrincipal principal, CancellationToken ct = default)
     {

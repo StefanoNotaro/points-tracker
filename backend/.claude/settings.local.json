@@ -5,7 +5,9 @@
       "PowerShell(Head-Object *)",
       "Bash(dotnet build *)",
       "Bash(npx tsc *)",
-      "PowerShell(Set-Location *)"
+      "PowerShell(Set-Location *)",
+      "Bash(Select-String -NotMatch \"MSB3026|MSB3027|MSB3021|retry\")",
+      "PowerShell(dotnet build *)"
     ]
   }
 }

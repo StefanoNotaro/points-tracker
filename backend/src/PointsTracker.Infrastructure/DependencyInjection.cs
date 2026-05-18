@@ -33,7 +33,7 @@ public static class DependencyInjection
         services.AddScoped<ITournamentAuthorizationService, TournamentAuthorizationService>();
         services.AddScoped<ITournamentMapper, TournamentMapper>();
         services.AddScoped<ITournamentLiveBridge, TournamentLiveBridge>();
-        services.AddScoped<UserSyncService>();
+        services.AddScoped<IUserSyncService, UserSyncService>();
 
         // SignalR is registered in the API layer so its JsonProtocol options
         // can be configured alongside the rest of the API JSON pipeline.

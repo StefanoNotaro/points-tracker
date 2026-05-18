@@ -9,7 +9,7 @@ using PointsTracker.Api.Middleware;
 using PointsTracker.Application.Common;
 using PointsTracker.Domain.Enums;
 using PointsTracker.Infrastructure;
-using PointsTracker.Infrastructure.Auth;
+using PointsTracker.Application.Services;
 using PointsTracker.Infrastructure.Hubs;
 using PointsTracker.Infrastructure.Persistence;
 
@@ -60,7 +60,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             {
                 if (context.Principal is null) return;
 
-                var sync = context.HttpContext.RequestServices.GetRequiredService<UserSyncService>();
+                var sync = context.HttpContext.RequestServices.GetRequiredService<IUserSyncService>();
                 try
                 {
                     var user = await sync.SyncAsync(context.Principal, context.HttpContext.RequestAborted);
