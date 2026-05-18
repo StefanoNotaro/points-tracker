@@ -17,7 +17,8 @@
       "Bash(dotnet tool *)",
       "Bash(Select-String \"ef\")",
       "Bash(npx ng *)",
-      "Bash(python *)"
+      "Bash(python *)",
+      "Bash(Get-ChildItem -Recurse \"C:\\\\Users\\\\stefa\\\\RiderProjects\\\\points-tracker\\\\backend\\\\src\\\\PointsTracker.Domain\\\\Brackets\" -File)"
     ]
   }
 }

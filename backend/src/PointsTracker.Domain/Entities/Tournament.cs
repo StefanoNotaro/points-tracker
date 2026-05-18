@@ -349,7 +349,10 @@ public class Tournament
         {
             var next = _matches.FirstOrDefault(m => m.Id == winnerNextId);
             if (next is not null)
+            {
                 ApplyToSlot(next, match.WinnerParticipantId, match.WinnerToSideA);
+                TryAutoWalkover(next);
+            }
         }
 
         // Loser drops (double-elim)
@@ -358,8 +361,35 @@ public class Tournament
         {
             var next = _matches.FirstOrDefault(m => m.Id == loserNextId);
             if (next is not null)
+            {
                 ApplyToSlot(next, match.LoserParticipantId, match.LoserToSideA);
+                TryAutoWalkover(next);
+            }
         }
+    }
+
+    /// <summary>
+    /// After a participant is placed into a future match, check whether the slot
+    /// will only ever receive one participant (the other feeder is a bye or
+    /// structural double-bye). If all matches that point here are resolved and
+    /// only one side is filled, grant a walkover automatically and advance.
+    /// </summary>
+    private void TryAutoWalkover(TournamentMatch match)
+    {
+        if (match.Status is TournamentMatchStatus.Completed or TournamentMatchStatus.Walkover) return;
+
+        var participant = match.ParticipantAId ?? match.ParticipantBId;
+        if (participant is null) return;                                 // no participants yet
+        if (match.ParticipantAId is not null && match.ParticipantBId is not null) return; // both present, normal match
+
+        var hasPendingFeeder = _matches.Any(m =>
+            m.Status is not (TournamentMatchStatus.Completed or TournamentMatchStatus.Walkover) &&
+            (m.NextMatchId == match.Id || m.NextLoserMatchId == match.Id));
+
+        if (hasPendingFeeder) return;
+
+        match.GrantWalkover(participant.Value);
+        AdvanceFrom(match);
     }
 
     private static void ApplyToSlot(TournamentMatch next, Guid? participantId, bool toSideA)

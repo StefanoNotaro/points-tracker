@@ -31,7 +31,6 @@ export class NavBarComponent {
 
   private readonly items: DrawerItem[] = [
     { labelKey: 'nav.items.dashboard',    icon: 'space_dashboard',   routerLink: '/dashboard',   authedOnly: true },
-    { labelKey: 'nav.items.newCounter',   icon: 'add_circle',        routerLink: '/new-counter' },
     { labelKey: 'nav.items.counters',     icon: 'list_alt',          routerLink: '/my-counters', authedOnly: true },
     { labelKey: 'nav.items.tournaments',  icon: 'emoji_events',      routerLink: '/tournaments' },
     { labelKey: 'nav.items.settings',     icon: 'settings',          routerLink: '/settings',    authedOnly: true, desktopDropdown: true },

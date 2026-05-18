@@ -112,6 +112,20 @@ public class TournamentMatch
         Touch();
     }
 
+    /// <summary>
+    /// Marks a bracket slot as a structural bye — both feeder matches were
+    /// themselves walkovers so no participant will ever arrive. The slot is
+    /// resolved immediately with no winner, allowing downstream matches to
+    /// detect that this feeder is no longer pending.
+    /// </summary>
+    internal void GrantDoubleBye()
+    {
+        WinnerParticipantId = null;
+        LoserParticipantId  = null;
+        Status = TournamentMatchStatus.Walkover;
+        Touch();
+    }
+
     internal void Schedule(DateTime? at)
     {
         ScheduledAt = at;

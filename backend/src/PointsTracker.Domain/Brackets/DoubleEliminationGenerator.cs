@@ -9,10 +9,12 @@ namespace PointsTracker.Domain.Brackets;
 /// receives each round's losers and itself is single-elim. The two bracket
 /// winners meet in a Grand Final.
 ///
-/// To keep complexity in check this generator requires the participant
-/// count to be a power of two (pad with byes if needed at the participant
-/// management UI). For non-power-of-two we fall back to filling byes
-/// in the winners side; the losers bracket is unchanged in shape.
+/// Non-power-of-two team counts are handled gracefully: the winners bracket
+/// pads to the next power of two using byes (walkovers). Bye slots produce
+/// no loser, so any losers-bracket slot whose both WR1 feeders are byes is
+/// immediately marked as a structural walkover (GrantDoubleBye). At runtime,
+/// Tournament.TryAutoWalkover detects any LB slot that receives only one
+/// participant (the other feeder was a bye) and auto-advances it.
 /// </summary>
 public sealed class DoubleEliminationGenerator : IBracketGenerator
 {
@@ -89,19 +91,35 @@ public sealed class DoubleEliminationGenerator : IBracketGenerator
         }
 
         // 4. Wire losers-bracket advancement (each LR_n winner → LR_{n+1}).
+        // The LB alternates between two round types:
+        //   Feed round (odd LR, e.g. LR1, LR3): LR winners pair up → count halves → 2:1 mapping, alternating sides.
+        //   Drop-in round (even LR, e.g. LR2, LR4): each LR winner faces a WR loser → same count → 1:1 mapping, all to side A.
         for (var lr = 0; lr < losersByRound.Count - 1; lr++)
         {
             var current = losersByRound[lr];
-            var next = losersByRound[lr + 1];
+            var next    = losersByRound[lr + 1];
+            var dropIn  = current.Count == next.Count; // feed→drop-in transition
             for (var i = 0; i < current.Count; i++)
             {
-                var nextIdx = i / 2;
-                if (nextIdx >= next.Count) nextIdx = next.Count - 1;
-                current[i].LinkAdvancement(next[nextIdx].Id, winnerToSideA: i % 2 == 0);
+                var nextIdx  = dropIn ? i : i / 2;
+                var toSideA  = dropIn || i % 2 == 0; // drop-in: LR winners always claim A; WR losers fill B
+                current[i].LinkAdvancement(next[nextIdx].Id, winnerToSideA: toSideA);
             }
         }
 
-        // 5. Grand Final: winner of last losers round vs winner of last winners round.
+        // 5. Mark LR1 slots whose both WR1 feeders are already walkovers (byes):
+        // no loser will ever arrive, so the slot is structurally dead and must be
+        // resolved now so downstream TryAutoWalkover checks don't treat it as pending.
+        foreach (var lr1Match in losersByRound[0])
+        {
+            var feeders = winners
+                .Where(w => w.RoundNumber == 1 && w.NextLoserMatchId == lr1Match.Id)
+                .ToList();
+            if (feeders.Count > 0 && feeders.All(f => f.Status == TournamentMatchStatus.Walkover))
+                lr1Match.GrantDoubleBye();
+        }
+
+        // 6. Grand Final: winner of last losers round vs winner of last winners round.
         var grand = TournamentMatch.Create(tournamentId, BracketSide.GrandFinal, round: 1, matchNumber: 1);
         matches.Add(grand);
 
