@@ -18,7 +18,11 @@
       "Bash(Select-String \"ef\")",
       "Bash(npx ng *)",
       "Bash(python *)",
-      "Bash(Get-ChildItem -Recurse \"C:\\\\Users\\\\stefa\\\\RiderProjects\\\\points-tracker\\\\backend\\\\src\\\\PointsTracker.Domain\\\\Brackets\" -File)"
+      "Bash(Get-ChildItem -Recurse \"C:\\\\Users\\\\stefa\\\\RiderProjects\\\\points-tracker\\\\backend\\\\src\\\\PointsTracker.Domain\\\\Brackets\" -File)",
+      "Bash(Get-ChildItem *)",
+      "Bash(grep -E \"\\\\.\\(ts|cs\\)$\")",
+      "Bash(grep -E \"\\\\.\\(cs|ts\\)$\")",
+      "Bash(grep -E \"\\\\.cs$\")"
     ]
   }
 }

@@ -21,14 +21,15 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   // For requests targeting a specific counter, attach session and/or share token.
   // Both can apply: a user may own one counter (session token) and have edit-level
   // share access to another. The backend uses whichever grants access.
+  // Session token is sent regardless of whether an access token is present — a user
+  // may have a stale OIDC token in storage while the app treats them as anonymous,
+  // and the backend always checks user-ID ownership before session-token ownership.
   const counterIdMatch = req.url.match(/\/counters\/([0-9a-f-]{36})/i);
   if (counterIdMatch) {
     const counterId = counterIdMatch[1];
 
-    if (!accessToken) {
-      const sessionToken = sessionTokens.getToken(counterId);
-      if (sessionToken) headers['X-Session-Token'] = sessionToken;
-    }
+    const sessionToken = sessionTokens.getToken(counterId);
+    if (sessionToken) headers['X-Session-Token'] = sessionToken;
 
     const shareToken = shareTokens.getToken(counterId);
     if (shareToken) headers['X-Share-Token'] = shareToken;
@@ -43,7 +44,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   // a counter of the same UUID. For tournament create POST the token isn't
   // known yet — the response carries it, then TournamentService.create stores it.
   const tournamentIdMatch = req.url.match(/\/tournaments\/([0-9a-f-]{36})/i);
-  if (tournamentIdMatch && !accessToken) {
+  if (tournamentIdMatch) {
     const tournamentId = tournamentIdMatch[1];
     const sessionToken = sessionTokens.getToken(`tournament:${tournamentId}`);
     if (sessionToken) headers['X-Session-Token'] = sessionToken;
