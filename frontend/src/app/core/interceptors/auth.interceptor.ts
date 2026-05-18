@@ -3,11 +3,13 @@ import { inject } from '@angular/core';
 import { AuthService } from '../auth/auth.service';
 import { SessionTokenService } from '../auth/session-token.service';
 import { ShareTokenService } from '../auth/share-token.service';
+import { ScorerTokenService } from '../auth/scorer-token.service';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const auth = inject(AuthService);
   const sessionTokens = inject(SessionTokenService);
   const shareTokens = inject(ShareTokenService);
+  const scorerTokens = inject(ScorerTokenService);
 
   const headers: Record<string, string> = {};
 
@@ -30,6 +32,10 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
     const shareToken = shareTokens.getToken(counterId);
     if (shareToken) headers['X-Share-Token'] = shareToken;
+
+    // Scorer link: grants write access to match counters for referees/scorers.
+    const scorerToken = scorerTokens.getToken(counterId);
+    if (scorerToken) headers['X-Scorer-Token'] = scorerToken;
   }
 
   // Tournaments use the same X-Session-Token scheme for anonymous ownership.

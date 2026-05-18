@@ -7,7 +7,16 @@
       "Bash(npx tsc *)",
       "PowerShell(Set-Location *)",
       "Bash(Select-String -NotMatch \"MSB3026|MSB3027|MSB3021|retry\")",
-      "PowerShell(dotnet build *)"
+      "PowerShell(dotnet build *)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\stefa\\\\RiderProjects\\\\points-tracker\\\\backend\\\\src\" -Recurse -Filter \"*Tournament*\" -File)",
+      "Bash(Select-Object FullName)",
+      "Bash(Sort-Object FullName)",
+      "Bash(xargs grep -l \"record.*TournamentAccess\\\\|class.*TournamentAccess\")",
+      "Bash(dotnet ef *)",
+      "Bash(Get-Command dotnet-ef *)",
+      "Bash(dotnet tool *)",
+      "Bash(Select-String \"ef\")",
+      "Bash(npx ng *)"
     ]
   }
 }

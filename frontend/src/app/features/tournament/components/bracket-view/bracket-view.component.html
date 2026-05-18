@@ -6,9 +6,9 @@
       </h3>
       <ul class="flex flex-col gap-2">
         @for (m of group.matches; track m.id) {
-          <li>
+          <li class="flex items-stretch gap-1">
             <button type="button"
-                    class="w-full pts-card !p-3 text-left flex items-center gap-3 transition-colors"
+                    class="flex-1 min-w-0 pts-card !p-3 text-left flex items-center gap-3 transition-colors"
                     [class.hover:border-primary]="canOpen(m)"
                     [class.opacity-60]="!canOpen(m) && !m.winnerParticipantId"
                     (click)="openMatch(m)">
@@ -31,6 +31,15 @@
               <span class="pts-badge shrink-0"
                     [ngClass]="badgeClass(m.status)">{{ 'tournament.bracket.status.' + m.status | translate }}</span>
             </button>
+            @if (canManageScorerLinks(m)) {
+              <button type="button"
+                      class="pts-card !p-2 flex items-center justify-center shrink-0 hover:border-primary transition-colors"
+                      (click)="openScorerLinks(m, $event)"
+                      [attr.title]="'tournament.scorerLink.manageTitle' | translate"
+                      [attr.aria-label]="'tournament.scorerLink.manageTitle' | translate">
+                <span class="material-symbols-rounded text-lg text-on-surface-muted">sports</span>
+              </button>
+            }
           </li>
         }
       </ul>

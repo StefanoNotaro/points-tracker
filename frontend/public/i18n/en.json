@@ -19,6 +19,7 @@
     "yes": "Yes",
     "no": "No",
     "dismiss": "Dismiss",
+    "copy": "Copy",
     "goHome": "Go home",
     "of": "of"
   },
@@ -463,6 +464,19 @@
       "save": "Save changes",
       "saved": "Tournament saved.",
       "saveError": "Could not save changes."
+    },
+    "scorerLink": {
+      "title": "Scorer access",
+      "manageTitle": "Manage scorer links",
+      "noLinks": "No active scorer links.",
+      "unnamedLink": "Unnamed link",
+      "labelPlaceholder": "Label (optional)",
+      "generate": "Generate link",
+      "copyNow": "Copy this link now — it won't be shown again.",
+      "revoke": "Revoke",
+      "loadError": "Could not load scorer links.",
+      "issueError": "Could not generate scorer link.",
+      "revokeError": "Could not revoke scorer link."
     }
   }
 }

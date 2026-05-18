@@ -24,9 +24,13 @@ public static class TournamentEndpoints
         group.MapPost("/{id:guid}/participants",                  AddParticipant).AllowAnonymous().RequireRateLimiting("write");
         group.MapDelete("/{id:guid}/participants/{participantId:guid}", RemoveParticipant).AllowAnonymous().RequireRateLimiting("write");
 
-        group.MapPost("/{id:guid}/start",                                  Start).AllowAnonymous().RequireRateLimiting("write");
-        group.MapPost("/{id:guid}/matches/{matchId:guid}/counter",         OpenMatchCounter).AllowAnonymous().RequireRateLimiting("write");
-        group.MapPost("/{id:guid}/matches/{matchId:guid}/result",          RecordResult).AllowAnonymous().RequireRateLimiting("write");
+        group.MapPost("/{id:guid}/start",                                                Start).AllowAnonymous().RequireRateLimiting("write");
+        group.MapPost("/{id:guid}/matches/{matchId:guid}/counter",                       OpenMatchCounter).AllowAnonymous().RequireRateLimiting("write");
+        group.MapPost("/{id:guid}/matches/{matchId:guid}/result",                        RecordResult).AllowAnonymous().RequireRateLimiting("write");
+
+        group.MapPost("/{id:guid}/matches/{matchId:guid}/scorer-links",             IssueMatchScorerLink).RequireAuthorization().RequireRateLimiting("scorer-link-issue");
+        group.MapDelete("/{id:guid}/scorer-links/{linkId:guid}",                    RevokeMatchScorerLink).RequireAuthorization().RequireRateLimiting("write");
+        group.MapGet("/{id:guid}/matches/{matchId:guid}/scorer-links",              ListMatchScorerLinks).RequireAuthorization().RequireRateLimiting("read");
     }
 
     private static async Task<IResult> CreateTournament(
@@ -166,7 +170,8 @@ public static class TournamentEndpoints
         HttpContext ctx)
     {
         var (userId, sessionToken) = GetContext(ctx);
-        var counterDto = await mediator.Send(new OpenMatchCounterCommand(id, matchId, userId, sessionToken));
+        var scorerToken = ctx.Request.Headers["X-Scorer-Token"].FirstOrDefault();
+        var counterDto = await mediator.Send(new OpenMatchCounterCommand(id, matchId, userId, sessionToken, scorerToken));
         return Results.Ok(counterDto);
     }
 
@@ -181,6 +186,41 @@ public static class TournamentEndpoints
         var dto = await mediator.Send(new RecordMatchResultCommand(id, matchId, req.WinnerParticipantId, userId, sessionToken));
         await hub.BroadcastTournamentUpdate(id, dto);
         return Results.Ok(dto);
+    }
+
+    private static async Task<IResult> IssueMatchScorerLink(
+        Guid id, Guid matchId,
+        IssueMatchScorerLinkRequest req,
+        IMediator mediator,
+        HttpContext ctx)
+    {
+        var (userId, sessionToken) = GetContext(ctx);
+        if (userId is null) return Results.Unauthorized();
+        var dto = await mediator.Send(new IssueMatchScorerLinkCommand(
+            id, matchId, userId.Value, sessionToken, req.Label, req.GrantToUserId));
+        return Results.Created($"/api/tournaments/{id}/matches/{matchId}/scorer-links/{dto.Id}", dto);
+    }
+
+    private static async Task<IResult> RevokeMatchScorerLink(
+        Guid id, Guid linkId,
+        IMediator mediator,
+        HttpContext ctx)
+    {
+        var (userId, sessionToken) = GetContext(ctx);
+        if (userId is null) return Results.Unauthorized();
+        await mediator.Send(new RevokeMatchScorerLinkCommand(id, linkId, userId.Value, sessionToken));
+        return Results.NoContent();
+    }
+
+    private static async Task<IResult> ListMatchScorerLinks(
+        Guid id, Guid matchId,
+        IMediator mediator,
+        HttpContext ctx)
+    {
+        var (userId, sessionToken) = GetContext(ctx);
+        if (userId is null) return Results.Unauthorized();
+        var list = await mediator.Send(new ListMatchScorerLinksQuery(id, matchId, userId.Value, sessionToken));
+        return Results.Ok(list);
     }
 
     private static (Guid? userId, string? sessionToken) GetContext(HttpContext ctx) =>
@@ -224,3 +264,4 @@ public record AddParticipantRequest(string TeamName, int? Seed, Guid? UserId);
 public record RecordMatchResultRequest(Guid WinnerParticipantId);
 public record ListAnonymousTournamentsRequest(List<string>? SessionTokens);
 public record StartTournamentRequest(bool? RandomizeUnseeded);
+public record IssueMatchScorerLinkRequest(string? Label, Guid? GrantToUserId);

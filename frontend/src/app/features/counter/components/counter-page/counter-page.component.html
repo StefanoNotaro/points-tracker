@@ -36,7 +36,7 @@
       </div>
 
       <div class="flex items-center gap-0.5">
-        @if (counter.canEdit) {
+        @if (counter.canEdit || counter.canScore) {
           <button
             type="button"
             class="pts-btn-icon"
@@ -95,7 +95,7 @@
             <span class="material-symbols-rounded mr-2 text-base align-middle">info</span>
             {{ (showMatchInfo() ? 'counter.page.hideMatchInfo' : 'counter.page.matchInfo') | translate }}
           </button>
-          @if (counter.canEdit && counter.status === 'active') {
+          @if ((counter.canEdit || counter.canScore) && counter.status === 'active') {
             <button mat-menu-item (click)="switchSidesManually()">
               <span class="material-symbols-rounded mr-2 text-base align-middle">swap_horiz</span>
               {{ 'counter.page.switchSides' | translate }}
@@ -145,7 +145,7 @@
       </div>
     }
 
-    @if (counter.canEdit && counter.status === 'active') {
+    @if ((counter.canEdit || counter.canScore) && counter.status === 'active') {
       <div class="flex gap-3 sm:gap-4" [class.flex-row-reverse]="swapSides()">
         <pts-score-button
           class="flex-1 min-w-0"
@@ -173,7 +173,7 @@
           class="pts-card flex-1 min-w-0 flex items-center justify-between gap-2
                  px-3 py-2 text-left hover:bg-surface-variant/40
                  disabled:opacity-50 disabled:hover:bg-surface"
-          [disabled]="!counter.canEdit || counter.timeoutsRemainingA === 0 || store.actionPending() || timeoutActive()"
+          [disabled]="(!counter.canEdit && !counter.canScore) || counter.timeoutsRemainingA === 0 || store.actionPending() || timeoutActive()"
           (click)="callTimeout('A')"
           [attr.aria-label]="'counter.page.timeoutAria' | translate: { team: counter.teamAName }"
         >
@@ -192,7 +192,7 @@
           class="pts-card flex-1 min-w-0 flex items-center justify-between gap-2
                  px-3 py-2 text-left hover:bg-surface-variant/40
                  disabled:opacity-50 disabled:hover:bg-surface"
-          [disabled]="!counter.canEdit || counter.timeoutsRemainingB === 0 || store.actionPending() || timeoutActive()"
+          [disabled]="(!counter.canEdit && !counter.canScore) || counter.timeoutsRemainingB === 0 || store.actionPending() || timeoutActive()"
           (click)="callTimeout('B')"
           [attr.aria-label]="'counter.page.timeoutAria' | translate: { team: counter.teamBName }"
         >
@@ -220,7 +220,7 @@
         </span>
         <span class="flex items-center gap-2 shrink-0">
           <span class="font-mono text-lg tabular-nums">{{ active.remaining }}s</span>
-          @if (counter.canEdit) {
+          @if (counter.canEdit || counter.canScore) {
             <button
               type="button"
               class="pts-btn-icon h-8 w-8"
@@ -236,7 +236,7 @@
       </div>
     }
 
-    @if (!counter.canEdit) {
+    @if (!counter.canEdit && !counter.canScore) {
       <div class="flex justify-center">
         <span class="pts-badge bg-surface-variant text-on-surface-muted">
           <span class="material-symbols-rounded text-sm">visibility</span>

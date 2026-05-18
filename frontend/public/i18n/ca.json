@@ -19,6 +19,7 @@
     "yes": "Sí",
     "no": "No",
     "dismiss": "Descarta",
+    "copy": "Copia",
     "goHome": "Vés a l'inici",
     "of": "de"
   },
@@ -463,6 +464,19 @@
       "save": "Desa els canvis",
       "saved": "Torneig desat.",
       "saveError": "No s'han pogut desar els canvis."
+    },
+    "scorerLink": {
+      "title": "Accés d'àrbitre",
+      "manageTitle": "Gestiona els enllaços d'àrbitre",
+      "noLinks": "Cap enllaç d'àrbitre actiu.",
+      "unnamedLink": "Enllaç sense nom",
+      "labelPlaceholder": "Etiqueta (opcional)",
+      "generate": "Genera l'enllaç",
+      "copyNow": "Copia aquest enllaç ara — no es tornarà a mostrar.",
+      "revoke": "Revoca",
+      "loadError": "No s'han pogut carregar els enllaços d'àrbitre.",
+      "issueError": "No s'ha pogut generar l'enllaç d'àrbitre.",
+      "revokeError": "No s'ha pogut revocar l'enllaç d'àrbitre."
     }
   }
 }

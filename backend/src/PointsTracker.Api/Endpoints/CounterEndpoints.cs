@@ -80,8 +80,8 @@ public static class CounterEndpoints
         IMediator mediator,
         HttpContext ctx)
     {
-        var (userId, sessionToken, shareToken) = GetContext(ctx);
-        var result = await mediator.Send(new GetCounterByIdQuery(id, userId, sessionToken, shareToken));
+        var (userId, sessionToken, shareToken, scorerToken) = GetContext(ctx);
+        var result = await mediator.Send(new GetCounterByIdQuery(id, userId, sessionToken, shareToken, scorerToken));
         return Results.Ok(result);
     }
 
@@ -103,8 +103,8 @@ public static class CounterEndpoints
         ITournamentLiveBridge bridge,
         HttpContext ctx)
     {
-        var (userId, sessionToken, shareToken) = GetContext(ctx);
-        var result = await mediator.Send(new UpdateScoreCommand(id, req.Team, true, userId, sessionToken, shareToken));
+        var (userId, sessionToken, shareToken, scorerToken) = GetContext(ctx);
+        var result = await mediator.Send(new UpdateScoreCommand(id, req.Team, true, userId, sessionToken, shareToken, scorerToken));
         await hub.BroadcastScoreUpdate(id, result);
         await bridge.OnCounterChangedAsync(id);
         return Results.Ok(result);
@@ -118,8 +118,8 @@ public static class CounterEndpoints
         ITournamentLiveBridge bridge,
         HttpContext ctx)
     {
-        var (userId, sessionToken, shareToken) = GetContext(ctx);
-        var result = await mediator.Send(new UpdateScoreCommand(id, req.Team, false, userId, sessionToken, shareToken));
+        var (userId, sessionToken, shareToken, scorerToken) = GetContext(ctx);
+        var result = await mediator.Send(new UpdateScoreCommand(id, req.Team, false, userId, sessionToken, shareToken, scorerToken));
         await hub.BroadcastScoreUpdate(id, result);
         await bridge.OnCounterChangedAsync(id);
         return Results.Ok(result);
@@ -133,9 +133,9 @@ public static class CounterEndpoints
         ITournamentLiveBridge bridge,
         HttpContext ctx)
     {
-        var (userId, sessionToken, shareToken) = GetContext(ctx);
+        var (userId, sessionToken, shareToken, scorerToken) = GetContext(ctx);
         var count = req?.Count ?? 1;
-        var result = await mediator.Send(new UndoCommand(id, userId, sessionToken, shareToken, count));
+        var result = await mediator.Send(new UndoCommand(id, userId, sessionToken, shareToken, count, scorerToken));
         await hub.BroadcastScoreUpdate(id, result);
         await bridge.OnCounterChangedAsync(id);
         return Results.Ok(result);
@@ -149,9 +149,9 @@ public static class CounterEndpoints
         ITournamentLiveBridge bridge,
         HttpContext ctx)
     {
-        var (userId, sessionToken, shareToken) = GetContext(ctx);
+        var (userId, sessionToken, shareToken, scorerToken) = GetContext(ctx);
         var count = req?.Count ?? 1;
-        var result = await mediator.Send(new RedoCommand(id, userId, sessionToken, shareToken, count));
+        var result = await mediator.Send(new RedoCommand(id, userId, sessionToken, shareToken, count, scorerToken));
         await hub.BroadcastScoreUpdate(id, result);
         await bridge.OnCounterChangedAsync(id);
         return Results.Ok(result);
@@ -165,7 +165,7 @@ public static class CounterEndpoints
         ITournamentLiveBridge bridge,
         HttpContext ctx)
     {
-        var (userId, sessionToken, shareToken) = GetContext(ctx);
+        var (userId, sessionToken, shareToken, _) = GetContext(ctx);
         var result = await mediator.Send(new UpdateTeamNameCommand(id, req.Team, req.Name, userId, sessionToken, shareToken));
         await hub.BroadcastScoreUpdate(id, result);
         await bridge.OnCounterChangedAsync(id);
@@ -180,8 +180,8 @@ public static class CounterEndpoints
         ITournamentLiveBridge bridge,
         HttpContext ctx)
     {
-        var (userId, sessionToken, shareToken) = GetContext(ctx);
-        var result = await mediator.Send(new ResolveSideSwitchCommand(id, req.Confirm, userId, sessionToken, shareToken));
+        var (userId, sessionToken, shareToken, scorerToken) = GetContext(ctx);
+        var result = await mediator.Send(new ResolveSideSwitchCommand(id, req.Confirm, userId, sessionToken, shareToken, scorerToken));
         await hub.BroadcastScoreUpdate(id, result);
         await bridge.OnCounterChangedAsync(id);
         return Results.Ok(result);
@@ -194,8 +194,8 @@ public static class CounterEndpoints
         ITournamentLiveBridge bridge,
         HttpContext ctx)
     {
-        var (userId, sessionToken, shareToken) = GetContext(ctx);
-        var result = await mediator.Send(new SwitchSidesCommand(id, userId, sessionToken, shareToken));
+        var (userId, sessionToken, shareToken, scorerToken) = GetContext(ctx);
+        var result = await mediator.Send(new SwitchSidesCommand(id, userId, sessionToken, shareToken, scorerToken));
         await hub.BroadcastScoreUpdate(id, result);
         await bridge.OnCounterChangedAsync(id);
         return Results.Ok(result);
@@ -209,8 +209,8 @@ public static class CounterEndpoints
         ITournamentLiveBridge bridge,
         HttpContext ctx)
     {
-        var (userId, sessionToken, shareToken) = GetContext(ctx);
-        var result = await mediator.Send(new CallTimeoutCommand(id, req.Team, userId, sessionToken, shareToken));
+        var (userId, sessionToken, shareToken, scorerToken) = GetContext(ctx);
+        var result = await mediator.Send(new CallTimeoutCommand(id, req.Team, userId, sessionToken, shareToken, scorerToken));
         await hub.BroadcastScoreUpdate(id, result);
         await bridge.OnCounterChangedAsync(id);
         return Results.Ok(result);
@@ -223,8 +223,8 @@ public static class CounterEndpoints
         ITournamentLiveBridge bridge,
         HttpContext ctx)
     {
-        var (userId, sessionToken, shareToken) = GetContext(ctx);
-        var result = await mediator.Send(new CancelTimeoutCommand(id, userId, sessionToken, shareToken));
+        var (userId, sessionToken, shareToken, scorerToken) = GetContext(ctx);
+        var result = await mediator.Send(new CancelTimeoutCommand(id, userId, sessionToken, shareToken, scorerToken));
         await hub.BroadcastScoreUpdate(id, result);
         await bridge.OnCounterChangedAsync(id);
         return Results.Ok(result);
@@ -237,8 +237,8 @@ public static class CounterEndpoints
         ITournamentLiveBridge bridge,
         HttpContext ctx)
     {
-        var (userId, sessionToken, shareToken) = GetContext(ctx);
-        var result = await mediator.Send(new EndMatchCommand(id, userId, sessionToken, shareToken));
+        var (userId, sessionToken, shareToken, scorerToken) = GetContext(ctx);
+        var result = await mediator.Send(new EndMatchCommand(id, userId, sessionToken, shareToken, scorerToken));
         await hub.BroadcastScoreUpdate(id, result);
         await bridge.OnCounterChangedAsync(id);
         return Results.Ok(result);
@@ -275,14 +275,15 @@ public static class CounterEndpoints
         return $"{ctx.Request.Scheme}://{ctx.Request.Host}";
     }
 
-    private static (Guid? userId, string? sessionToken, string? shareToken) GetContext(HttpContext ctx)
+    private static (Guid? userId, string? sessionToken, string? shareToken, string? scorerToken) GetContext(HttpContext ctx)
     {
         var userId = ctx.User.GetUserId();
         var sessionToken = ctx.Request.Headers["X-Session-Token"].FirstOrDefault();
         // Header takes precedence; the legacy ?share= query param remains for direct deep-links.
         var shareToken = ctx.Request.Headers["X-Share-Token"].FirstOrDefault()
                          ?? ctx.Request.Query["share"].FirstOrDefault();
-        return (userId, sessionToken, shareToken);
+        var scorerToken = ctx.Request.Headers["X-Scorer-Token"].FirstOrDefault();
+        return (userId, sessionToken, shareToken, scorerToken);
     }
 }
 

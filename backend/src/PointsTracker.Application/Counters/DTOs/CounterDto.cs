@@ -20,6 +20,7 @@ public record CounterDto(
     int CurrentScoreB,
     bool IsOwner,
     bool CanEdit,
+    bool CanScore,
     DateTime CreatedAt,
     DateTime UpdatedAt,
     SportRulesDto Rules,

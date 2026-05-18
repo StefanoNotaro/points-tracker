@@ -1,0 +1,76 @@
+<div class="flex flex-col gap-4">
+  <h3 class="pts-label flex items-center gap-2">
+    <span class="material-symbols-rounded text-base">sports</span>
+    {{ 'tournament.scorerLink.title' | translate }}
+  </h3>
+
+  @if (loading()) {
+    <pts-loading-spinner size="sm" />
+  } @else {
+    <!-- Active links list -->
+    @if (links().length > 0) {
+      <ul class="flex flex-col gap-2">
+        @for (link of links(); track link.id) {
+          <li class="flex items-center justify-between gap-2 py-1">
+            <span class="text-sm text-on-surface truncate">
+              {{ link.label ?? ('tournament.scorerLink.unnamedLink' | translate) }}
+            </span>
+            <button type="button"
+                    class="pts-btn-ghost pts-btn-sm text-error"
+                    (click)="revoke(link.id)"
+                    [attr.aria-label]="'tournament.scorerLink.revoke' | translate">
+              <span class="material-symbols-rounded text-base">link_off</span>
+            </button>
+          </li>
+        }
+      </ul>
+    } @else {
+      <p class="text-sm text-on-surface-muted">{{ 'tournament.scorerLink.noLinks' | translate }}</p>
+    }
+
+    <!-- New token banner -->
+    @if (newToken()) {
+      <div class="pts-card !p-3 bg-success/10 flex flex-col gap-2">
+        <p class="text-xs text-on-surface-muted">{{ 'tournament.scorerLink.copyNow' | translate }}</p>
+        <div class="flex items-center gap-2">
+          <input readonly [value]="newToken()"
+                 class="flex-1 min-w-0 text-xs bg-transparent border-none outline-none text-on-surface truncate" />
+          <button type="button"
+                  class="pts-btn-ghost pts-btn-sm"
+                  (click)="copyToken()"
+                  [attr.aria-label]="'common.copy' | translate">
+            <span class="material-symbols-rounded text-base">
+              {{ copied() ? 'check' : 'content_copy' }}
+            </span>
+          </button>
+          <button type="button"
+                  class="pts-btn-ghost pts-btn-sm"
+                  (click)="dismissToken()"
+                  [attr.aria-label]="'common.dismiss' | translate">
+            <span class="material-symbols-rounded text-base">close</span>
+          </button>
+        </div>
+      </div>
+    }
+
+    <!-- Issue form -->
+    <div class="flex items-center gap-2 mt-1">
+      <input type="text"
+             class="pts-input flex-1 min-w-0 text-sm"
+             [placeholder]="'tournament.scorerLink.labelPlaceholder' | translate"
+             [value]="labelInput()"
+             (input)="labelInput.set($any($event.target).value)" />
+      <button type="button"
+              class="pts-btn-primary pts-btn-sm shrink-0"
+              [disabled]="issuing()"
+              (click)="issue()">
+        @if (issuing()) {
+          <pts-loading-spinner size="sm" />
+        } @else {
+          <span class="material-symbols-rounded text-base">add_link</span>
+        }
+        {{ 'tournament.scorerLink.generate' | translate }}
+      </button>
+    </div>
+  }
+</div>

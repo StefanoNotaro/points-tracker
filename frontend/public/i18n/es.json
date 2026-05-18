@@ -19,6 +19,7 @@
     "yes": "Sí",
     "no": "No",
     "dismiss": "Descartar",
+    "copy": "Copiar",
     "goHome": "Ir al inicio",
     "of": "de"
   },
@@ -463,6 +464,19 @@
       "save": "Guardar cambios",
       "saved": "Torneo guardado.",
       "saveError": "No se pudieron guardar los cambios."
+    },
+    "scorerLink": {
+      "title": "Acceso de árbitro",
+      "manageTitle": "Gestionar enlaces de árbitro",
+      "noLinks": "Sin enlaces de árbitro activos.",
+      "unnamedLink": "Enlace sin nombre",
+      "labelPlaceholder": "Etiqueta (opcional)",
+      "generate": "Generar enlace",
+      "copyNow": "Copia este enlace ahora — no volverá a mostrarse.",
+      "revoke": "Revocar",
+      "loadError": "No se pudieron cargar los enlaces de árbitro.",
+      "issueError": "No se pudo generar el enlace de árbitro.",
+      "revokeError": "No se pudo revocar el enlace de árbitro."
     }
   }
 }

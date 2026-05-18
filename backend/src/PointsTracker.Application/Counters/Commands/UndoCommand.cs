@@ -11,7 +11,8 @@ public record UndoCommand(
     Guid? ActorUserId,
     string? SessionToken,
     string? ShareToken,
-    int Count = 1
+    int Count = 1,
+    string? ScorerToken = null
 ) : IRequest<CounterDto>;
 
 public class UndoHandler(
@@ -29,13 +30,14 @@ public class UndoHandler(
             ?? throw new NotFoundException(nameof(Domain.Entities.Counter), cmd.CounterId);
 
         var access = authService.GetAccess(counter, cmd.ActorUserId, cmd.SessionToken, cmd.ShareToken);
-        if (!access.CanEdit) throw new ForbiddenException();
+        var canScore = !access.CanEdit && await authService.HasScorerAccessAsync(counter, cmd.ScorerToken, ct);
+        if (!access.CanEdit && !canScore) throw new ForbiddenException();
 
         var steps = Math.Clamp(cmd.Count, 1, MaxUndoSteps);
         for (var i = 0; i < steps && counter.CanUndo; i++)
             counter.Undo(cmd.ActorUserId);
 
         await counterRepo.SaveChangesAsync(ct);
-        return mapper.ToDto(counter, cmd.ActorUserId, cmd.SessionToken, cmd.ShareToken);
+        return mapper.ToDto(counter, cmd.ActorUserId, cmd.SessionToken, cmd.ShareToken, canScore);
     }
 }

@@ -10,12 +10,14 @@ public record GetCounterByIdQuery(
     Guid CounterId,
     Guid? ActorUserId,
     string? SessionToken,
-    string? ShareToken
+    string? ShareToken,
+    string? ScorerToken = null
 ) : IRequest<CounterDto>;
 
 public class GetCounterByIdHandler(
     ICounterRepository counterRepo,
     ITournamentRepository tournamentRepo,
+    ICounterAuthorizationService authService,
     ICounterMapper mapper
 ) : IRequestHandler<GetCounterByIdQuery, CounterDto>
 {
@@ -41,6 +43,9 @@ public class GetCounterByIdHandler(
             }
         }
 
-        return mapper.ToDto(counter, query.ActorUserId, query.SessionToken, query.ShareToken);
+        var access = authService.GetAccess(counter, query.ActorUserId, query.SessionToken, query.ShareToken);
+        var canScore = !access.CanEdit && await authService.HasScorerAccessAsync(counter, query.ScorerToken, ct);
+
+        return mapper.ToDto(counter, query.ActorUserId, query.SessionToken, query.ShareToken, canScore);
     }
 }

@@ -61,7 +61,23 @@
           </div>
         } @else {
           <pts-bracket-view [matches]="t.matches" [canEdit]="t.canEdit"
-                            (matchClicked)="openMatch($event)" />
+                            (matchClicked)="openMatch($event)"
+                            (scorerLinkClicked)="openScorerPanel($event)" />
+          @if (scorerPanelMatch(); as m) {
+            <div class="pts-card !p-4 flex flex-col gap-1">
+              <div class="flex items-center justify-between gap-2 mb-1">
+                <p class="text-xs text-on-surface-muted truncate">
+                  {{ m.participantAName }} vs {{ m.participantBName }}
+                </p>
+                <button type="button" class="pts-btn-icon pts-btn-sm"
+                        (click)="closeScorerPanel()"
+                        [attr.aria-label]="'common.close' | translate">
+                  <span class="material-symbols-rounded text-base">close</span>
+                </button>
+              </div>
+              <pts-scorer-link-panel [tournamentId]="t.id" [matchId]="m.id" />
+            </div>
+          }
         }
       }
       @case ('participants') {

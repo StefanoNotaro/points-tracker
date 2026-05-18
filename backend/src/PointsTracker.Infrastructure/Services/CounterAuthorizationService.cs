@@ -1,9 +1,12 @@
 using PointsTracker.Application.Services;
 using PointsTracker.Domain.Entities;
+using PointsTracker.Domain.Interfaces;
 
 namespace PointsTracker.Infrastructure.Services;
 
-public class CounterAuthorizationService(IShareTokenService tokenService) : ICounterAuthorizationService
+public class CounterAuthorizationService(
+    IShareTokenService tokenService,
+    IMatchScorerLinkRepository scorerLinkRepo) : ICounterAuthorizationService
 {
     public CounterAccess GetAccess(Counter counter, Guid? userId, string? sessionToken, string? shareToken)
     {
@@ -55,5 +58,19 @@ public class CounterAuthorizationService(IShareTokenService tokenService) : ICou
         }
 
         return new CounterAccess(IsOwner: false, CanEdit: false, CanRead: false);
+    }
+
+    public async Task<bool> HasScorerAccessAsync(
+        Counter counter, string? rawScorerToken, CancellationToken ct = default)
+    {
+        if (string.IsNullOrEmpty(rawScorerToken) || counter.LinkedTournamentMatchId is null)
+            return false;
+
+        var hash = tokenService.HashToken(rawScorerToken);
+        var link = await scorerLinkRepo.GetByTokenHashAsync(hash, ct);
+
+        return link is not null
+            && link.IsActive
+            && link.MatchId == counter.LinkedTournamentMatchId;
     }
 }

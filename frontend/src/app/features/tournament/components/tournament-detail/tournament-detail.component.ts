@@ -9,13 +9,14 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
 import { BracketViewComponent } from '../bracket-view/bracket-view.component';
 import { ParticipantsManagerComponent } from '../participants-manager/participants-manager.component';
 import { TournamentSettingsComponent } from '../tournament-settings/tournament-settings.component';
+import { ScorerLinkPanelComponent } from '../scorer-link-panel/scorer-link-panel.component';
 import { Tournament, TournamentMatch, minTeamsForFormat } from '../../../../shared/models/tournament.model';
 
 type Tab = 'bracket' | 'participants' | 'standings' | 'settings';
 
 @Component({
   selector: 'pts-tournament-detail',
-  imports: [LoadingSpinnerComponent, BracketViewComponent, ParticipantsManagerComponent, TournamentSettingsComponent, TranslatePipe],
+  imports: [LoadingSpinnerComponent, BracketViewComponent, ParticipantsManagerComponent, TournamentSettingsComponent, ScorerLinkPanelComponent, TranslatePipe],
   templateUrl: './tournament-detail.component.html',
 })
 export class TournamentDetailComponent implements OnInit, OnDestroy {
@@ -31,6 +32,7 @@ export class TournamentDetailComponent implements OnInit, OnDestroy {
   readonly starting = signal(false);
   readonly activeTab = signal<Tab>('bracket');
   readonly shuffleUnseeded = signal(false);
+  readonly scorerPanelMatch = signal<TournamentMatch | null>(null);
 
   readonly minTeams = computed(() => {
     const t = this.tournament();
@@ -89,6 +91,14 @@ export class TournamentDetailComponent implements OnInit, OnDestroy {
     } finally {
       this.starting.set(false);
     }
+  }
+
+  openScorerPanel(m: TournamentMatch): void {
+    this.scorerPanelMatch.update((cur) => (cur?.id === m.id ? null : m));
+  }
+
+  closeScorerPanel(): void {
+    this.scorerPanelMatch.set(null);
   }
 
   async openMatch(m: TournamentMatch): Promise<void> {

@@ -11,6 +11,7 @@ import { Counter } from '../../../shared/models/counter.model';
 import { AuthService } from '../../../core/auth/auth.service';
 import { SessionTokenService } from '../../../core/auth/session-token.service';
 import { ShareTokenService } from '../../../core/auth/share-token.service';
+import { ScorerTokenService } from '../../../core/auth/scorer-token.service';
 
 /** Group bookkeeping — group key, server method names, ref count. */
 type GroupKind = 'counter' | 'user';
@@ -32,6 +33,7 @@ export class CounterHubService implements OnDestroy {
   private readonly auth = inject(AuthService);
   private readonly sessionTokens = inject(SessionTokenService);
   private readonly shareTokens = inject(ShareTokenService);
+  private readonly scorerTokens = inject(ScorerTokenService);
   private connection: HubConnection | null = null;
   private connecting: Promise<void> | null = null;
   private readonly groups = new Map<string, GroupSubscription>();
@@ -117,7 +119,13 @@ export class CounterHubService implements OnDestroy {
 
   private invokeJoin(kind: GroupKind, id: string): Promise<void> {
     return kind === 'counter'
-      ? this.connection!.invoke('JoinCounter', id, this.sessionTokens.getToken(id), this.shareTokens.getToken(id))
+      ? this.connection!.invoke(
+          'JoinCounter',
+          id,
+          this.sessionTokens.getToken(id),
+          this.shareTokens.getToken(id),
+          this.scorerTokens.getToken(id),
+        )
       : this.connection!.invoke('JoinMyUpdates');
   }
 

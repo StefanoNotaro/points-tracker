@@ -10,7 +10,8 @@ public record EndMatchCommand(
     Guid CounterId,
     Guid? ActorUserId,
     string? SessionToken,
-    string? ShareToken
+    string? ShareToken,
+    string? ScorerToken = null
 ) : IRequest<CounterDto>;
 
 public class EndMatchHandler(
@@ -25,11 +26,12 @@ public class EndMatchHandler(
             ?? throw new NotFoundException(nameof(Domain.Entities.Counter), cmd.CounterId);
 
         var access = authService.GetAccess(counter, cmd.ActorUserId, cmd.SessionToken, cmd.ShareToken);
-        if (!access.CanEdit) throw new ForbiddenException();
+        var canScore = !access.CanEdit && await authService.HasScorerAccessAsync(counter, cmd.ScorerToken, ct);
+        if (!access.CanEdit && !canScore) throw new ForbiddenException();
 
         counter.EndMatchManually(cmd.ActorUserId);
         await counterRepo.SaveChangesAsync(ct);
 
-        return mapper.ToDto(counter, cmd.ActorUserId, cmd.SessionToken, cmd.ShareToken);
+        return mapper.ToDto(counter, cmd.ActorUserId, cmd.SessionToken, cmd.ShareToken, canScore);
     }
 }

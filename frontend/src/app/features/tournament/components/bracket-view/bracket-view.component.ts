@@ -18,6 +18,7 @@ export class BracketViewComponent {
   readonly matches = input.required<TournamentMatch[]>();
   readonly canEdit = input<boolean>(false);
   readonly matchClicked = output<TournamentMatch>();
+  readonly scorerLinkClicked = output<TournamentMatch>();
 
   private readonly i18n = inject(TranslateService);
 
@@ -64,6 +65,16 @@ export class BracketViewComponent {
   openMatch(m: TournamentMatch): void {
     if (!this.canOpen(m)) return;
     this.matchClicked.emit(m);
+  }
+
+  canManageScorerLinks(m: TournamentMatch): boolean {
+    if (!this.canEdit()) return false;
+    return m.status === 'ready' || m.status === 'inprogress';
+  }
+
+  openScorerLinks(m: TournamentMatch, event: Event): void {
+    event.stopPropagation();
+    this.scorerLinkClicked.emit(m);
   }
 }
 

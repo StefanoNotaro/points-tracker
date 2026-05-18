@@ -172,6 +172,17 @@ builder.Services.AddRateLimiter(opts =>
                 QueueLimit = 0,
                 AutoReplenishment = true,
             }));
+
+    opts.AddPolicy("scorer-link-issue", context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: GetUserOrIpPartitionKey(context),
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 20,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0,
+                AutoReplenishment = true,
+            }));
 });
 
 static string GetUserOrIpPartitionKey(HttpContext context)
@@ -225,6 +236,7 @@ if (app.Environment.IsDevelopment())
 app.MapHealthEndpoints();
 app.MapCounterEndpoints();
 app.MapTournamentEndpoints();
+app.MapScorerLinkEndpoints();
 app.MapAdminEndpoints();
 app.MapHub<CounterHub>("/hubs/counter");
 app.MapHub<TournamentHub>("/hubs/tournament");

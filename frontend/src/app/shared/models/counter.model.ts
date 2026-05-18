@@ -41,6 +41,8 @@ export interface Counter {
   currentScoreB: number;
   isOwner: boolean;
   canEdit: boolean;
+  /** True when the viewer holds a valid match scorer link for this counter. */
+  canScore: boolean;
   createdAt: string;
   updatedAt: string;
   rules: SportRulesDto;

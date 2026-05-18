@@ -226,12 +226,12 @@ export class CounterStore implements OnDestroy {
       // Filter — the connection is shared with the dashboard's user group,
       // so we'd otherwise react to every owned counter, not just this one.
       if (updated.id !== counterId) return;
-      // The broadcast carries isOwner/canEdit computed for whoever made the change,
-      // not for this client. Preserve our own access flags so a viewer doesn't
-      // suddenly see edit buttons just because the owner moved the score.
+      // The broadcast carries isOwner/canEdit/canScore computed for whoever
+      // made the change, not for this client. Preserve our own access flags so
+      // a viewer doesn't suddenly see edit buttons just because the owner scored.
       const current = this._counter();
       const merged = current
-        ? { ...updated, isOwner: current.isOwner, canEdit: current.canEdit }
+        ? { ...updated, isOwner: current.isOwner, canEdit: current.canEdit, canScore: current.canScore }
         : updated;
       this.applyUpdate(merged);
     });

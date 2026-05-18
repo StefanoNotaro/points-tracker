@@ -6,7 +6,7 @@ namespace PointsTracker.Infrastructure.Services;
 
 public class CounterMapper(ICounterAuthorizationService authService) : ICounterMapper
 {
-    public CounterDto ToDto(Counter counter, Guid? actorUserId, string? sessionToken, string? shareToken)
+    public CounterDto ToDto(Counter counter, Guid? actorUserId, string? sessionToken, string? shareToken, bool canScore = false)
     {
         var access = authService.GetAccess(counter, actorUserId, sessionToken, shareToken);
 
@@ -27,6 +27,7 @@ public class CounterMapper(ICounterAuthorizationService authService) : ICounterM
             counter.CurrentScoreB,
             access.IsOwner,
             access.CanEdit,
+            canScore,
             counter.CreatedAt,
             counter.UpdatedAt,
             new SportRulesDto(

@@ -16,6 +16,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Tournament> Tournaments => Set<Tournament>();
     public DbSet<TournamentParticipant> TournamentParticipants => Set<TournamentParticipant>();
     public DbSet<TournamentMatch> TournamentMatches => Set<TournamentMatch>();
+    public DbSet<MatchScorerLink> MatchScorerLinks => Set<MatchScorerLink>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

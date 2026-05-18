@@ -142,6 +142,26 @@ export interface CreateTournamentResponse {
   sessionToken: string | null;
 }
 
+export interface MatchScorerLink {
+  id: string;
+  tournamentId: string;
+  matchId: string;
+  label: string | null;
+  grantedToUserId: string | null;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface IssuedMatchScorerLink extends MatchScorerLink {
+  token: string;
+}
+
+export interface ScorerJoinDto {
+  counterId: string | null;
+  tournamentId: string;
+  matchId: string;
+}
+
 /**
  * Minimum number of participants for a tournament to be startable.
  * For group-stage, the minimum scales with the group count (each group needs ≥ 2 teams).

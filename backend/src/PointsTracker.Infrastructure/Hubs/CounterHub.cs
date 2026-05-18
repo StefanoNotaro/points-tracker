@@ -15,7 +15,7 @@ public class CounterHub(
     ICounterAuthorizationService authorizationService,
     ILogger<CounterHub> logger) : Hub
 {
-    public async Task JoinCounter(string counterId, string? sessionToken = null, string? shareToken = null)
+    public async Task JoinCounter(string counterId, string? sessionToken = null, string? shareToken = null, string? scorerToken = null)
     {
         if (!Guid.TryParse(counterId, out var parsedCounterId))
             throw new HubException("counter.liveAccessDenied");
@@ -27,7 +27,13 @@ public class CounterHub(
         var userId = GetUserId();
         var isSuperAdmin = HasRole(GlobalRole.SuperAdmin);
         var access = authorizationService.GetLiveAccess(counter, userId, sessionToken, shareToken, isSuperAdmin);
-        if (!access.CanRead)
+
+        // Scorer link holders must be able to join the live feed even without
+        // other credentials — they are read (and write) via the scorer token path.
+        var canRead = access.CanRead
+            || await authorizationService.HasScorerAccessAsync(counter, scorerToken, Context.ConnectionAborted);
+
+        if (!canRead)
         {
             logger.LogWarning(
                 "Denied SignalR counter join for counter {CounterId}. ConnectionId={ConnectionId}, UserId={UserId}",

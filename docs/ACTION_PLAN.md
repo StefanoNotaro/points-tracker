@@ -88,19 +88,19 @@ Source: Architecture/security review against `docs/ARCHITECTURE.md`, `docs/SECUR
 | FE-06 | Align feature folder structure to architecture (`features/*/components/`) for dashboard/settings |  | [ ] | Conformance with `docs/ARCHITECTURE.md` |
 | FE-09 | Add `pts-not-found` component and dedicated 404 route |  | [ ] | Current wildcard redirects to root |
 | FE-08 | Remove/justify `[innerHTML]` use in `create-counter` template per security guidance |  | [~] | Deferred — risk accepted for now; single `<b>` tag in a static translation string, no untrusted input |
-| TOUR-REF-01 | Add tournament match officiating model: assign scorer/referee users (or invite tokens) per match |  | [ ] | Separate from global admin role |
-| TOUR-REF-02 | Add organizer-generated match scorer links (anonymous allowed, reusable, revocable) |  | [ ] | Link lifetime: valid until match end; no ownership grant |
-| TOUR-REF-03 | Enforce scorer authorization in backend commands/hubs (`increment`, `decrement`, `timeout`, `undo`, `redo`, `end-match`) |  | [ ] | Block non-scoped operations (e.g., delete counter, rename tournament) |
-| TOUR-REF-04 | Add UI flows: assign referee/scorer, generate/revoke link, show active officiator in match screen |  | [ ] | Include status indicators and recovery path if scorer disconnects |
+| TOUR-REF-01 | Add tournament match officiating model: assign scorer/referee users (or invite tokens) per match |  | [x] | `MatchScorerLink` entity + `IMatchScorerLinkRepository`; EF config, migration `AddMatchScorerLinks` |
+| TOUR-REF-02 | Add organizer-generated match scorer links (anonymous allowed, reusable, revocable) |  | [x] | Issue/revoke/list commands + endpoints; `GET /api/scorer-links/resolve/{token}` endpoint |
+| TOUR-REF-03 | Enforce scorer authorization in backend commands/hubs (`increment`, `decrement`, `timeout`, `undo`, `redo`, `end-match`) |  | [x] | `HasScorerAccessAsync` on `ICounterAuthorizationService`; `CanScore` flag on `CounterDto`; 8 write commands updated; `CounterHub.JoinCounter` accepts scorer token |
+| TOUR-REF-04 | Add UI flows: assign referee/scorer, generate/revoke link, show active officiator in match screen |  | [x] | `ScorerTokenService`; auth interceptor + SignalR hub pass `X-Scorer-Token`; `JoinCounterComponent` falls back to scorer-link resolve; `ScorerLinkPanelComponent` for organizers; i18n in en/es/ca |
 
 ### P2 execution order (most important -> least important)
 
 1. ~~`FE-08`~~ — Deferred (risk accepted; static translation string, no untrusted input).
 2. `BE-07` — ✓ Done. Extracted `IUserSyncService` to Application layer; `UserSyncService` implements it; DI and `Program.cs` resolve via interface.
-3. `TOUR-REF-01` — Add tournament match officiating domain model (**prerequisite** — all TOUR-REF items depend on this).
-4. `TOUR-REF-03` — Enforce scorer authorization in backend commands/hubs (**security gate** — must land before scorer links are usable).
-5. `TOUR-REF-02` — Add organizer-generated match scorer links (**feature** — depends on TOUR-REF-01 and TOUR-REF-03).
-6. `TOUR-REF-04` — Add UI flows: assign referee, generate/revoke link, active officiator indicator (**feature UI** — depends on 01/02/03).
+3. ~~`TOUR-REF-01`~~ — ✓ Done. `MatchScorerLink` entity, repository, EF config, migration.
+4. ~~`TOUR-REF-03`~~ — ✓ Done. `HasScorerAccessAsync`, `CanScore` flag, 8 write commands, SignalR hub.
+5. ~~`TOUR-REF-02`~~ — ✓ Done. Issue/revoke/list commands, endpoints, resolve endpoint.
+6. ~~`TOUR-REF-04`~~ — ✓ Done. Scorer token service, interceptor, hub, join flow, organizer UI panel, i18n.
 7. `FE-09` — Add `pts-not-found` component and dedicated 404 route (**UX** — current wildcard silently redirects to root).
 8. `FE-06` — Align feature folder structure to architecture (`features/*/components/`) (**maintainability** — no runtime impact).
 9. `BE-09` — Evaluate UUID v4 → UUID v7 migration (**optimization** — no urgency at current scale; plan as non-breaking migration).
