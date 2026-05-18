@@ -11,6 +11,8 @@ interface DrawerItem {
   routerLink: string;
   authedOnly?: boolean;
   adminOnly?: boolean;
+  /** On md+: hidden in the drawer and shown in the avatar dropdown instead. */
+  desktopDropdown?: boolean;
 }
 
 @Component({
@@ -25,14 +27,14 @@ export class NavBarComponent {
   private readonly router = inject(Router);
 
   readonly drawerOpen = signal(false);
+  readonly userMenuOpen = signal(false);
 
   private readonly items: DrawerItem[] = [
-    { labelKey: 'nav.items.home',         icon: 'home',            routerLink: '/' },
-    { labelKey: 'nav.items.newCounter',   icon: 'add_circle',      routerLink: '/new-counter' },
-    { labelKey: 'nav.items.dashboard',    icon: 'space_dashboard', routerLink: '/dashboard', authedOnly: true },
-    { labelKey: 'nav.items.counters',     icon: 'list_alt',        routerLink: '/my-counters', authedOnly: true },
-    { labelKey: 'nav.items.tournaments',  icon: 'emoji_events',    routerLink: '/tournaments' },
-    { labelKey: 'nav.items.settings',     icon: 'settings',        routerLink: '/settings', authedOnly: true },
+    { labelKey: 'nav.items.dashboard',    icon: 'space_dashboard',   routerLink: '/dashboard',   authedOnly: true },
+    { labelKey: 'nav.items.newCounter',   icon: 'add_circle',        routerLink: '/new-counter' },
+    { labelKey: 'nav.items.counters',     icon: 'list_alt',          routerLink: '/my-counters', authedOnly: true },
+    { labelKey: 'nav.items.tournaments',  icon: 'emoji_events',      routerLink: '/tournaments' },
+    { labelKey: 'nav.items.settings',     icon: 'settings',          routerLink: '/settings',    authedOnly: true, desktopDropdown: true },
     { labelKey: 'nav.items.adminCleanup', icon: 'cleaning_services', routerLink: '/admin/cleanup', authedOnly: true, adminOnly: true },
   ];
 
@@ -44,18 +46,30 @@ export class NavBarComponent {
     }),
   );
 
+  readonly desktopDropdownItems = computed(() =>
+    this.visibleItems().filter((i) => i.desktopDropdown),
+  );
+
   constructor() {
     this.router.events
       .pipe(filter((e) => e instanceof NavigationEnd))
-      .subscribe(() => this.drawerOpen.set(false));
+      .subscribe(() => {
+        this.drawerOpen.set(false);
+        this.userMenuOpen.set(false);
+      });
   }
 
   signIn(): void {
     this.drawerOpen.set(false);
     this.auth.login();
   }
+  toggleUserMenu(): void {
+    this.userMenuOpen.update((v) => !v);
+  }
+
   signOut(): void {
     this.drawerOpen.set(false);
+    this.userMenuOpen.set(false);
     this.auth.logout();
   }
 }
